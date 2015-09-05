@@ -1,0 +1,499 @@
+﻿// Copyright (c) 2015 Paul Mattes.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the names of Paul Mattes nor the names of his contributors
+//       may be used to endorse or promote products derived from this software
+//       without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+// EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+// OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+// ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+using System;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using NUnit.Framework;
+using x3270if;
+using Mock;
+using System.Net;
+using System.Net.Sockets;
+using System.IO;
+using System.Threading;
+
+namespace UnitTests
+{
+    /// <summary>
+    /// Tests for configuring, starting and stopping sessions.
+    /// </summary>
+    [TestFixture]
+    class SessionTests
+    {
+        public SessionTests()
+        {
+        }
+
+        [TestFixtureSetUp]
+        public void Setup()
+        {
+            Util.ConsoleDebug = false;
+        }
+
+        /// <summary>
+        /// Exercise the logging code, regardless of the flag set in Setup().
+        /// </summary>
+        [Test]
+        public void TestLog()
+        {
+            // Temporarily change the ConsoleDebug flag.
+            var oldDebug = Util.ConsoleDebug;
+            try
+            {
+                Util.ConsoleDebug = true;
+
+                // Temporarily redirect stdout to NUL:.
+                var oldOut = Console.Out;
+                try
+                {
+                    Console.SetOut(new StreamWriter(Stream.Null));
+                    // Say hello.
+                    Util.Log("Hello");
+                }
+                finally
+                {
+                    Console.SetOut(oldOut);
+                }
+            }
+            finally
+            {
+                Util.ConsoleDebug = oldDebug;
+            }
+        }
+
+        /// <summary>
+        /// Test the Config class.
+        /// </summary>
+        [Test]
+        public void TestConfig()
+        {
+            // Verify that a bogus model number throws an exception.
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                var startup = new ProcessConfig
+                {
+                    Model = 6
+                };
+            });
+
+            // Verify that a good one doesn't.
+            var startup2 = new ProcessConfig
+            {
+                Model = 2
+            };
+            Assert.AreEqual(2, startup2.Model);
+
+            // Verfify that a bogus Origin is bad.
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                { var config = new ProcessConfig { Origin = 2 }; });
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                { var config = new ProcessConfig { Origin = -1 }; });
+        }
+
+        /// <summary>
+        /// Test the various flavors of history on an unstarted session.
+        /// </summary>
+        [Test]
+        public void TestEmptyHistory()
+        {
+            var session = new ProcessSession();
+
+            Assert.AreEqual(null, session.LastCommand);
+            var emptyIoResult = new IoResult[0];
+            Assert.AreEqual(emptyIoResult, session.RecentCommands);
+            Assert.AreEqual(null, session.Status);
+        }
+
+        /// <summary>
+        /// Test the limit on the history list.
+        /// </summary>
+        [Test]
+        public void TestFullHistory()
+        {
+            // Start a mock thread session.
+            var session = new MockTaskSession();
+            var startResult = session.Start();
+            Assert.AreEqual(true, startResult.Success);
+
+            // Make sure the start shows the initial empty command.
+            var history = session.RecentCommands;
+            Assert.AreEqual(2, history.Length);
+            Assert.AreEqual(string.Empty, history[1].Command);
+
+            // Overflow the history list.
+            for (int i = 0; i < Session.MaxCommands; i++)
+            {
+                Assert.AreEqual(true, session.Io("Lines 1").Success);
+            }
+            history = session.RecentCommands;
+            Assert.AreEqual("Lines 1", history[0].Command);
+            Assert.AreEqual("Line 1", history[0].Result[0]);
+
+            session.Close();
+        }
+
+        /// <summary>
+        /// Test the mock session, task flavor.
+        /// </summary>
+        [Test]
+        public void TestTaskMockSession()
+        {
+            var session = new MockTaskSession();
+            var startResult = session.Start();
+            Assert.AreEqual(true, startResult.Success);
+
+            // Test canned responses.
+            var result = session.Io("Lines 1");
+            Assert.AreEqual(true, result.Success);
+            Assert.AreEqual(1, result.Result.Length);
+            Assert.AreEqual("Line 1", result.Result[0]);
+
+            result = session.Io("Lines 2");
+            Assert.AreEqual(true, result.Success);
+            Assert.AreEqual(2, result.Result.Length);
+            Assert.AreEqual("Line 1", result.Result[0]);
+            Assert.AreEqual("Line 2", result.Result[1]);
+
+            result = session.Io("Fail");
+            Assert.AreEqual(false, result.Success);
+            Assert.AreEqual(1, result.Result.Length);
+            Assert.AreEqual("failed", result.Result[0]);
+
+            // Test a double start.
+            Assert.Throws<X3270ifUsageException>(() => { startResult = session.Start(); });
+
+            // Test the I/O timeout.
+            Assert.AreEqual(true, startResult.Success);
+            result = session.Io("Hang 100", 50);
+            Assert.AreEqual(false, result.Success);
+            session.Close();
+
+            // Test the EOF response.
+            startResult = session.Start();
+            Assert.AreEqual(true, startResult.Success);
+            result = session.Io("Quit");
+            Assert.AreEqual(false, result.Success);
+            Assert.AreEqual(false, session.Running);
+            Assert.AreEqual(false, session.LastCommand.Success);
+            session.Close();
+
+            // Test the exception for I/O on a closed session.
+            Assert.Throws<X3270ifUsageException>(() => { var r = session.Io("Xxx"); });
+        }
+
+        /// <summary>
+        /// Exercise code page matching.
+        /// </summary>
+        [Test]
+        public void TestCodePage()
+        {
+            var session = new MockTaskSession();
+            session.CodePage = "CP1252";
+            Assert.IsTrue(session.Start().Success);
+
+            session.Close();
+            session.CodePage = "Junk";
+            Assert.IsFalse(session.Start().Success);
+            
+            session.CodePage = null;
+            session.CodePageFail = true;
+            Assert.IsFalse(session.Start().Success);
+        }
+
+        /// <summary>
+        /// Test exception mode at start-up.
+        /// </summary>
+        [Test]
+        public void TestStartExceptionMode()
+        {
+            // Set the handshake timeout to 50msec.
+            var startup = new MockTaskConfig
+            {
+                HandshakeTimeoutMsec = 50
+            };
+            var session = new MockTaskSession(startup);
+            // Set the response hang time to twice that.
+            session.HangMsec = 100;
+            // Set exception mode for any failure, including Start.
+            session.ExceptionMode = true;
+            // Boom.
+            Assert.Throws<X3270ifInternalException>(() => { var result = session.Start(); });
+        }
+
+
+        /// <summary>
+        /// Test a hung start (no response to the empty initial command) for the Task
+        /// flavor of a mock session.
+        /// </summary>
+        [Test]
+        public void TestTaskMockSessionHungStart()
+        {
+            var startup = new MockTaskConfig
+            {
+                HandshakeTimeoutMsec = 50
+            };
+            var session = new MockTaskSession(startup);
+            session.HangMsec = 100;
+
+            // Test a hung start.
+            var startResult = session.Start();
+            Assert.AreEqual(false, startResult.Success);
+        }
+
+        /// <summary>
+        /// Test the mock session, separate process flavor.
+        /// </summary>
+        [Test]
+        public void TestProcessMockSession()
+        {
+            var startup = new ProcessConfig
+            {
+                ProcessName = "MockWs3270.exe",
+                ConnectRetryMsec = 50
+            };
+
+            // Try a successful start.
+            var session = new ProcessSession(startup);
+            var result = session.Start();
+            Assert.AreEqual(true, result.Success);
+            session.Close();
+
+            // Exercise some bad command-line options.
+            startup.TestFirstOptions = "-baz";
+            result = session.Start();
+            Assert.AreEqual(false, result.Success);
+
+            startup.TestFirstOptions = "-scriptport 12345678";
+            result = session.Start();
+            Assert.AreEqual(false, result.Success);
+        }
+
+        /// <summary>
+        /// Test connecting to an existing mock session, process flavor.
+        /// </summary>
+        [Test]
+        public void TestProcessMockSessionStartExisting()
+        {
+            var session = new PortSession(new PortConfig { AutoStart = false });
+
+            // Try no variable.
+            var startResult = session.Start();
+            Assert.AreEqual(false, startResult.Success);
+
+            // Try junk variable.
+            Environment.SetEnvironmentVariable(Util.x3270Port, "junk");
+            startResult = session.Start();
+            Assert.AreEqual(false, startResult.Success);
+
+            // Set up an explicit config to shorten the retry delay.
+            var config = new PortConfig
+            {
+                ConnectRetryMsec = 10,
+                AutoStart = false
+            };
+
+            // Try an unused port.
+            // We guarantee an unused port by binding a socket to port 0 (letting the
+            // system pick one) and then *not* listening on it.
+            using (var noListenSocket = new Socket(SocketType.Stream, ProtocolType.Tcp))
+            {
+                noListenSocket.Bind(new IPEndPoint(IPAddress.Any, 0));
+                Environment.SetEnvironmentVariable(Util.x3270Port, ((IPEndPoint)noListenSocket.LocalEndPoint).Port.ToString());
+                session = new PortSession(config);
+                startResult = session.Start();
+                Assert.AreEqual(false, startResult.Success);
+            }
+
+            // Try again, without the connect retry override.
+            // This is frustratingly slow, but needed to exercise the default timeout of 3x1000ms.
+            config.ConnectRetryMsec = null;
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            startResult = session.Start();
+            Assert.AreEqual(false, startResult.Success);
+            stopwatch.Stop();
+            Assert.IsTrue(stopwatch.ElapsedMilliseconds >= 3000);
+
+            // Verify that we can't set a ConnectRetryMsec < 0.
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var config2 = new PortConfig { ConnectRetryMsec = -3 }; } );
+
+            // Create a mock server thread by hand, so we can connect to it manually.
+            using (var listener = new Socket(SocketType.Stream, ProtocolType.Tcp))
+            {
+                listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+                listener.Listen(1);
+                var mockServer = new Server();
+                var Server = Task.Run(() => mockServer.Ws3270(listener));
+
+                // Now connect to it, which should be successful.
+                // We also put the port in the config, to exercise that path.
+                config.Port = ((IPEndPoint)listener.LocalEndPoint).Port;
+                startResult = session.Start();
+                Assert.AreEqual(true, startResult.Success);
+
+                // All done, close the client side and wait for the mock server to complete.
+                session.Close();
+                Server.Wait();
+            }
+        }
+
+        /// <summary>
+        /// Explicit test for the PortBackEnd.
+        /// </summary>
+        [Test]
+        public void TestPortBackEnd()
+        {
+            var backEnd = new PortBackEnd(null);
+
+            // Make sure GetErrorOutput does nothing.
+            Assert.AreEqual("Nothing", backEnd.GetErrorOutput("Nothing"));
+
+            // Dispose it twice, to exercise all of the Dispose logic.
+            backEnd.Dispose();
+            backEnd.Dispose();
+        }
+
+        /// <summary>
+        /// Test a process session, using a .EXE that does not exist.
+        /// </summary>
+        [Test]
+        public void TestNoSuchProcess()
+        {
+            var startup = new ProcessConfig
+            {
+                ProcessName = "MockWs3270NoSuch.exe"
+            };
+            var session = new ProcessSession(startup);
+
+            var startResult = session.Start();
+            Assert.AreEqual(false, startResult.Success);
+        }
+
+        /// <summary>
+        /// Explicit test for the process back end.
+        /// </summary>
+        [Test]
+        public void TestProcessBackEnd()
+        {
+            var backEnd = new ProcessBackEnd(null);
+            Assert.AreEqual("nothing", backEnd.GetErrorOutput("nothing"));
+            backEnd.Dispose();
+            backEnd.Dispose();
+        }
+
+        /// <summary>
+        /// Test the StatusField method.
+        /// </summary>
+        [Test]
+        public void TestStatusField()
+        {
+            var session = new MockTaskSession();
+
+            // Test StatusField exception when not running.
+            Assert.Throws<X3270ifUsageException>(() => { var s = session.StatusField(StatusLineField.Formatting); });
+
+            var startResult = session.Start();
+            Assert.AreEqual(true, startResult.Success);
+
+            // Test ordinary StatusField.
+            Assert.AreEqual("F", session.StatusField(StatusLineField.Formatting));
+
+            // Test origin-based StatusField.
+            Assert.AreEqual("0", session.StatusField(StatusLineField.CursorRow));
+            Assert.AreEqual("0", session.StatusField(StatusLineField.CursorColumn));
+
+            session.Close();
+
+            // Test origin-based StatusField with 1-origin
+            session = new MockTaskSession(new MockTaskConfig { Origin = 1 });
+            session.Start();
+            Assert.AreEqual("1", session.StatusField(StatusLineField.CursorRow));
+            Assert.AreEqual("1", session.StatusField(StatusLineField.CursorColumn));
+
+            session.Close();
+        }
+
+        // Exercise session exception mode.
+        [Test]
+        public void TestExceptionMode()
+        {
+            var session = new MockTaskSession();
+            var startResult = session.Start();
+            Assert.AreEqual(true, startResult.Success);
+
+            session.ExceptionMode = true;
+            Assert.Throws<X3270ifCommandException>(() => { var result = session.Io("Fail"); });
+            Assert.Throws<X3270ifCommandException>(() => { var result = session.Io("Fail()"); });
+            Assert.Throws<X3270ifInternalException>(() => { var result = session.Io("Quit"); });
+            session.Close();
+        }
+
+        // Exercise auto-start Port sessions.
+        [Test]
+        public void TestPortAutoStart()
+        {
+            // No X3270PORT to connect to.
+            Assert.Throws<X3270ifInternalException>(() => { var session = new PortSession(); });
+        }
+
+        // Exercise Io's argument checking.
+        [Test]
+        public void TestIoArgs()
+        {
+            var session = new MockTaskSession();
+            session.Start();
+
+            Assert.Throws<ArgumentException>(() => { var result = session.Io("Foo(\0)"); });
+        }
+
+        // Exercise broken sessions.
+        [Test]
+        public void TestBrokenSession()
+        {
+            var session = new MockTaskSession();
+            session.Start();
+
+            var result = session.Io("Quit");
+            Assert.AreEqual(false, result.Success);
+            Assert.AreEqual(false, session.Running);
+
+            session.Close();
+            session.Start();
+            result = session.Io("ReplyQuit");
+            Assert.AreEqual(true, result.Success);
+            Thread.Sleep(500);
+            result = session.Io("Anything");
+            Assert.AreEqual(false, result.Success);
+            Assert.AreEqual(false, session.Running);
+        }
+
+        // Blow up the Session base class.
+        [Test]
+        public void TestSessionNullBackEnd()
+        {
+            Assert.Throws<ArgumentNullException>(() => { var session = new MockTaskSession(new MockTaskConfig(), true); });
+        }
+    }
+}
