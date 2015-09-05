@@ -463,11 +463,11 @@ namespace x3270if
                 switch (Type)
                 {
                     case PositionType.Ascii:
-                        throw new X3270ifUsageException("Cannot get EBCDIC value from an ASCII ReadBuffer result");
+                        throw new InvalidOperationException("Cannot get EBCDIC value from an ASCII ReadBuffer result");
                     case PositionType.Ebcdic:
                         return (Attrs.Intensity != FieldIntensity.Zero) ? ebcdicChar : (ushort)0x40;
                     default:
-                        throw new X3270ifUsageException("Cannot get EBCDIC value from non-display position");
+                        throw new InvalidOperationException("Cannot get EBCDIC value from non-display position");
                 }
             }
             set
@@ -488,9 +488,9 @@ namespace x3270if
                     case PositionType.Ascii:
                         return (Attrs.Intensity != FieldIntensity.Zero) ? asciiChar : ' ';
                     case PositionType.Ebcdic:
-                        throw new X3270ifUsageException("Cannot get ASCII value from an EBCDIC ReadBuffer result");
+                        throw new InvalidOperationException("Cannot get ASCII value from an EBCDIC ReadBuffer result");
                     default:
-                        throw new X3270ifUsageException("Cannot get ASCII value from non-display position");
+                        throw new InvalidOperationException("Cannot get ASCII value from non-display position");
                 }
             }
             set
@@ -919,7 +919,7 @@ namespace x3270if
         {
             if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
             {
-                throw new X3270ifUsageException("ReadBuffer is not Ascii");
+                throw new InvalidOperationException("ReadBuffer is not Ascii");
             }
             FieldColor fg = FieldColor.NeutralWhite;
             FieldColor bg = FieldColor.NeutralBlack;
@@ -1025,7 +1025,7 @@ namespace x3270if
         {
             if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
             {
-                throw new X3270ifUsageException("ReadBuffer is not Ascii");
+                throw new InvalidOperationException("ReadBuffer is not Ascii");
             }
             row -= Origin;
             column -= Origin;
@@ -1077,7 +1077,7 @@ namespace x3270if
         {
             if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
             {
-                throw new X3270ifUsageException("ReadBuffer is not Ascii");
+                throw new InvalidOperationException("ReadBuffer is not Ascii");
             }
             row -= Origin;
             column -= Origin;
