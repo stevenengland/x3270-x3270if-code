@@ -998,5 +998,14 @@ namespace x3270ifGuiTest
             }
 
         }
+
+        private void queryTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == '\r')
+            {
+                runQueryButton_Click(sender, e);
+                e.Handled = true;
+            }
+        }
     }
 }

@@ -188,7 +188,7 @@ namespace x3270if
 
             if (!Running)
             {
-                throw new X3270ifUsageException("Not running");
+                throw new InvalidOperationException("Not running");
             }
 
             // Control characters are verboten.
@@ -350,14 +350,7 @@ namespace x3270if
                     {
                         failureMessage += " Timeout or socket EOF";
                     }
-                    if (state == IoStates.Failed)
-                    {
-                        throw new X3270ifCommandException(failureMessage);
-                    }
-                    else
-                    {
-                        throw new X3270ifInternalException(failureMessage);
-                    }
+                    throw new X3270ifCommandException(failureMessage);
                 }
             }
             finally

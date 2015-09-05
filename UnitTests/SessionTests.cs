@@ -239,7 +239,7 @@ namespace UnitTests
             // Set exception mode for any failure, including Start.
             session.ExceptionMode = true;
             // Boom.
-            Assert.Throws<X3270ifInternalException>(() => { var result = session.Start(); });
+            Assert.Throws<X3270ifCommandException>(() => { var result = session.Start(); });
         }
 
 
@@ -446,7 +446,7 @@ namespace UnitTests
             session.ExceptionMode = true;
             Assert.Throws<X3270ifCommandException>(() => { var result = session.Io("Fail"); });
             Assert.Throws<X3270ifCommandException>(() => { var result = session.Io("Fail()"); });
-            Assert.Throws<X3270ifInternalException>(() => { var result = session.Io("Quit"); });
+            Assert.Throws<X3270ifCommandException>(() => { var result = session.Io("Quit"); });
             session.Close();
         }
 
