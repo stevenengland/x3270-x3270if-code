@@ -33,6 +33,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using System.Timers;
 using x3270if;
 
 // GUI app to exercise the x3270if DLL.
@@ -50,6 +51,7 @@ namespace x3270ifGuiTest
         {
             StartQuery,
             StartTransfer,
+            Timeout,
             Stop,
             Quit
         }
@@ -171,22 +173,65 @@ namespace x3270ifGuiTest
         #endregion
 
         private Session session;
+
         private bool loggedOn;
         private DisplayBuffer displayBuffer;
         private bool quitting;
 
+        private System.Timers.Timer timer = new System.Timers.Timer();
+
         #region Worker subroutines
-        private void abortSession(BackgroundWorker worker)
+
+        /// <summary>
+        /// Downgrade the session by one step.
+        /// </summary>
+        /// <param name="worker">Context</param>
+        /// <param name="andClose">If true, close the session</param>
+        /// <returns>true if there is more to tear down</returns>
+        private bool downgradeSession(BackgroundWorker worker, bool andClose)
         {
-            session.Clear();
+            if (session == null)
+            {
+                // Nothing to downgrade.
+                return false;
+            }
+
             if (loggedOn)
             {
+                session.Clear();
                 session.String("LOGOFF\n");
                 loggedOn = false;
                 worker.ReportProgress(0, new WorkerStatusLoggedOn(false));
+                worker.ReportProgress(0, new WorkerStatusConnected(false));
+                return true;
             }
-            session.Disconnect();
-            worker.ReportProgress(0, new WorkerStatusConnected(false));
+
+            if (session.Running && session.StatusField(StatusLineField.Connection)[0] == 'C')
+            {
+                session.Disconnect();
+                worker.ReportProgress(0, new WorkerStatusConnected(false));
+                return true;
+            }
+            else
+            {
+                worker.ReportProgress(0, new WorkerStatusConnected(false));
+            }
+
+            if (andClose && session.Running)
+            {
+                session.Close();
+                worker.ReportProgress(0, new WorkerStatusRunning(false));
+                return false;
+            }
+
+            return false;
+        }
+
+        private void abortSession(BackgroundWorker worker)
+        {
+            while (downgradeSession(worker, andClose: false))
+            {
+            }
         }
 
         private void nextScreen()
@@ -326,7 +371,7 @@ namespace x3270ifGuiTest
         /// </summary>
         /// <param name="worker"></param>
         /// <returns>true if logon parameters are valid</returns>
-        private bool checkLogin(BackgroundWorker worker)
+        private bool checkLoginFields(BackgroundWorker worker)
         {
             if (string.IsNullOrEmpty(hostnameTextBox.Text))
             {
@@ -466,16 +511,22 @@ namespace x3270ifGuiTest
             worker.ReportProgress(100, new WorkerStatusIdle());
 
             // Make sure we have the fields we need.
-            if (!checkLogin(worker))
+            if (!checkLoginFields(worker))
             {
                 return;
             }
 
             var username = usernameTextBox.Text.ToUpper();
 
-            if (!logon(worker, username))
+            var wasLoggedOn = loggedOn;
+            if (!loggedOn)
             {
-                return;
+                if (!logon(worker, username))
+                {
+                    return;
+                }
+            } else {
+                session.Clear();
             }
 
             // Send the command we want to capture.
@@ -497,9 +548,11 @@ namespace x3270ifGuiTest
 
             var ready = " " + username + " Ready;";
             nextScreen();
+
             if (!waitForString(worker, 1, 1, query) ||
-                !waitForString(worker, 2, 1, "DMS") ||
-                !waitForString(worker, 3, 1, ready))
+                (!wasLoggedOn && (!waitForString(worker, 1, 1, query) ||
+                                  !waitForString(worker, 2, 1, "DMS") ||
+                                  !waitForString(worker, 3, 1, ready))))
             {
                 worker.ReportProgress(0, new WorkerStatusError(worker, "Command failed"));
                 abortSession(worker);
@@ -508,7 +561,7 @@ namespace x3270ifGuiTest
 
             List<string> lines = new List<String>();
 
-            var dataRow = 4;
+            var dataRow = wasLoggedOn ? 2 : 4;
             bool first = true;
             do
             {
@@ -548,9 +601,6 @@ namespace x3270ifGuiTest
                 }
             } while (isMore());
 
-            // Log off and kill ws3270.
-            abortSession(worker);
-
             // Report results.
             overall.Stop();
             worker.ReportProgress(100, new WorkerStatusComplete(
@@ -585,7 +635,7 @@ namespace x3270ifGuiTest
             worker.ReportProgress(100, new WorkerStatusIdle());
 
             // Make sure we have the fields we need.
-            if (!checkLogin(worker))
+            if (!checkLoginFields(worker))
             {
                 return;
             }
@@ -667,9 +717,18 @@ namespace x3270ifGuiTest
 
             // Log in
             var username = usernameTextBox.Text.ToUpper();
-            if (!logon(worker, username))
+            bool wasLoggedOn = loggedOn;
+
+            if (!loggedOn)
             {
-                return;
+                if (!logon(worker, username))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                session.Clear();
             }
 
             // Send a harmless command and wait for the response.
@@ -683,9 +742,10 @@ namespace x3270ifGuiTest
             var ready = " " + username + " Ready;";
             nextScreen();
             if (!waitForString(worker, 1, 1, "SET APL OFF") ||
-                !waitForString(worker, 2, 1, "DMS") ||
-                !waitForString(worker, 3, 1, ready) ||
-                !waitForString(worker, 4, 1, ready))
+                (wasLoggedOn && !waitForString(worker, 2, 1, ready)) ||
+                (!wasLoggedOn && (!waitForString(worker, 2, 1, "DMS") ||
+                                  !waitForString(worker, 3, 1, ready) ||
+                                  !waitForString(worker, 4, 1, ready))))
             {
                 worker.ReportProgress(0, new WorkerStatusError(worker, "Setup failed"));
                 abortSession(worker);
@@ -735,9 +795,6 @@ namespace x3270ifGuiTest
                 return;
             }
 
-            // Log off and kill ws3270.
-            abortSession(worker);
-
             // Report results.
             overall.Stop();
             worker.ReportProgress(100, new WorkerStatusComplete(
@@ -749,6 +806,9 @@ namespace x3270ifGuiTest
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
+            // Stop the timer.
+            timer.Enabled = false;
+
             BackgroundWorker worker = sender as BackgroundWorker;
             var action = (queryAction)e.Argument;
 
@@ -757,25 +817,33 @@ namespace x3270ifGuiTest
                 case queryAction.StartQuery:
                     // Run the query.
                     doStartQuery(worker);
+                    if (session != null && session.Running)
+                    {
+                        timer.Enabled = true;
+                    }
                     break;
                 case queryAction.StartTransfer:
                     // Run the file transfer.
                     doStartTransfer(worker);
+                    if (session != null && session.Running)
+                    {
+                        timer.Enabled = true;
+                    }
+                    break;
+                case queryAction.Timeout:
+                    // Step the teardown.
+                    if (downgradeSession(worker, andClose: true))
+                    {
+                        timer.Enabled = true;
+                    }
                     break;
                 case queryAction.Stop:
                 case queryAction.Quit:
                     // Stop the ws3270 session.
-                    if (session != null && session.Running)
+                    while (downgradeSession(worker, andClose: true))
                     {
-                        session.Close();
                     }
-                    if (action == queryAction.Stop)
-                    {
-                        // Turn off the status indicator.
-                        worker.ReportProgress(0, new WorkerStatusRunning(false));
-                        worker.ReportProgress(0, new WorkerStatusIdle());
-                    }
-                    else
+                    if (action == queryAction.Quit)
                     {
                         // Exit the program.
                         Environment.Exit(0);
@@ -902,6 +970,16 @@ namespace x3270ifGuiTest
         {
             stateLabel.Text = "";
             resultLabel.Text = "";
+
+            // Set up the idle timer.
+            timer.Elapsed += timer_Elapsed;
+            timer.Interval = 15000;
+            timer.Enabled = false;
+        }
+
+        void timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            this.Invoke(new MethodInvoker(() => backgroundWorker1.RunWorkerAsync(queryAction.Timeout)));
         }
 
         private void runQueryButton_Click(object sender, EventArgs e)
