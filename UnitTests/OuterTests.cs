@@ -137,8 +137,8 @@ namespace UnitTests
             // Check the first location, which is a normal unprotected field.
             var c = b.Contents(0, 0);
             Assert.AreEqual(PositionType.FieldAttribute, c.Type);
-            Assert.Throws<X3270ifUsageException>(() => { var e = c.AsciiChar; });
-            Assert.Throws<X3270ifUsageException>(() => { var e = c.EbcdicChar; });
+            Assert.Throws<InvalidOperationException>(() => { var e = c.AsciiChar; });
+            Assert.Throws<InvalidOperationException>(() => { var e = c.EbcdicChar; });
             Assert.AreEqual(FieldFlags.Protected, c.Attrs.Flags);
             Assert.AreEqual(FieldIntensity.HighlightedSelectable, c.Attrs.Intensity);
             Assert.AreEqual(FieldColor.Default, c.Attrs.Foreground);
@@ -224,18 +224,18 @@ namespace UnitTests
                 Encoding = Encoding.UTF8
             };
             b = new DisplayBuffer(rb);
-            Assert.Throws<X3270ifUsageException>(() => { var da = b.Ascii(); });
+            Assert.Throws<InvalidOperationException>(() => { var da = b.Ascii(); });
 
             // Verify GE, which happens only on EBCDIC dumps.
             Assert.AreEqual(CharacterSet.Apl, b.Contents(0, 15).Attrs.CharacterSet);
 
             // Verify that DumpAsciiConsole() fails for EBCDIC dumps.
-            Assert.Throws<X3270ifUsageException>(() => { b.DumpAsciiConsole(); });
+            Assert.Throws<InvalidOperationException>(() => { b.DumpAsciiConsole(); });
 
             // Exercise the Ascii and Ebcdic methods. The first also exercises zero intensity.
             Assert.AreEqual(0x40, b.Contents(0, 15).EbcdicChar);
             Assert.AreEqual(0x50, b.Contents(0, 10).EbcdicChar);
-            Assert.Throws<X3270ifUsageException>(() => { var ga = b.Contents(0, 15).AsciiChar; });
+            Assert.Throws<InvalidOperationException>(() => { var ga = b.Contents(0, 15).AsciiChar; });
 
             // Test other displayBuffer methods with a completely contrived buffer.
             rb = new Session.ReadBufferIoResult
@@ -315,7 +315,7 @@ namespace UnitTests
             WrappedDumpAsciiBuffer(b);
 
             // Verify that you can't read an EBCDIC character from an ASCII dump.
-            Assert.Throws<X3270ifUsageException>(() => { var ec = b.Contents(0, 1).EbcdicChar; });
+            Assert.Throws<InvalidOperationException>(() => { var ec = b.Contents(0, 1).EbcdicChar; });
         }
 
         /// <summary>
@@ -374,9 +374,9 @@ namespace UnitTests
                 Encoding = Encoding.UTF8
             };
             b = new DisplayBuffer(rb);
-            Assert.Throws<X3270ifUsageException>(() => { var s = b.Ascii(1); });
-            Assert.Throws<X3270ifUsageException>(() => { var s = b.Ascii(0, 1, 2); });
-            Assert.Throws<X3270ifUsageException>(() => { var s = b.Ascii(0, 1, 1, 2); });
+            Assert.Throws<InvalidOperationException>(() => { var s = b.Ascii(1); });
+            Assert.Throws<InvalidOperationException>(() => { var s = b.Ascii(0, 1, 2); });
+            Assert.Throws<InvalidOperationException>(() => { var s = b.Ascii(0, 1, 1, 2); });
         }
 
         /// <summary>

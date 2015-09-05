@@ -182,7 +182,7 @@ namespace UnitTests
             Assert.AreEqual("failed", result.Result[0]);
 
             // Test a double start.
-            Assert.Throws<X3270ifUsageException>(() => { startResult = session.Start(); });
+            Assert.Throws<InvalidOperationException>(() => { startResult = session.Start(); });
 
             // Test the I/O timeout.
             Assert.AreEqual(true, startResult.Success);
@@ -200,7 +200,7 @@ namespace UnitTests
             session.Close();
 
             // Test the exception for I/O on a closed session.
-            Assert.Throws<X3270ifUsageException>(() => { var r = session.Io("Xxx"); });
+            Assert.Throws<InvalidOperationException>(() => { var r = session.Io("Xxx"); });
         }
 
         /// <summary>
@@ -362,7 +362,7 @@ namespace UnitTests
         /// <summary>
         /// Explicit test for the PortBackEnd.
         /// </summary>
-        [Test]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times"), Test]
         public void TestPortBackEnd()
         {
             var backEnd = new PortBackEnd(null);
@@ -394,7 +394,7 @@ namespace UnitTests
         /// <summary>
         /// Explicit test for the process back end.
         /// </summary>
-        [Test]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times"), Test]
         public void TestProcessBackEnd()
         {
             var backEnd = new ProcessBackEnd(null);
@@ -412,7 +412,7 @@ namespace UnitTests
             var session = new MockTaskSession();
 
             // Test StatusField exception when not running.
-            Assert.Throws<X3270ifUsageException>(() => { var s = session.StatusField(StatusLineField.Formatting); });
+            Assert.Throws<InvalidOperationException>(() => { var s = session.StatusField(StatusLineField.Formatting); });
 
             var startResult = session.Start();
             Assert.AreEqual(true, startResult.Success);

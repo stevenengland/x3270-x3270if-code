@@ -96,7 +96,7 @@ namespace x3270if
         {
             if (Running)
             {
-                throw new X3270ifUsageException("Already running");
+                throw new InvalidOperationException("Already running");
             }
 
             // Start it up.

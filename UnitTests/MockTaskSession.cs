@@ -29,6 +29,8 @@ using x3270if;
 using System.Net;
 using System.Net.Sockets;
 using Mock;
+using Microsoft.Win32.SafeHandles;
+using System.Runtime.InteropServices;
 
 namespace UnitTests
 {
@@ -43,8 +45,15 @@ namespace UnitTests
     /// <summary>
     /// Task-based mock back-end
     /// </summary>
-    public class MockTaskSession : Session
+    public class MockTaskSession : Session, IDisposable
     {
+        // Has Dispose already been called? 
+        private bool disposed = false;
+
+        // SafeHandle instance for Dispose.
+        private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+
+        // The back end
         private MockBackEnd mockBackEnd;
 
         public MockTaskSession(MockTaskConfig config = null) : base(config, new MockBackEnd(config))
@@ -82,6 +91,37 @@ namespace UnitTests
         {
             set { mockBackEnd.CodePageFail = value; }
         }
+
+
+        // Dispose methods.
+        /// <summary>
+        /// Public Dispose method.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Private Dispose method.
+        /// </summary>
+        /// <param name="disposing">true if called from public Dispose.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                handle.Dispose();
+                // Free other managed objects.
+                Close();
+            }
+            disposed = true;
+        }
     }
 
     /// <summary>
@@ -90,6 +130,12 @@ namespace UnitTests
     /// </summary>
     public class MockBackEnd : IBackEnd
     {
+        // Has Dispose already been called? 
+        private bool disposed = false;
+
+        // SafeHandle instance for Dispose.
+        private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+
         // Configuration.
         private MockTaskConfig Config;
 
@@ -218,9 +264,33 @@ namespace UnitTests
             }
         }
 
+        /// <summary>
+        /// Public Dispose method.
+        /// </summary>
         public void Dispose()
         {
-            Close();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Internal Dispose method.
+        /// </summary>
+        /// <param name="disposing">true if called from public Dispose method</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                handle.Dispose();
+                // Free other managed objects.
+                Close();
+            }
+            disposed = true;
         }
     }
 }

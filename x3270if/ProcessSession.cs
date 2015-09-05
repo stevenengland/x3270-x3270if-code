@@ -104,10 +104,10 @@ namespace x3270if
     public class ProcessBackEnd : IBackEnd
     {
         // Has Dispose already been called? 
-        private bool Disposed = false;
+        private bool disposed = false;
 
         // Instantiate a SafeHandle instance.
-        private SafeHandle Handle = new SafeFileHandle(IntPtr.Zero, true);
+        private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
 
         // TCP client (socket)
         private TcpClient Client = null;
@@ -140,20 +140,20 @@ namespace x3270if
         /// Internal Dispose method.
         /// </summary>
         /// <param name="disposing">true if called from public Dispose method</param>
-        protected void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposed)
+            if (disposed)
             {
                 return;
             }
 
             if (disposing)
             {
-                Handle.Dispose();
+                handle.Dispose();
                 // Free other managed objects.
                 Close();
             }
-            Disposed = true;
+            disposed = true;
         }
 
         /// <summary>

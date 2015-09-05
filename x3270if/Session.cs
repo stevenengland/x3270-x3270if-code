@@ -29,13 +29,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 
 namespace x3270if
 {
     /// <summary>
     /// Base exception class for exception mode. Nothing should use this class directly.
     /// </summary>
-    public class X3270ifException : Exception
+    [Serializable]
+    public class X3270ifException : Exception, ISerializable
     {
         /// <summary>
         /// Basic constructor.
@@ -50,6 +52,7 @@ namespace x3270if
     /// Exception class for command exceptions (generated when a command fails and
     /// exception mode is set).
     /// </summary>
+    [Serializable]
     public class X3270ifCommandException : X3270ifException
     {
         /// <summary>
@@ -62,23 +65,9 @@ namespace x3270if
     }
 
     /// <summary>
-    /// Exception class for x3270if operational errors (using things the wrong way).
-    /// </summary>
-    public class X3270ifUsageException : X3270ifException
-    {
-        /// <summary>
-        /// Basic constructor.
-        /// </summary>
-        /// <param name="explanation">Explanatory text.</param>
-        public X3270ifUsageException(string explanation)
-            : base(explanation)
-        {
-        }
-    }
-
-    /// <summary>
     /// Exception class for x3270if operational errors (internal operation failed).
     /// </summary>
+    [Serializable]
     public class X3270ifInternalException : X3270ifException
     {
         /// <summary>
@@ -255,7 +244,7 @@ namespace x3270if
         {
             if (!Running)
             {
-                throw new X3270ifUsageException("Not running");
+                throw new InvalidOperationException("Not running");
             }
             return Status.Split(' ')[(int)index];
         }
