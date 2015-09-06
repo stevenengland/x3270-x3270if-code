@@ -37,12 +37,13 @@ namespace x3270if
     namespace Attributes
     {
         /// <summary>
-        /// 3270 intensity enumeration (basic field attribute)
+        /// 3270 intensity enumeration. Used by the <see cref="DisplayBuffer"/> class.
+        /// <para>These come from a Start Field order or the 3270 attributes of an extended field.</para>
         /// </summary>
         public enum FieldIntensity : byte
         {
             /// <summary>
-            /// Normal.
+            /// Normal intensity, not lightpen selectable.
             /// </summary>
             Normal = 0x00,
             /// <summary>
@@ -54,13 +55,14 @@ namespace x3270if
             /// </summary>
             HighlightedSelectable = 0x08,
             /// <summary>
-            /// Invisible (passwords).
+            /// Invisible (a password, e.g.).
             /// </summary>
             Zero = 0x0c
         }
 
         /// <summary>
-        /// Miscellaneous field attribute flags.
+        /// Miscellaneous field attribute flags. Used by the <see cref="DisplayBuffer"/> class.
+        /// <para>These come from a Start Field order or the 3270 attributes of an extended field.</para>
         /// </summary>
         [Flags]
         public enum FieldFlags : byte
@@ -89,6 +91,8 @@ namespace x3270if
 
         /// <summary>
         /// A foreground or background color.
+        /// Used by <see cref="ExtendedAttribute.Foreground"/> and <see cref="ExtendedAttribute.Background"/>
+        /// in the <see cref="DisplayBuffer"/> class.
         /// </summary>
         public enum FieldColor : byte
         {
@@ -97,7 +101,7 @@ namespace x3270if
             /// </summary>
             Default = 0,
             /// <summary>
-            /// Neutral black (black on a screen, white on a printer)
+            /// Neutral black (black on a screen, white on a printer).
             /// </summary>
             NeutralBlack = 0xf0,
             /// <summary>
@@ -125,7 +129,7 @@ namespace x3270if
             /// </summary>
             Yellow = 0xf6,
             /// <summary>
-            /// Neutral white (white on a screen, black on a printer)
+            /// Neutral white (white on a screen, black on a printer).
             /// </summary>
             NeutralWhite = 0xf7,
             /// <summary>
@@ -163,50 +167,50 @@ namespace x3270if
         }
 
         /// <summary>
-        /// An extended attribute.
+        /// An extended attribute. Used by the <see cref="DisplayBuffer"/> class.
         /// </summary>
         public enum ExtendedAttribute : byte
         {
             /// <summary>
-            /// Standard 3270 field attributes.
+            /// Standard 3270 field attributes (see <see cref="FieldIntensity"/> and <see cref="FieldFlags"/>).
             /// </summary>
             Ea3270 = 0xc0,
             /// <summary>
-            /// Field validation.
+            /// Field validation (see <see cref="Validation"/>).
             /// </summary>
             Validation = 0xc1,
             /// <summary>
-            /// Field outlining.
+            /// Field outlining (see <see cref="Outlining"/>).
             /// </summary>
             Outlining = 0xc2,
             /// <summary>
-            /// Field highlighting.
+            /// Field highlighting (see <see cref="Highlighting"/>).
             /// </summary>
             Highlighting = 0x41,
             /// <summary>
-            /// Foreground color.
+            /// Foreground color (see <see cref="FieldColor"/>).
             /// </summary>
             Foreground = 0x42,
             /// <summary>
-            /// Character set.
+            /// Character set (see <see cref="CharacterSet"/>).
             /// </summary>
             CharacterSet = 0x43,
             /// <summary>
-            /// Background color.
+            /// Background color (see <see cref="FieldColor"/>).
             /// </summary>
             Background = 0x45,
             /// <summary>
-            /// Field transparency.
+            /// Field transparency (see <see cref="Transparency"/>).
             /// </summary>
             Transparency = 0x46,
             /// <summary>
-            /// Input control enable.
+            /// Input control enable (see <see cref="InputControl"/>).
             /// </summary>
             InputControl = 0xfe
         }
 
         /// <summary>
-        /// A character set.
+        /// A character set. Used by <see cref="ExtendedAttribute.CharacterSet"/> in the <see cref="DisplayBuffer"/> class.
         /// </summary>
         public enum CharacterSet : byte
         {
@@ -215,11 +219,11 @@ namespace x3270if
             /// </summary>
             Default = 0,
             /// <summary>
-            /// APL and line drawing (EBCDIC).
+            /// APL and line drawing.
             /// </summary>
             Apl = 0xf1,
             /// <summary>
-            /// DEC line drawing (NVT mode, x3270 extension).
+            /// DEC line drawing (an x3270 NVT-mode extension).
             /// </summary>
             LineDrawing = 0xf2,
             /// <summary>
@@ -229,7 +233,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// The Validation extended attribute.
+        /// The Validation extended attribute. Used by <see cref="ExtendedAttribute.Validation"/> in the <see cref="DisplayBuffer"/> class.
         /// </summary>
         public enum Validation : byte
         {
@@ -252,7 +256,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// The Outlining extended attribute (ORed together).
+        /// The Outlining extended attribute (ORed together). Used by <see cref="ExtendedAttribute.Outlining"/> in the <see cref="DisplayBuffer"/> class.
         /// </summary>
         public enum Outlining : byte
         {
@@ -279,7 +283,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// The Highlighting extended attribute.
+        /// The Highlighting extended attribute. Used by <see cref="ExtendedAttribute.Highlighting"/> in the <see cref="DisplayBuffer"/> class.
         /// </summary>
         public enum Highlighting : byte
         {
@@ -310,7 +314,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// The Transparency extended attribute.
+        /// The Transparency extended attribute. Used by <see cref="ExtendedAttribute.Transparency"/> in the <see cref="DisplayBuffer"/> class.
         /// </summary>
         public enum Transparency : byte
         {
@@ -333,7 +337,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// The InputControl extended attribute.
+        /// The InputControl extended attribute. Used by <see cref="ExtendedAttribute.InputControl"/> in the <see cref="DisplayBuffer"/> class.
         /// </summary>
         public enum InputControl : byte
         {
@@ -349,7 +353,7 @@ namespace x3270if
     }
 
     /// <summary>
-    /// Types of display buffer data (one position).
+    /// Types of display buffer data (one position). Used by the <see cref="DisplayBuffer"/> class.
     /// </summary>
     public enum PositionType
     {
@@ -362,7 +366,7 @@ namespace x3270if
         /// </summary>
         Ebcdic,
         /// <summary>
-        /// The right-hand side of a DBCS character.
+        /// The right-hand side of a DBCS character. Effectively empty -- the left-hand side (the preceding position) is an ASCII or EBCDIC character with the DBCS character code.
         /// </summary>
         DbcsRight,
         /// <summary>
@@ -372,7 +376,7 @@ namespace x3270if
     }
         
     /// <summary>
-    /// 3270 field attributes.
+    /// 3270 field attributes. Used by the <see cref="DisplayBuffer"/> class.
     /// </summary>
     public class Attrs
     {
@@ -510,8 +514,20 @@ namespace x3270if
     }
 
     /// <summary>
-    /// Helper class for manipulating the output of ReadBuffer.
+    /// Helper class for manipulating the output of <see cref="Session.ReadBuffer"/>.
     /// </summary>
+    /// <remarks>
+    /// This class can be used to optimize interactions with the emulator and host.
+    /// Every time the application sends an AID to the host, it can call <see cref="Session.ReadBuffer"/> and construct a
+    /// DisplayBuffer from the result. Then it can interrogate the contents of the DisplayBuffer instead of asking the host
+    /// for each field it wants to inspect. This eliminates the latency of multiple requests to the emulator, as well as
+    /// ensuring that the screen image being interrogated for one field is the same image as queried for others (i.e., that this
+    /// is one screen drawn by the host).
+    /// <para>If the host has not yet finished drawing the screen, the application can call the <see cref="Session.Wait"/> method
+    /// with the parameter <see cref="x3270if.WaitMode.Output"/>, waiting for the host to update the screen. Then it
+    /// can call <see cref="Session.ReadBuffer"/> again, construct a new DisplayBuffer, and continue.
+    /// </para>
+    /// </remarks>
     public class DisplayBuffer
     {
         /// <summary>
@@ -979,7 +995,7 @@ namespace x3270if
         /// Translate one screen position to a character.
         /// </summary>
         /// <param name="c">Display position to translate</param>
-        /// <returns>character, or null if position is to be skipped</returns>
+        /// <returns>Character, or null if position contains a hole.</returns>
         private char? TranslatePosition(DisplayPosition c)
         {
             switch (c.Type)
@@ -1010,22 +1026,22 @@ namespace x3270if
 
         #region Ascii methods
         /// <summary>
-        /// Return an ASCII string at the cursor address.
+        /// Translate a DisplayBuffer to a text string, starting at the cursor address.
         /// </summary>
-        /// <param name="length">Length of field to return</param>
-        /// <returns>String</returns>
+        /// <param name="length">Length of field to return. Can wrap rows.</param>
+        /// <returns>Text.</returns>
         public string Ascii(int length)
         {
             return Ascii(cursorRow, cursorColumn, length);
         }
 
         /// <summary>
-        /// Return an ASCII string starting at the specified address.
+        /// Translate a DisplayBuffer to a text string, starting at the specified address.
         /// </summary>
-        /// <param name="row">Starting row</param>
-        /// <param name="column">Starting column</param>
-        /// <param name="length">Length of field></param>
-        /// <returns>String</returns>
+        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="length">Length of field.</param>
+        /// <returns>Text.</returns>
         public String Ascii(int row, int column, int length)
         {
             if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
@@ -1071,12 +1087,12 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Translate a ReadBuffer region to ASCII.
+        /// Translate a rectangular region of a DisplayBuffer to text.
         /// </summary>
-        /// <param name="row">Starting row</param>
-        /// <param name="column">Starting column</param>
-        /// <param name="rows">Number of rows</param>
-        /// <param name="columns">Number of columns</param>
+        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="rows">Number of rows.</param>
+        /// <param name="columns">Number of columns.</param>
         /// <returns>Array of strings, one entry per row</returns>
         public string[] Ascii(int row, int column, int rows, int columns)
         {
@@ -1122,9 +1138,9 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Translate an entire ASCII ReadBuffer buffer to simple ASCII.
+        /// Translate an entire DisplayBuffer buffer to text.
         /// </summary>
-        /// <returns>String</returns>
+        /// <returns>Text array.</returns>
         public string[] Ascii()
         {
             return Ascii(Origin, Origin, rows, columns);
@@ -1399,11 +1415,12 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Return the length of the field that starts with the field attribute at the specified
-        /// coordinates. The length does not include the field attribute itself, so it can be zero.
+        /// Returns the length of the field that includes the specified
+        /// coordinates.
         /// </summary>
-        /// <param name="c">coordinates</param>
-        /// <returns>Field length</returns>
+        /// <param name="c">Coordinates.</param>
+        /// <returns>Field length. The length does not include the field attribute itself, so it can be zero.</returns>
+        /// <remarks>If the screen is unformatted, returns the size of the entire screen.</remarks>
         public int FieldLength(Coordinates c)
         {
             // Work backwards until we find the field attribute, or wrap.
@@ -1430,11 +1447,13 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Field length that uses a simple row and column.
+        /// Returns the length of the field that includes the specified
+        /// row and column location.
         /// </summary>
-        /// <param name="row">Row</param>
-        /// <param name="column">Column</param>
-        /// <returns>Field length</returns>
+        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <returns>Field length. The length does not include the field attribute itself, so it can be zero.</returns>
+        /// <remarks>If the screen is unformatted, returns the size of the entire screen.</remarks>
         public int FieldLength(int row, int column)
         {
             return FieldLength(new Coordinates(this, row, column));
@@ -1478,25 +1497,25 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Convenience method for checking screen contents.
+        /// Convenience method for checking screen contents (exact match).
         /// </summary>
-        /// <param name="row">Row</param>
-        /// <param name="column">Column</param>
-        /// <param name="text">Text to compare</param>
-        /// <returns>true if the screen at that location equals the string</returns>
+        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="text">Text to compare.</param>
+        /// <returns>True if the DisplayBuffer at that location contains that string.</returns>
         public bool AsciiEquals(int row, int column, string text)
         {
             return Ascii(row, column, text.Length) == text;
         }
 
         /// <summary>
-        /// Convenience method for checking screen contents.
+        /// Convenience method for checking screen contents (pattern match).
         /// </summary>
-        /// <param name="row">Row</param>
-        /// <param name="column">Column</param>
-        /// <param name="length">Length of region</param>
-        /// <param name="regex">Regular expression to match against</param>
-        /// <returns>true if the regex matches the region of the screen</returns>
+        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="length">Length of region.</param>
+        /// <param name="regex">Regular expression to match against. (See <see cref="System.Text.RegularExpressions"/>.)</param>
+        /// <returns>True if the regex matches the region of the DisplayBuffer.</returns>
         public bool AsciiMatches(int row, int column, int length, string regex)
         {
             return Regex.Matches(Ascii(row, column, length), regex).Count != 0;

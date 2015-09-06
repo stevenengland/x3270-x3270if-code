@@ -36,13 +36,13 @@ namespace x3270if
         /// <summary>
         /// Coordinate (row and column) origin.
         /// <para>The default is 0 to conform to how the emulator represents coordinates, but it
-        /// can be set to 1 to conform to how the on-screen indicator and emulator trace files display them.
+        /// can be set to 1 to match how the on-screen indicator and emulator trace files display them.
         /// </para>
         /// </summary>
         /// <remarks>
         /// This parameter changes the behavior of all methods and attributes that refer to row and
-        /// column coordinates. When set to 1, it causes all coordinates to be transparently translated from
-        /// 1-origin (as supplied by and reported to the user of these classes) to 0-origin (as required by
+        /// column coordinates. When set to 1, it causes all coordinates to be transparently translated between
+        /// 1-origin (supplied by and reported to the user of these classes) and 0-origin (as required by
         /// the emulator scripting API). This corrects the historical mismatch between the scripting API and
         /// the on-screen display and trace files.
         /// </remarks>
@@ -69,7 +69,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// If nonzero, all I/O requests that don't specify a timeout use this value as a timeout.
+        /// If nonzero, all <see cref="Session.Io"/> requests that don't specify a timeout use this value as a timeout. In milliseconds.
         /// </summary>
         public int DefaultTimeoutMsec
         {
@@ -79,7 +79,7 @@ namespace x3270if
 
         private int handshakeTimeoutMsec = 5000;
         /// <summary>
-        /// Timeout for the initial handshake with the emulator.
+        /// Timeout for the initial handshake with the emulator, in milliseconds.
         /// </summary>
         public int HandshakeTimeoutMsec
         {
@@ -95,7 +95,7 @@ namespace x3270if
 
         private int? connectRetryMsec = null;
         /// <summary>
-        /// Connect retry delay.
+        /// Connect retry delay, in milliseconds.
         /// </summary>
         public int? ConnectRetryMsec
         {
