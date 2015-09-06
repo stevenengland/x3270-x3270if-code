@@ -1117,7 +1117,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Translate an enture ASCII ReadBuffer buffer to simple ASCII.
+        /// Translate an entire ASCII ReadBuffer buffer to simple ASCII.
         /// </summary>
         /// <returns>String</returns>
         public string[] Ascii()
@@ -1312,7 +1312,7 @@ namespace x3270if
             /// </summary>
             /// <param name="c1">First coordinates.</param>
             /// <param name="c2">Second coordinates.</param>
-            /// <returns></returns>
+            /// <returns>true if c1 &gt; c2</returns>
             public static bool operator> (Coordinates c1, Coordinates c2)
             {
                 if (c1 == null)
@@ -1331,7 +1331,7 @@ namespace x3270if
             /// </summary>
             /// <param name="c1">First coordinates.</param>
             /// <param name="c2">Second coordinates.</param>
-            /// <returns></returns>
+            /// <returns>true if c1 &lt; c2.</returns>
             public static bool operator< (Coordinates c1, Coordinates c2)
             {
                 if (c1 == null)
@@ -1348,7 +1348,7 @@ namespace x3270if
             /// <summary>
             /// Clone method.
             /// </summary>
-            /// <returns>New copy</returns>
+            /// <returns>New copy.</returns>
             public Coordinates Clone()
             {
                 return new Coordinates(this);
