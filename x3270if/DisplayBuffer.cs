@@ -448,6 +448,253 @@ namespace x3270if
     }
 
     /// <summary>
+    /// A row and column for specifying a location in a display buffer.
+    /// </summary>
+    public class Coordinates : IEquatable<Coordinates>
+    {
+        private int rows;
+        private int columns;
+        private int origin;
+
+        // The row, 0-origin.
+        private int row;
+
+        /// <summary>
+        /// Row.
+        /// </summary>
+        public int Row
+        {
+            get { return row + origin; }
+            set
+            {
+                value -= origin;
+                if (value < 0 || value >= rows)
+                {
+                    throw new ArgumentOutOfRangeException("value");
+                }
+                row = value;
+            }
+        }
+
+        // The column, zero-origin.
+        private int column;
+        /// <summary>
+        /// Column.
+        /// </summary>
+        public int Column
+        {
+            get { return column + origin; }
+            set
+            {
+                value -= origin;
+                if (value < 0 || value >= columns)
+                {
+                    throw new ArgumentOutOfRangeException("value");
+                }
+                column = value;
+            }
+        }
+
+        /// <summary>
+        /// Constructor, given a DisplayBuffer and an optional initial row and column.
+        /// </summary>
+        /// <param name="displayBuffer">Dispay buffer to get screen dimensions and origin from.</param>
+        /// <param name="row">Optional initial row, defaults to <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Optional initial column, defaults to <see cref="x3270if.Config.Origin"/>.</param>
+        public Coordinates(DisplayBuffer displayBuffer, int? row = null, int? column = null)
+        {
+            rows = displayBuffer.Rows;
+            columns = displayBuffer.Columns;
+            origin = displayBuffer.Origin;
+
+            Row = row ?? origin;
+            Column = column ?? origin;
+        }
+
+        /// <summary>
+        /// Cloning constructor.
+        /// </summary>
+        /// <param name="c">Coordinates to clone.</param>
+        public Coordinates(Coordinates c)
+        {
+            this.rows = c.rows;
+            this.columns = c.columns;
+            this.origin = c.origin;
+
+            this.Row = c.Row;
+            this.Column = c.Column;
+        }
+
+        /// <summary>
+        /// Increment operator.
+        /// </summary>
+        /// <param name="c">Coordinates to increment</param>
+        /// <returns>New incremented coordinates, wrapped if necessary.</returns>
+        public static Coordinates operator ++(Coordinates c)
+        {
+            Coordinates ret = new Coordinates(c);
+
+            if (++ret.column >= c.columns)
+            {
+                ret.column = 0;
+                if (++ret.row >= c.rows)
+                {
+                    ret.row = 0;
+                }
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Decrement operator.
+        /// </summary>
+        /// <param name="c">Coordinates to decrement.</param>
+        /// <returns>New decremented coordinates, wrapped if necessary.</returns>
+        public static Coordinates operator --(Coordinates c)
+        {
+            Coordinates ret = new Coordinates(c);
+
+            if (--ret.column < 0)
+            {
+                ret.column = c.columns - 1;
+                if (--ret.row < 0)
+                {
+                    ret.row = c.rows - 1;
+                }
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Equality operator.
+        /// </summary>
+        /// <param name="c1">First coordinates</param>
+        /// <param name="c2">Second coordinates</param>
+        /// <returns>true if they are equal</returns>
+        public static bool operator ==(Coordinates c1, Coordinates c2)
+        {
+            if (ReferenceEquals(c1, c2))
+            {
+                return true;
+            }
+            if ((object)c1 == null || (object)c2 == null)
+            {
+                return false;
+            }
+            return c1.row == c2.row && c1.column == c2.column;
+        }
+
+        /// <summary>
+        /// Inequality operator.
+        /// </summary>
+        /// <param name="c1">First coordinates.</param>
+        /// <param name="c2">Second coordinates.</param>
+        /// <returns>True if they are unequal.</returns>
+        public static bool operator !=(Coordinates c1, Coordinates c2)
+        {
+            return !(c1 == c2);
+        }
+
+        /// <summary>
+        /// Equality method.
+        /// </summary>
+        /// <param name="other">Other coordinates.</param>
+        /// <returns>True if they are equal.</returns>
+        public bool Equals(Coordinates other)
+        {
+            return this == other;
+        }
+
+        /// <summary>
+        /// Equality method.
+        /// </summary>
+        /// <param name="other">Other coordinates (which might not be a Coordinates object)</param>
+        /// <returns>True if they are equal.</returns>
+        public override bool Equals(object other)
+        {
+            var otherCoordinate = other as Coordinates;
+            if (otherCoordinate == null)
+            {
+                return false;
+            }
+            return this == otherCoordinate;
+        }
+
+        /// <summary>
+        /// Hash generator for Coordinates.
+        /// </summary>
+        /// <returns>Hash value.</returns>
+        public override int GetHashCode()
+        {
+            return Row ^ Column;
+        }
+
+        /// <summary>
+        /// Greater-than operator.
+        /// </summary>
+        /// <param name="c1">First coordinates.</param>
+        /// <param name="c2">Second coordinates.</param>
+        /// <returns>True if c1 &gt; c2.</returns>
+        public static bool operator >(Coordinates c1, Coordinates c2)
+        {
+            if (c1 == null)
+            {
+                throw new ArgumentNullException("c1");
+            }
+            if (c2 == null)
+            {
+                throw new ArgumentNullException("c2");
+            }
+            return c1.BufferAddress > c2.BufferAddress;
+        }
+
+        /// <summary>
+        /// Less-than operator.
+        /// </summary>
+        /// <param name="c1">First coordinates.</param>
+        /// <param name="c2">Second coordinates.</param>
+        /// <returns>True if c1 &lt; c2.</returns>
+        public static bool operator <(Coordinates c1, Coordinates c2)
+        {
+            if (c1 == null)
+            {
+                throw new ArgumentNullException("c1");
+            }
+            if (c2 == null)
+            {
+                throw new ArgumentNullException("c2");
+            }
+            return c1.BufferAddress < c2.BufferAddress;
+        }
+
+        /// <summary>
+        /// Clone method.
+        /// </summary>
+        /// <returns>New copy.</returns>
+        public Coordinates Clone()
+        {
+            return new Coordinates(this);
+        }
+
+        /// <summary>
+        /// Buffer address (0-origin index into screen buffer).
+        /// </summary>
+        public int BufferAddress
+        {
+            get { return (row * columns) + column; }
+        }
+
+        /// <summary>
+        /// String conversion method.
+        /// </summary>
+        /// <returns>Human-readable text</returns>
+        public override string ToString()
+        {
+            return "[" + Row + "," + Column + "]";
+        }
+    }
+
+    /// <summary>
     /// Contents of one position in the 3270 display buffer.
     /// Consists of the Type numeration, restricted methods to get the ASCII or EBCDIC character, and
     /// a set of Attributes.
@@ -544,9 +791,25 @@ namespace x3270if
             get { return ioResult.Origin; }
         }
 
-        // Screen dimensions.
-        private int rows, columns;
-        private int cursorRow, cursorColumn;
+        /// <summary>
+        /// Number of rows on the screen.
+        /// </summary>
+        public int Rows { get; private set; }
+
+        /// <summary>
+        /// Number of columns on the screen.
+        /// </summary>
+        public int Columns { get; private set; }
+
+        /// <summary>
+        /// Cursor row, using the session's <see cref="x3270if.Config.Origin"/>.
+        /// </summary>
+        public int CursorRow { get; private set; }
+
+        /// <summary>
+        /// Cursor column, using the session's <see cref="x3270if.Config.Origin"/>.
+        /// </summary>
+        public int CursorColumn { get; private set; }
 
         // Encoding.
         private Encoding Encoding = Encoding.UTF8;
@@ -585,16 +848,16 @@ namespace x3270if
         {
             ioResult = r;
             string[] statusFields = r.StatusLine.Split(' ');
-            rows = int.Parse(statusFields[(int)StatusLineField.Rows]);
-            columns = int.Parse(statusFields[(int)StatusLineField.Columns]);
-            cursorRow = int.Parse(statusFields[(int)StatusLineField.CursorRow]);
-            cursorColumn = int.Parse(statusFields[(int)StatusLineField.CursorColumn]);
+            Rows = int.Parse(statusFields[(int)StatusLineField.Rows]);
+            Columns = int.Parse(statusFields[(int)StatusLineField.Columns]);
+            CursorRow = int.Parse(statusFields[(int)StatusLineField.CursorRow]);
+            CursorColumn = int.Parse(statusFields[(int)StatusLineField.CursorColumn]);
             Encoding = r.Encoding;
-            ContentsArray = new DisplayPosition[rows, columns];
+            ContentsArray = new DisplayPosition[Rows, Columns];
             Attrs faAttrs = new Attrs();
             Attrs saAttrs = new Attrs();
 
-            for (int row = 0; row < rows; row++)
+            for (int row = 0; row < Rows; row++)
             {
                 parseRow(r.Result[row], row, ref faAttrs, ref saAttrs);
             }
@@ -946,9 +1209,9 @@ namespace x3270if
             FieldColor bg = FieldColor.NeutralBlack;
             Console.ForegroundColor = ColorMap(fg, true);
             Console.BackgroundColor = ColorMap(bg, false);
-            for (int row = 0; row < rows; row++)
+            for (int row = 0; row < Rows; row++)
             {
-                for (int column = 0; column < columns; column++)
+                for (int column = 0; column < Columns; column++)
                 {
                     var c = ContentsArray[row, column];
                     var a = c.Attrs;
@@ -1032,7 +1295,7 @@ namespace x3270if
         /// <returns>Text.</returns>
         public string Ascii(int length)
         {
-            return Ascii(cursorRow, cursorColumn, length);
+            return Ascii(CursorRow, CursorColumn, length);
         }
 
         /// <summary>
@@ -1050,15 +1313,15 @@ namespace x3270if
             }
             row -= Origin;
             column -= Origin;
-            if (row < 0 || row >= rows)
+            if (row < 0 || row >= Rows)
             {
                 throw new ArgumentOutOfRangeException("row");
             }
-            if (column < 0 || column >= columns)
+            if (column < 0 || column >= Columns)
             {
                 throw new ArgumentOutOfRangeException("column");
             }
-            if (length < 0 || (row * columns) + column + length > rows * columns)
+            if (length < 0 || (row * Columns) + column + length > Rows * Columns)
             {
                 throw new ArgumentOutOfRangeException("length");
             }
@@ -1077,7 +1340,7 @@ namespace x3270if
                 {
                     sb.Append((char)r);
                 }
-                if (++curColumn >= columns)
+                if (++curColumn >= Columns)
                 {
                     curRow++;
                     curColumn = 0;
@@ -1102,19 +1365,19 @@ namespace x3270if
             }
             row -= Origin;
             column -= Origin;
-            if (row < 0 || row >= this.rows)
+            if (row < 0 || row >= this.Rows)
             {
                 throw new ArgumentOutOfRangeException("row");
             }
-            if (column < 0 || column >= this.columns)
+            if (column < 0 || column >= this.Columns)
             {
                 throw new ArgumentOutOfRangeException("column");
             }
-            if (rows <= 0 || row + rows > this.rows)
+            if (rows <= 0 || row + rows > this.Rows)
             {
                 throw new ArgumentOutOfRangeException("rows");
             }
-            if (columns <= 0 || column + columns > this.columns)
+            if (columns <= 0 || column + columns > this.Columns)
             {
                 throw new ArgumentOutOfRangeException("columns");
             }
@@ -1143,255 +1406,10 @@ namespace x3270if
         /// <returns>Text array.</returns>
         public string[] Ascii()
         {
-            return Ascii(Origin, Origin, rows, columns);
+            return Ascii(Origin, Origin, Rows, Columns);
         }
 
-        /// <summary>
-        /// A row and column for specifying a location in a display buffer.
-        /// </summary>
-        public class Coordinates : IEquatable<Coordinates>
-        {
-            private int rows;
-            private int columns;
-            private int origin;
 
-            // The row, 0-origin.
-            private int row;
-
-            /// <summary>
-            /// Row.
-            /// </summary>
-            public int Row
-            {
-                get { return row + origin; }
-                set
-                {
-                    value -= origin;
-                    if (value < 0 || value >= rows)
-                    {
-                        throw new ArgumentOutOfRangeException("value");
-                    }
-                    row = value;
-                }
-            }
-
-            // The column, zero-origin.
-            private int column;
-            /// <summary>
-            /// Column.
-            /// </summary>
-            public int Column
-            {
-                get { return column + origin; }
-                set
-                {
-                    value -= origin;
-                    if (value < 0 || value >= columns)
-                    {
-                        throw new ArgumentOutOfRangeException("value");
-                    }
-                    column = value;
-                }
-            }
-
-            /// <summary>
-            /// Constructor, given a DisplayBuffer and an optional initial row and column.
-            /// </summary>
-            /// <param name="displayBuffer">Dispay buffer to get screen dimensions and origin from.</param>
-            /// <param name="row">Optional initial row, defaults to <see cref="x3270if.Config.Origin"/>.</param>
-            /// <param name="column">Optional initial column, defaults to <see cref="x3270if.Config.Origin"/>.</param>
-            public Coordinates(DisplayBuffer displayBuffer, int? row = null, int? column = null)
-            {
-                rows = displayBuffer.rows;
-                columns = displayBuffer.columns;
-                origin = displayBuffer.Origin;
-
-                Row = row ?? origin;
-                Column = column ?? origin;
-            }
-
-            /// <summary>
-            /// Cloning constructor.
-            /// </summary>
-            /// <param name="c">Coordinates to clone.</param>
-            public Coordinates(Coordinates c)
-            {
-                this.rows = c.rows;
-                this.columns = c.columns;
-                this.origin = c.origin;
-
-                this.Row = c.Row;
-                this.Column = c.Column;
-            }
-
-            /// <summary>
-            /// Increment operator.
-            /// </summary>
-            /// <param name="c">Coordinates to increment</param>
-            /// <returns>New coordinates, incremented and wrapped if necessary</returns>
-            public static Coordinates operator++(Coordinates c)
-            {
-                Coordinates ret = new Coordinates(c);
-
-                if (++ret.column >= c.columns)
-                {
-                    ret.column = 0;
-                    if (++ret.row >= c.rows)
-                    {
-                        ret.row = 0;
-                    }
-                }
-                return ret;
-            }
-
-            /// <summary>
-            /// Decrement operator.
-            /// </summary>
-            /// <param name="c">Coordinates to decrement.</param>
-            /// <returns>New coordinates, decremented and wrapped if necessary</returns>
-            public static Coordinates operator--(Coordinates c)
-            {
-                Coordinates ret = new Coordinates(c);
-
-                if (--ret.column < 0)
-                {
-                    ret.column = c.columns - 1;
-                    if (--ret.row < 0)
-                    {
-                        ret.row = c.rows - 1;
-                    }
-                }
-                return ret;
-            }
-
-            /// <summary>
-            /// Equality operator.
-            /// </summary>
-            /// <param name="c1">First coordinates</param>
-            /// <param name="c2">Second coordinates</param>
-            /// <returns>true if they are equal</returns>
-            public static bool operator==(Coordinates c1, Coordinates c2)
-            {
-                if (ReferenceEquals(c1, c2))
-                {
-                    return true;
-                }
-                if ((object)c1 == null || (object)c2 == null)
-                {
-                    return false;
-                }
-                return c1.row == c2.row && c1.column == c2.column;
-            }
-
-            /// <summary>
-            /// Inequality operator.
-            /// </summary>
-            /// <param name="c1">First coordinates</param>
-            /// <param name="c2">Second coordinates</param>
-            /// <returns>true if they are unequal</returns>
-            public static bool operator!=(Coordinates c1, Coordinates c2)
-            {
-                return !(c1 == c2);
-            }
-
-            /// <summary>
-            /// Equality method.
-            /// </summary>
-            /// <param name="other">Other coordinates</param>
-            /// <returns>true if they are equal</returns>
-            public bool Equals(Coordinates other)
-            {
-                return this == other;
-            }
-
-            /// <summary>
-            /// Equality method.
-            /// </summary>
-            /// <param name="other">Other coordinates (which might not be a Coordinates object)</param>
-            /// <returns>true if they are equal</returns>
-            public override bool Equals(object other)
-            {
-                var otherCoordinate = other as Coordinates;
-                if (otherCoordinate == null)
-                {
-                    return false;
-                }
-                return this == otherCoordinate;
-            }
-
-            /// <summary>
-            /// Hash generator for Coordinates.
-            /// </summary>
-            /// <returns>Hash value</returns>
-            public override int GetHashCode()
-            {
-                return Row ^ Column;
-            }
-
-            /// <summary>
-            /// Greater-than operator.
-            /// </summary>
-            /// <param name="c1">First coordinates.</param>
-            /// <param name="c2">Second coordinates.</param>
-            /// <returns>true if c1 &gt; c2</returns>
-            public static bool operator> (Coordinates c1, Coordinates c2)
-            {
-                if (c1 == null)
-                {
-                    throw new ArgumentNullException("c1");
-                }
-                if (c2 == null)
-                {
-                    throw new ArgumentNullException("c2");
-                }
-                return c1.BufferAddress > c2.BufferAddress;
-            }
-
-            /// <summary>
-            /// Less-than operator.
-            /// </summary>
-            /// <param name="c1">First coordinates.</param>
-            /// <param name="c2">Second coordinates.</param>
-            /// <returns>true if c1 &lt; c2.</returns>
-            public static bool operator< (Coordinates c1, Coordinates c2)
-            {
-                if (c1 == null)
-                {
-                    throw new ArgumentNullException("c1");
-                }
-                if (c2 == null)
-                {
-                    throw new ArgumentNullException("c2");
-                }
-                return c1.BufferAddress < c2.BufferAddress;
-            }
-
-            /// <summary>
-            /// Clone method.
-            /// </summary>
-            /// <returns>New copy.</returns>
-            public Coordinates Clone()
-            {
-                return new Coordinates(this);
-            }
-
-            /// <summary>
-            /// Buffer address (0-origin index into screen buffer).
-            /// </summary>
-            public int BufferAddress
-            {
-                get { return (row * columns) + column; }
-            }
-
-            /// <summary>
-            /// String conversion method.
-            /// </summary>
-            /// <returns>Human-readable text</returns>
-            public override string ToString()
-            {
-                return "[" + Row + "," + Column + "]";
-            }
-        }
 
         /// <summary>
         /// Find the coordinates of the Field Attribute for a given screen position.
@@ -1468,7 +1486,7 @@ namespace x3270if
         {
             if (c == null)
             {
-                c = new Coordinates(this, cursorRow, cursorColumn);
+                c = new Coordinates(this, CursorRow, CursorColumn);
             }
 
             // Find the field that contains this position.
@@ -1476,7 +1494,7 @@ namespace x3270if
             if (faPosition == null)
             {
                 // Unformatted. One big blob.
-                return Ascii(0, 0, rows * columns);
+                return Ascii(0, 0, Rows * Columns);
             }
 
             // Return just this field.

@@ -443,12 +443,12 @@ namespace UnitTests
             var b = new DisplayBuffer(rb);
 
             // Exercise the Coordinate class.
-            var c = new DisplayBuffer.Coordinates(b);
+            var c = new Coordinates(b);
             Assert.Throws<ArgumentOutOfRangeException>(() => { c.Row = -1; });
             Assert.Throws<ArgumentOutOfRangeException>(() => { c.Row = 100; });
             Assert.Throws<ArgumentOutOfRangeException>(() => { c.Column = -1; });
             Assert.Throws<ArgumentOutOfRangeException>(() => { c.Column = 100; });
-            var d = new DisplayBuffer.Coordinates(c);
+            var d = new Coordinates(c);
             Assert.AreEqual(c, d);
             object o = d;
             Assert.AreEqual(c, o);
@@ -466,10 +466,10 @@ namespace UnitTests
             Assert.AreEqual(1, e.Row);
 
             // Test operator overrides.
-            var f = new DisplayBuffer.Coordinates(b);
+            var f = new Coordinates(b);
             Assert.AreEqual(f.Row, 0);
             Assert.AreEqual(f.Column, 0);
-            var g = new DisplayBuffer.Coordinates(b);
+            var g = new Coordinates(b);
             Assert.AreEqual(true, f == g);
             Assert.AreEqual(false, f < g);
             Assert.AreEqual(false, f > g);
@@ -507,10 +507,10 @@ namespace UnitTests
             var b = new DisplayBuffer(rb);
 
             // Exercise the Coordinate class.
-            var c = new DisplayBuffer.Coordinates(b);
+            var c = new Coordinates(b);
             Assert.Throws<ArgumentOutOfRangeException>(() => { c.Row = 0; });
             Assert.Throws<ArgumentOutOfRangeException>(() => { c.Column = 0; });
-            var d = new DisplayBuffer.Coordinates(c);
+            var d = new Coordinates(c);
 
             Assert.AreEqual("[1,1]", c.ToString());
 
@@ -559,7 +559,7 @@ namespace UnitTests
             Assert.AreEqual("ABCDEFGHIJKabcdefghijk", b2.AsciiField());
 
             // Test field length on an unformatted buffer.
-            Assert.AreEqual(22, b2.FieldLength(new DisplayBuffer.Coordinates(b2, 0, 0)));
+            Assert.AreEqual(22, b2.FieldLength(new Coordinates(b2, 0, 0)));
             Assert.AreEqual(22, b2.FieldLength(0, 0));
         }
     }
