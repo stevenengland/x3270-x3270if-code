@@ -214,6 +214,7 @@ namespace x3270ifGuiTest
                 loggedOn = false;
                 worker.ReportProgress(0, new WorkerStatusLoggedOn(false));
                 worker.ReportProgress(0, new WorkerStatusConnected(false));
+                worker.ReportProgress(0, new WorkerStatusScreen(string.Empty));
                 return true;
             }
 
