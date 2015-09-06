@@ -28,320 +28,324 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text.RegularExpressions;
+using x3270if.Attributes;
 
 // Tools for interrogating the result of ReadBuffer.
 
 namespace x3270if
 {
-    /// <summary>
-    /// 3270 intensity enumeration (basic field attribute)
-    /// </summary>
-    public enum FieldIntensity : byte
+    namespace Attributes
     {
         /// <summary>
-        /// Normal.
+        /// 3270 intensity enumeration (basic field attribute)
         /// </summary>
-        Normal = 0x00,
-        /// <summary>
-        /// Normal, lightpen selectable.
-        /// </summary>
-        NormalSelectable = 0x04,
-        /// <summary>
-        /// Highlighted, lightpen selectable.
-        /// </summary>
-        HighlightedSelectable = 0x08,
-        /// <summary>
-        /// Invisible (passwords).
-        /// </summary>
-        Zero = 0x0c
-    }
+        public enum FieldIntensity : byte
+        {
+            /// <summary>
+            /// Normal.
+            /// </summary>
+            Normal = 0x00,
+            /// <summary>
+            /// Normal, lightpen selectable.
+            /// </summary>
+            NormalSelectable = 0x04,
+            /// <summary>
+            /// Highlighted, lightpen selectable.
+            /// </summary>
+            HighlightedSelectable = 0x08,
+            /// <summary>
+            /// Invisible (passwords).
+            /// </summary>
+            Zero = 0x0c
+        }
 
-    /// <summary>
-    /// Miscellaneous field attribute flags.
-    /// </summary>
-    [Flags]
-    public enum FieldFlags : byte
-    {
         /// <summary>
-        /// Default (not protected or intensified).
+        /// Miscellaneous field attribute flags.
         /// </summary>
-        None = 0,
-        /// <summary>
-        /// Protected field (can't type input).
-        /// </summary>
-        Protected = 0x20,
-        /// <summary>
-        /// Numeric input only.
-        /// </summary>
-        Numeric = 0x10,
-        /// <summary>
-        /// Modified.
-        /// </summary>
-        Modified = 0x01,
-        /// <summary>
-        /// All possible flags.
-        /// </summary>
-        All = Protected | Numeric | Modified
-    }
+        [Flags]
+        public enum FieldFlags : byte
+        {
+            /// <summary>
+            /// Default (not protected or intensified).
+            /// </summary>
+            None = 0,
+            /// <summary>
+            /// Protected field (can't type input).
+            /// </summary>
+            Protected = 0x20,
+            /// <summary>
+            /// Numeric input only.
+            /// </summary>
+            Numeric = 0x10,
+            /// <summary>
+            /// Modified.
+            /// </summary>
+            Modified = 0x01,
+            /// <summary>
+            /// All possible flags.
+            /// </summary>
+            All = Protected | Numeric | Modified
+        }
 
-    /// <summary>
-    /// A foreground or background color.
-    /// </summary>
-    public enum FieldColor : byte
-    {
         /// <summary>
-        /// Default.
+        /// A foreground or background color.
         /// </summary>
-        Default = 0,
-        /// <summary>
-        /// Neutral black (black on a screen, white on a printer)
-        /// </summary>
-        NeutralBlack = 0xf0,
-        /// <summary>
-        /// Blue.
-        /// </summary>
-        Blue = 0xf1,
-        /// <summary>
-        /// Red.
-        /// </summary>
-        Red = 0xf2,
-        /// <summary>
-        /// Pink.
-        /// </summary>
-        Pink = 0xf3,
-        /// <summary>
-        /// Green.
-        /// </summary>
-        Green = 0xf4,
-        /// <summary>
-        /// Turquiose.
-        /// </summary>
-        Turquoise = 0xf5,
-        /// <summary>
-        /// Yellow.
-        /// </summary>
-        Yellow = 0xf6,
-        /// <summary>
-        /// Neutral white (white on a screen, black on a printer)
-        /// </summary>
-        NeutralWhite = 0xf7,
-        /// <summary>
-        /// Black.
-        /// </summary>
-        Black = 0xf8,
-        /// <summary>
-        /// Deep blue.
-        /// </summary>
-        DeepBlue = 0xf9,
-        /// <summary>
-        /// Orange.
-        /// </summary>
-        Orange = 0xfa,
-        /// <summary>
-        /// Purple.
-        /// </summary>
-        Purple = 0xfb,
-        /// <summary>
-        /// Pale green.
-        /// </summary>
-        PaleGreen = 0xfc,
-        /// <summary>
-        /// Pale turquiose.
-        /// </summary>
-        PaleTurquoise = 0xfd,
-        /// <summary>
-        /// Gray.
-        /// </summary>
-        Gray = 0xfe,
-        /// <summary>
-        /// White.
-        /// </summary>
-        White = 0xff
-    }
+        public enum FieldColor : byte
+        {
+            /// <summary>
+            /// Default.
+            /// </summary>
+            Default = 0,
+            /// <summary>
+            /// Neutral black (black on a screen, white on a printer)
+            /// </summary>
+            NeutralBlack = 0xf0,
+            /// <summary>
+            /// Blue.
+            /// </summary>
+            Blue = 0xf1,
+            /// <summary>
+            /// Red.
+            /// </summary>
+            Red = 0xf2,
+            /// <summary>
+            /// Pink.
+            /// </summary>
+            Pink = 0xf3,
+            /// <summary>
+            /// Green.
+            /// </summary>
+            Green = 0xf4,
+            /// <summary>
+            /// Turquiose.
+            /// </summary>
+            Turquoise = 0xf5,
+            /// <summary>
+            /// Yellow.
+            /// </summary>
+            Yellow = 0xf6,
+            /// <summary>
+            /// Neutral white (white on a screen, black on a printer)
+            /// </summary>
+            NeutralWhite = 0xf7,
+            /// <summary>
+            /// Black.
+            /// </summary>
+            Black = 0xf8,
+            /// <summary>
+            /// Deep blue.
+            /// </summary>
+            DeepBlue = 0xf9,
+            /// <summary>
+            /// Orange.
+            /// </summary>
+            Orange = 0xfa,
+            /// <summary>
+            /// Purple.
+            /// </summary>
+            Purple = 0xfb,
+            /// <summary>
+            /// Pale green.
+            /// </summary>
+            PaleGreen = 0xfc,
+            /// <summary>
+            /// Pale turquiose.
+            /// </summary>
+            PaleTurquoise = 0xfd,
+            /// <summary>
+            /// Gray.
+            /// </summary>
+            Gray = 0xfe,
+            /// <summary>
+            /// White.
+            /// </summary>
+            White = 0xff
+        }
 
-    /// <summary>
-    /// An extended attribute.
-    /// </summary>
-    public enum ExtendedAttribute : byte
-    {
         /// <summary>
-        /// Standard 3270 field attributes.
+        /// An extended attribute.
         /// </summary>
-        Ea3270 = 0xc0,
-        /// <summary>
-        /// Field validation.
-        /// </summary>
-        Validation = 0xc1,
-        /// <summary>
-        /// Field outlining.
-        /// </summary>
-        Outlining = 0xc2,
-        /// <summary>
-        /// Field highlighting.
-        /// </summary>
-        Highlighting = 0x41,
-        /// <summary>
-        /// Foreground color.
-        /// </summary>
-        Foreground = 0x42,
-        /// <summary>
-        /// Character set.
-        /// </summary>
-        CharacterSet = 0x43,
-        /// <summary>
-        /// Background color.
-        /// </summary>
-        Background = 0x45,
-        /// <summary>
-        /// Field transparency.
-        /// </summary>
-        Transparency = 0x46,
-        /// <summary>
-        /// Input control enable.
-        /// </summary>
-        InputControl = 0xfe
-    }
+        public enum ExtendedAttribute : byte
+        {
+            /// <summary>
+            /// Standard 3270 field attributes.
+            /// </summary>
+            Ea3270 = 0xc0,
+            /// <summary>
+            /// Field validation.
+            /// </summary>
+            Validation = 0xc1,
+            /// <summary>
+            /// Field outlining.
+            /// </summary>
+            Outlining = 0xc2,
+            /// <summary>
+            /// Field highlighting.
+            /// </summary>
+            Highlighting = 0x41,
+            /// <summary>
+            /// Foreground color.
+            /// </summary>
+            Foreground = 0x42,
+            /// <summary>
+            /// Character set.
+            /// </summary>
+            CharacterSet = 0x43,
+            /// <summary>
+            /// Background color.
+            /// </summary>
+            Background = 0x45,
+            /// <summary>
+            /// Field transparency.
+            /// </summary>
+            Transparency = 0x46,
+            /// <summary>
+            /// Input control enable.
+            /// </summary>
+            InputControl = 0xfe
+        }
 
-    /// <summary>
-    /// A character set.
-    /// </summary>
-    public enum CharacterSet : byte
-    {
         /// <summary>
-        /// Default.
+        /// A character set.
         /// </summary>
-        Default = 0,
-        /// <summary>
-        /// APL and line drawing (EBCDIC).
-        /// </summary>
-        Apl = 0xf1,
-        /// <summary>
-        /// DEC line drawing (NVT mode, x3270 extension).
-        /// </summary>
-        LineDrawing = 0xf2,
-        /// <summary>
-        /// DBCS.
-        /// </summary>
-        Dbcs = 0xf8
-    }
+        public enum CharacterSet : byte
+        {
+            /// <summary>
+            /// Default.
+            /// </summary>
+            Default = 0,
+            /// <summary>
+            /// APL and line drawing (EBCDIC).
+            /// </summary>
+            Apl = 0xf1,
+            /// <summary>
+            /// DEC line drawing (NVT mode, x3270 extension).
+            /// </summary>
+            LineDrawing = 0xf2,
+            /// <summary>
+            /// DBCS.
+            /// </summary>
+            Dbcs = 0xf8
+        }
 
-    /// <summary>
-    /// The Validation extended attribute.
-    /// </summary>
-    public enum Validation : byte
-    {
         /// <summary>
-        /// Default.
+        /// The Validation extended attribute.
         /// </summary>
-        Default = 0,
-        /// <summary>
-        /// Mandatory fill.
-        /// </summary>
-        Fill = 0x04,
-        /// <summary>
-        /// Not sure.
-        /// </summary>
-        Entry = 0x02,
-        /// <summary>
-        /// Not sure.
-        /// </summary>
-        Trigger = 0x01
-    }
+        public enum Validation : byte
+        {
+            /// <summary>
+            /// Default.
+            /// </summary>
+            Default = 0,
+            /// <summary>
+            /// Mandatory fill.
+            /// </summary>
+            Fill = 0x04,
+            /// <summary>
+            /// Not sure.
+            /// </summary>
+            Entry = 0x02,
+            /// <summary>
+            /// Not sure.
+            /// </summary>
+            Trigger = 0x01
+        }
 
-    /// <summary>
-    /// The Outlining extended attribute (ORed together).
-    /// </summary>
-    public enum Outlining : byte
-    {
         /// <summary>
-        /// Default.
+        /// The Outlining extended attribute (ORed together).
         /// </summary>
-        Default = 0,
-        /// <summary>
-        /// Line under.
-        /// </summary>
-        Underline = 0x01,
-        /// <summary>
-        /// Line to the left.
-        /// </summary>
-        Left = 0x02,
-        /// <summary>
-        /// Line over.
-        /// </summary>
-        Overline = 0x04,
-        /// <summary>
-        /// Line to the right.
-        /// </summary>
-        Right = 0x08
-    }
+        public enum Outlining : byte
+        {
+            /// <summary>
+            /// Default.
+            /// </summary>
+            Default = 0,
+            /// <summary>
+            /// Line under.
+            /// </summary>
+            Underline = 0x01,
+            /// <summary>
+            /// Line to the left.
+            /// </summary>
+            Left = 0x02,
+            /// <summary>
+            /// Line over.
+            /// </summary>
+            Overline = 0x04,
+            /// <summary>
+            /// Line to the right.
+            /// </summary>
+            Right = 0x08
+        }
 
-    /// <summary>
-    /// The Highlighting extended attribute.
-    /// </summary>
-    public enum Highlighting : byte
-    {
         /// <summary>
-        /// Default.
+        /// The Highlighting extended attribute.
         /// </summary>
-        Default = 0,
-        /// <summary>
-        /// Normal intensity.
-        /// </summary>
-        Normal = 0xf0,
-        /// <summary>
-        /// Blinking.
-        /// </summary>
-        Blink = 0xf1,
-        /// <summary>
-        /// Reverse foreground and background colors.
-        /// </summary>
-        Reverse = 0xf2,
-        /// <summary>
-        /// Underlined.
-        /// </summary>
-        Underscore = 0xf4,
-        /// <summary>
-        /// Intensified.
-        /// </summary>
-        Intensify = 0xf8
-    }
+        public enum Highlighting : byte
+        {
+            /// <summary>
+            /// Default.
+            /// </summary>
+            Default = 0,
+            /// <summary>
+            /// Normal intensity.
+            /// </summary>
+            Normal = 0xf0,
+            /// <summary>
+            /// Blinking.
+            /// </summary>
+            Blink = 0xf1,
+            /// <summary>
+            /// Reverse foreground and background colors.
+            /// </summary>
+            Reverse = 0xf2,
+            /// <summary>
+            /// Underlined.
+            /// </summary>
+            Underscore = 0xf4,
+            /// <summary>
+            /// Intensified.
+            /// </summary>
+            Intensify = 0xf8
+        }
 
-    /// <summary>
-    /// The Transparency extended attribute.
-    /// </summary>
-    public enum Transparency : byte
-    {
         /// <summary>
-        /// Default.
+        /// The Transparency extended attribute.
         /// </summary>
-        Default = 0,
-        /// <summary>
-        /// Text is ORed.
-        /// </summary>
-        Or = 0xf0,
-        /// <summary>
-        /// Text is XORed.
-        /// </summary>
-        Xor = 0xf1,
-        /// <summary>
-        /// Text is opaque.
-        /// </summary>
-        Opaque = 0xff
-    }
+        public enum Transparency : byte
+        {
+            /// <summary>
+            /// Default.
+            /// </summary>
+            Default = 0,
+            /// <summary>
+            /// Text is ORed.
+            /// </summary>
+            Or = 0xf0,
+            /// <summary>
+            /// Text is XORed.
+            /// </summary>
+            Xor = 0xf1,
+            /// <summary>
+            /// Text is opaque.
+            /// </summary>
+            Opaque = 0xff
+        }
 
-    /// <summary>
-    /// The InputControl extended attribute.
-    /// </summary>
-    public enum InputControl : byte
-    {
         /// <summary>
-        /// Default (no input control).
+        /// The InputControl extended attribute.
         /// </summary>
-        Default = 0,
-        /// <summary>
-        /// Input control enabled.
-        /// </summary>
-        Enabled = 0x01
+        public enum InputControl : byte
+        {
+            /// <summary>
+            /// Default (no input control).
+            /// </summary>
+            Default = 0,
+            /// <summary>
+            /// Input control enabled.
+            /// </summary>
+            Enabled = 0x01
+        }
     }
 
     /// <summary>
@@ -516,7 +520,8 @@ namespace x3270if
         private Session.ReadBufferIoResult ioResult;
 
         /// <summary>
-        /// Coordinate origin (0 [default] or 1)
+        /// Coordinate origin (0 [default] or 1).
+        /// This is derived from the session's <see cref="x3270if.Config.Origin"/>.
         /// </summary>
         public int Origin
         {
@@ -538,8 +543,8 @@ namespace x3270if
         /// <summary>
         /// The screen contents, one location.
         /// </summary>
-        /// <param name="row">Row, using the defined origin.</param>
-        /// <param name="column">Column, using the defined origin.</param>
+        /// <param name="row">Row, using the defined <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the defined <see cref="x3270if.Config.Origin"/>.</param>
         /// <returns>Contents of one screen location</returns>
         public DisplayPosition Contents(int row, int column)
         {
@@ -550,7 +555,7 @@ namespace x3270if
         /// The screen contents, one location, indexed by Coordinates.
         /// </summary>
         /// <param name="c">Coordinates</param>
-        /// <returns></returns>
+        /// <returns>Contents of one screen location.</returns>
         public DisplayPosition Contents(Coordinates c)
         {
             return ContentsArray[c.Row - Origin, c.Column - Origin];
@@ -1176,9 +1181,9 @@ namespace x3270if
             /// <summary>
             /// Constructor, given a DisplayBuffer and an optional initial row and column.
             /// </summary>
-            /// <param name="displayBuffer"></param>
-            /// <param name="row"></param>
-            /// <param name="column"></param>
+            /// <param name="displayBuffer">Dispay buffer to get screen dimensions and origin from.</param>
+            /// <param name="row">Optional initial row, defaults to <see cref="x3270if.Config.Origin"/>.</param>
+            /// <param name="column">Optional initial column, defaults to <see cref="x3270if.Config.Origin"/>.</param>
             public Coordinates(DisplayBuffer displayBuffer, int? row = null, int? column = null)
             {
                 rows = displayBuffer.rows;
@@ -1464,6 +1469,8 @@ namespace x3270if
         /// <summary>
         /// Return a field value in ASCII.
         /// </summary>
+        /// <param name="row">Row number, using the object's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column number, using the object's <see cref="x3270if.Config.Origin"/>.</param>
         /// <returns>Text</returns>
         public string AsciiField(int row, int column)
         {

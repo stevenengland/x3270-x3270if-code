@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 namespace x3270if
 {
     /// <summary>
-    /// Flavors of Query().
+    /// Variants of the Query method.
     /// </summary>
     public enum QueryType
 	{
@@ -42,7 +42,7 @@ namespace x3270if
         /// </summary>
         ConnectionState,
         /// <summary>
-        /// The cursor position (row column). These will be translated to the configured origin.
+        /// The cursor position (row column). These will be translated to the session's <see cref="x3270if.Config.Origin"/>.
         /// </summary>
         Cursor,
         /// <summary>

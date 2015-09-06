@@ -28,15 +28,24 @@ using System;
 namespace x3270if
 {
     /// <summary>
-    /// x3270if start-up object
-    /// Defines the charactersistics of a ws3270 session
+    /// x3270if session configuration.
     /// </summary>
     public class Config
     {
         private int origin = 0;
         /// <summary>
         /// Coordinate (row and column) origin.
+        /// <para>The default is 0 to conform to how the emulator represents coordinates, but it
+        /// can be set to 1 to conform to how the on-screen indicator and emulator trace files display them.
+        /// </para>
         /// </summary>
+        /// <remarks>
+        /// This parameter changes the behavior of all methods and attributes that refer to row and
+        /// column coordinates. When set to 1, it causes all coordinates to be transparently translated from
+        /// 1-origin (as supplied by and reported to the user of these classes) to 0-origin (as required by
+        /// the emulator scripting API). This corrects the historical mismatch between the scripting API and
+        /// the on-screen display and trace files.
+        /// </remarks>
         public int Origin
         {
             get { return origin; }
@@ -44,7 +53,7 @@ namespace x3270if
             {
                 if (value < 0 || value > 1)
                 {
-                    throw new ArgumentOutOfRangeException("origin");
+                    throw new ArgumentOutOfRangeException("Origin");
                 }
                 origin = value;
             }

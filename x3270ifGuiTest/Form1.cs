@@ -35,6 +35,7 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Timers;
 using x3270if;
+using x3270if.Transfer;
 
 // GUI app to exercise the x3270if DLL.
 namespace x3270ifGuiTest
@@ -766,40 +767,40 @@ namespace x3270ifGuiTest
             }
 
             // Marshal transfer options
-            var transferParams = new List<TransferParameter>();
-            transferParams.Add(new TransferParameterExistAction(checkedTag<ExistAction>(existsBox).Value));
+            var transferParams = new List<Parameter>();
+            transferParams.Add(new ParameterExistAction(checkedTag<ExistAction>(existsBox).Value));
             if (modeAsciiButton.Checked)
             {
-                transferParams.Add(new TransferParameterAsciiCr(crCheckBox.Checked));
-                transferParams.Add(new TransferParameterAsciiRemap(remapCheckBox.Checked, (codePage != 0) ? (uint?)codePage : null));
+                transferParams.Add(new ParameterAsciiCr(crCheckBox.Checked));
+                transferParams.Add(new ParameterAsciiRemap(remapCheckBox.Checked, (codePage != 0) ? (uint?)codePage : null));
             }
             if (recfmBox.Enabled && !recfmDefaultButton.Checked)
             {
-                transferParams.Add(new TransferParameterSendRecordFormat(checkedTag<RecordFormat>(recfmBox).Value));
+                transferParams.Add(new ParameterSendRecordFormat(checkedTag<RecordFormat>(recfmBox).Value));
                 if (lrecl != 0) {
-                    transferParams.Add(new TransferParameterSendLogicalRecordLength(lrecl));
+                    transferParams.Add(new ParameterSendLogicalRecordLength(lrecl));
                 }
             }
             if (tsoAllocationBox.Enabled && primarySpace != 0)
             {
                 var allocationUnits = checkedTag<TsoAllocationUnits>(tsoAllocationBox).Value;
-                transferParams.Add(new TransferParameterTsoSendAllocation(
+                transferParams.Add(new ParameterTsoSendAllocation(
                     allocationUnits,
                     primarySpace,
                     secondarySpace > 0 ? (uint?)secondarySpace : null,
                     allocationUnits == TsoAllocationUnits.Avblock ? (uint?)avblock : null));
             }
 
-            var hostType = checkedTag<TransferHostType>(hostTypeBox);
+            var hostType = checkedTag<HostType>(hostTypeBox);
             worker.ReportProgress(0, new WorkerStatusProcessing("Transfer in progress"));
 
             // Do the transfer.
             result = session.Transfer(
                 localFileTextBox.Text,
                 hostFileTextBox.Text,
-                checkedTag<TransferDirection>(directionBox).Value,
-                checkedTag<TransferMode>(modeBox).Value,
-                checkedTag<TransferHostType>(hostTypeBox).Value,
+                checkedTag<Direction>(directionBox).Value,
+                checkedTag<Mode>(modeBox).Value,
+                checkedTag<HostType>(hostTypeBox).Value,
                 transferParams);
             if (!result.Success)
             {

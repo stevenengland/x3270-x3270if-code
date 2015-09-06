@@ -27,428 +27,414 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using x3270if.Transfer;
 
 namespace x3270if
 {
-    // From ft.c:
-    //{ "Direction",      NULL, { "receive", "send" } },
-    //{ "HostFile" },
-    //{ "LocalFile" },
-    //{ "Host",           NULL, { "tso", "vm", "cics" } },
-    //{ "Mode",           NULL, { "ascii", "binary" } },
-    //{ "Cr",             NULL, { "auto", "remove",       "add", "keep" } },
-    //{ "Remap",          NULL, { "yes", "no" } },
-    //{ "Exist",          NULL, { "keep", "replace", "append" } },
-    //{ "Recfm",          NULL, { "default", "fixed", "variable", "undefined" } },
-    //{ "Lrecl" },
-    //{ "Blksize" },
-    //{ "Allocation",     NULL, { "default", "tracks", "cylinders", "avblock" } },
-    //{ "PrimarySpace" },
-    //{ "SecondarySpace" },
-    //{ "BufferSize" },
-    //{ "Avblock" },
-    //{ "WindowsCodePage" },
-
-    /// <summary>
-    /// Transfer additional parameter types.
-    /// </summary>
-    public enum TransferParameterType
+    namespace Transfer
     {
         /// <summary>
-        /// Add or remove CRs in an Ascii transfer.
+        /// Transfer additional parameter types.
         /// </summary>
-        AsciiCr,
-        /// <summary>
-        /// Remap the character set in an Ascii transfer.
-        /// </summary>
-        AsciiRemap,
-        /// <summary>
-        /// Specify the action when the destination file exists.
-        /// </summary>
-        ExistAction,
-        /// <summary>
-        /// Specify the record format for the host file.
-        /// </summary>
-        SendRecordFormat,
-        /// <summary>
-        /// Specify the record length for the host file.
-        /// </summary>
-        SendLogicalRecordLength,
-        /// <summary>
-        /// Specify the host file block size.
-        /// </summary>
-        BlockSize,
-        /// <summary>
-        /// Specify the file allocation for TSO.
-        /// </summary>
-        TsoSendAllocation,
-        /// <summary>
-        /// Specify the buffer size for the transfer.
-        /// </summary>
-        BufferSize
-    };
-
-    /// <summary>
-    /// File transfer parameter.
-    /// </summary>
-    public class TransferParameter
-    {
-        /// <summary>
-        /// Type of parameter.
-        /// </summary>
-        public TransferParameterType Type;
-    }
-
-    /// <summary>
-    /// ASCII transfer CR add/remove parameter.
-    /// </summary>
-    public class TransferParameterAsciiCr : TransferParameter
-    {
-        /// <summary>
-        /// Add/remove flag.
-        /// </summary>
-        public bool AddRemove;
-
-        /// <summary>
-        /// Constructor for AsciiCr parameter.
-        /// </summary>
-        /// <param name="addRemove">Add/remove flag.</param>
-        public TransferParameterAsciiCr(bool addRemove)
+        public enum ParameterType
         {
-            Type = TransferParameterType.AsciiCr;
-            AddRemove = addRemove;
+            /// <summary>
+            /// Add or remove CRs in an Ascii transfer.
+            /// </summary>
+            AsciiCr,
+            /// <summary>
+            /// Remap the character set in an Ascii transfer.
+            /// </summary>
+            AsciiRemap,
+            /// <summary>
+            /// Specify the action when the destination file exists.
+            /// </summary>
+            ExistAction,
+            /// <summary>
+            /// Specify the record format for the host file.
+            /// </summary>
+            SendRecordFormat,
+            /// <summary>
+            /// Specify the record length for the host file.
+            /// </summary>
+            SendLogicalRecordLength,
+            /// <summary>
+            /// Specify the host file block size.
+            /// </summary>
+            BlockSize,
+            /// <summary>
+            /// Specify the file allocation for TSO.
+            /// </summary>
+            TsoSendAllocation,
+            /// <summary>
+            /// Specify the buffer size for the transfer.
+            /// </summary>
+            BufferSize
+        };
+
+        /// <summary>
+        /// File transfer parameter.
+        /// <para>This is an abstract base class used to derive specific parameter types.</para>
+        /// </summary>
+        public abstract class Parameter
+        {
+            /// <summary>
+            /// Type of parameter.
+            /// </summary>
+            public ParameterType Type;
         }
-    }
-
-    /// <summary>
-    /// ASCII character set remap parameter.
-    /// </summary>
-    public class TransferParameterAsciiRemap : TransferParameter
-    {
-        /// <summary>
-        /// Remap flag.
-        /// </summary>
-        public bool Remap;
-        /// <summary>
-        /// Optional code page (if Remap is true).
-        /// </summary>
-        public uint? CodePage;
 
         /// <summary>
-        /// Constructor for remap parameter.
+        /// ASCII transfer CR add/remove parameter.
         /// </summary>
-        /// <param name="remap">Remap flag.</param>
-        /// <param name="codePage">Optional code page, if remap is true.</param>
-        public TransferParameterAsciiRemap(bool remap, uint? codePage = null)
+        public class ParameterAsciiCr : Parameter
         {
-            Type = TransferParameterType.AsciiRemap;
-            Remap = remap;
-            if (!remap && codePage.HasValue)
+            /// <summary>
+            /// Add/remove flag. If true, add or remove CRs when transferring text files.
+            /// </summary>
+            public bool AddRemove;
+
+            /// <summary>
+            /// Constructor for AsciiCr parameter.
+            /// </summary>
+            /// <param name="addRemove">Add/remove flag.</param>
+            public ParameterAsciiCr(bool addRemove)
             {
-                throw new ArgumentException("codePage requies remap");
+                Type = ParameterType.AsciiCr;
+                AddRemove = addRemove;
             }
-            if (codePage == 0)
-            {
-                throw new ArgumentOutOfRangeException("codePage");
-            }
-            CodePage = codePage;
         }
-    }
-
-    /// <summary>
-    /// Actions to take when the target file exists.
-    /// </summary>
-    public enum ExistAction
-    {
-        /// <summary>
-        /// Replace the file.
-        /// </summary>
-        Replace,
-        /// <summary>
-        /// Keep the file and abort the transfer.
-        /// </summary>
-        Keep,
-        /// <summary>
-        /// Append to the file.
-        /// </summary>
-        Append
-    }
-
-    /// <summary>
-    /// Exist action parameter.
-    /// </summary>
-    public class TransferParameterExistAction : TransferParameter
-    {
-        /// <summary>
-        /// Exist action.
-        /// </summary>
-        public ExistAction ExistAction;
 
         /// <summary>
-        /// Constructor for exist action.
+        /// ASCII character set remap parameter.
         /// </summary>
-        /// <param name="existAction">Exist action.</param>
-        public TransferParameterExistAction(ExistAction existAction)
+        public class ParameterAsciiRemap : Parameter
         {
-            Type = TransferParameterType.ExistAction;
-            ExistAction = existAction;
-        }
-    }
+            /// <summary>
+            /// Remap flag.
+            /// </summary>
+            public bool Remap;
+            /// <summary>
+            /// Optional code page (if Remap is true).
+            /// </summary>
+            public uint? CodePage;
 
-    /// <summary>
-    /// Host record formats.
-    /// </summary>
-    public enum RecordFormat
-    {
-        /// <summary>
-        /// Fixed-length records.
-        /// </summary>
-        Fixed,
-        /// <summary>
-        /// Variable-length records.
-        /// </summary>
-        Variable,
-        /// <summary>
-        /// Undefined-length records.
-        /// </summary>
-        Undefined
-    }
-
-    /// <summary>
-    /// Host record length format parameter.
-    /// </summary>
-    public class TransferParameterSendRecordFormat : TransferParameter
-    {
-        /// <summary>
-        /// Record format.
-        /// </summary>
-        public RecordFormat RecordFormat;
-
-        /// <summary>
-        /// Constructor for host record format parameter.
-        /// </summary>
-        /// <param name="recordFormat">Record format.</param>
-        public TransferParameterSendRecordFormat(RecordFormat recordFormat)
-        {
-            Type = TransferParameterType.SendRecordFormat;
-            RecordFormat = recordFormat;
-        }
-    }
-
-    /// <summary>
-    /// Host logical record length parameter.
-    /// </summary>
-    public class TransferParameterSendLogicalRecordLength : TransferParameter
-    {
-        /// <summary>
-        /// Record length.
-        /// </summary>
-        public uint RecordLength;
-
-        /// <summary>
-        /// Construtor for host logical record length parameter.
-        /// </summary>
-        /// <param name="recordLength">Record length.</param>
-        public TransferParameterSendLogicalRecordLength(uint recordLength)
-        {
-            if (recordLength == 0)
+            /// <summary>
+            /// Constructor for remap parameter.
+            /// </summary>
+            /// <param name="remap">Remap flag.</param>
+            /// <param name="codePage">Optional code page, if remap is true.</param>
+            public ParameterAsciiRemap(bool remap, uint? codePage = null)
             {
-                throw new ArgumentOutOfRangeException("recordLength");
-            }
-            Type = TransferParameterType.SendLogicalRecordLength;
-            RecordLength = recordLength;
-        }
-    }
-
-    /// <summary>
-    /// Block size parameter.
-    /// </summary>
-    public class TransferParameterBlockSize : TransferParameter
-    {
-        /// <summary>
-        /// Block size.
-        /// </summary>
-        public uint BlockSize;
-
-        /// <summary>
-        /// Constructor for block size parameter.
-        /// </summary>
-        /// <param name="blockSize">Block size.</param>
-        public TransferParameterBlockSize(uint blockSize)
-        {
-            if (blockSize == 0)
-            {
-                throw new ArgumentOutOfRangeException("blockSize");
-            }
-            Type = TransferParameterType.BlockSize;
-            BlockSize = blockSize;
-        }
-    }
-
-    /// <summary>
-    /// TSO file allocation units.
-    /// </summary>
-    public enum TsoAllocationUnits
-    {
-        /// <summary>
-        /// Tracks.
-        /// </summary>
-        Tracks,
-        /// <summary>
-        /// Cylinders.
-        /// </summary>
-        Cylinders,
-        /// <summary>
-        /// Avblocks.
-        /// </summary>
-        Avblock
-    }
-
-    /// <summary>
-    /// TSO file allocation parameter.
-    /// </summary>
-    public class TransferParameterTsoSendAllocation : TransferParameter
-    {
-        /// <summary>
-        /// Allocation units.
-        /// </summary>
-        public TsoAllocationUnits AllocationUnits;
-        /// <summary>
-        /// Primary space.
-        /// </summary>
-        public uint PrimarySpace;
-        /// <summary>
-        /// Secondary space.
-        /// </summary>
-        public uint? SecondarySpace;
-        /// <summary>
-        /// Number of bytes in an avblock.
-        /// </summary>
-        public uint? Avblock;
-
-        /// <summary>
-        /// Constructor for TSO file allocation parameter.
-        /// </summary>
-        /// <param name="allocationUnits">Allocation units.</param>
-        /// <param name="primarySpace">Primary space.</param>
-        /// <param name="secondarySpace">Secondary space.</param>
-        /// <param name="avblock">Bytes per avblock</param>
-        public TransferParameterTsoSendAllocation(
-            TsoAllocationUnits allocationUnits,
-            uint primarySpace,
-            uint? secondarySpace = null,
-            uint? avblock = null)
-        {
-            // The way to create an avblock allocation without secondary space is:
-            //  var x = new TransferParameterTsoSendAllocation(TsoAllocationUnits.Avblock, 100, avblock: 200);
-
-            Type = TransferParameterType.TsoSendAllocation;
-
-            AllocationUnits = allocationUnits;
-            if (primarySpace == 0)
-            {
-                throw new ArgumentOutOfRangeException("primarySpace");
-            }
-            PrimarySpace = primarySpace;
-            if (secondarySpace.HasValue && secondarySpace.Value == 0)
-            {
-                throw new ArgumentOutOfRangeException("secondarySpace");
-            }
-            SecondarySpace = secondarySpace;
-            if (allocationUnits == TsoAllocationUnits.Avblock)
-            {
-                if (!avblock.HasValue)
+                Type = ParameterType.AsciiRemap;
+                Remap = remap;
+                if (!remap && codePage.HasValue)
                 {
-                    throw new ArgumentException("avblock is required");
+                    throw new ArgumentException("codePage requies remap");
                 }
-                if (avblock.Value == 0)
+                if (codePage == 0)
                 {
-                    throw new ArgumentOutOfRangeException("avblock");
+                    throw new ArgumentOutOfRangeException("codePage");
                 }
-                Avblock = avblock;
+                CodePage = codePage;
             }
-            else
+        }
+
+        /// <summary>
+        /// Actions to take when the target file exists.
+        /// </summary>
+        public enum ExistAction
+        {
+            /// <summary>
+            /// Replace the file.
+            /// </summary>
+            Replace,
+            /// <summary>
+            /// Keep the file and abort the transfer.
+            /// </summary>
+            Keep,
+            /// <summary>
+            /// Append to the file.
+            /// </summary>
+            Append
+        }
+
+        /// <summary>
+        /// Exist action parameter.
+        /// </summary>
+        public class ParameterExistAction : Parameter
+        {
+            /// <summary>
+            /// Exist action.
+            /// </summary>
+            public ExistAction ExistAction;
+
+            /// <summary>
+            /// Constructor for exist action.
+            /// </summary>
+            /// <param name="existAction">Exist action.</param>
+            public ParameterExistAction(ExistAction existAction)
             {
-                if (avblock.HasValue)
+                Type = ParameterType.ExistAction;
+                ExistAction = existAction;
+            }
+        }
+
+        /// <summary>
+        /// Host record formats.
+        /// </summary>
+        public enum RecordFormat
+        {
+            /// <summary>
+            /// Fixed-length records.
+            /// </summary>
+            Fixed,
+            /// <summary>
+            /// Variable-length records.
+            /// </summary>
+            Variable,
+            /// <summary>
+            /// Undefined-length records.
+            /// </summary>
+            Undefined
+        }
+
+        /// <summary>
+        /// Host record length format parameter.
+        /// </summary>
+        public class ParameterSendRecordFormat : Parameter
+        {
+            /// <summary>
+            /// Record format.
+            /// </summary>
+            public RecordFormat RecordFormat;
+
+            /// <summary>
+            /// Constructor for host record format parameter.
+            /// </summary>
+            /// <param name="recordFormat">Record format.</param>
+            public ParameterSendRecordFormat(RecordFormat recordFormat)
+            {
+                Type = ParameterType.SendRecordFormat;
+                RecordFormat = recordFormat;
+            }
+        }
+
+        /// <summary>
+        /// Host logical record length parameter.
+        /// </summary>
+        public class ParameterSendLogicalRecordLength : Parameter
+        {
+            /// <summary>
+            /// Record length.
+            /// </summary>
+            public uint RecordLength;
+
+            /// <summary>
+            /// Construtor for host logical record length parameter.
+            /// </summary>
+            /// <param name="recordLength">Record length.</param>
+            public ParameterSendLogicalRecordLength(uint recordLength)
+            {
+                if (recordLength == 0)
                 {
-                    throw new ArgumentException("avblock is prohibited");
+                    throw new ArgumentOutOfRangeException("recordLength");
+                }
+                Type = ParameterType.SendLogicalRecordLength;
+                RecordLength = recordLength;
+            }
+        }
+
+        /// <summary>
+        /// Block size parameter.
+        /// </summary>
+        public class ParameterBlockSize : Parameter
+        {
+            /// <summary>
+            /// Block size.
+            /// </summary>
+            public uint BlockSize;
+
+            /// <summary>
+            /// Constructor for block size parameter.
+            /// </summary>
+            /// <param name="blockSize">Block size.</param>
+            public ParameterBlockSize(uint blockSize)
+            {
+                if (blockSize == 0)
+                {
+                    throw new ArgumentOutOfRangeException("blockSize");
+                }
+                Type = ParameterType.BlockSize;
+                BlockSize = blockSize;
+            }
+        }
+
+        /// <summary>
+        /// TSO file allocation units.
+        /// </summary>
+        public enum TsoAllocationUnits
+        {
+            /// <summary>
+            /// Tracks.
+            /// </summary>
+            Tracks,
+            /// <summary>
+            /// Cylinders.
+            /// </summary>
+            Cylinders,
+            /// <summary>
+            /// Avblocks.
+            /// </summary>
+            Avblock
+        }
+
+        /// <summary>
+        /// TSO file allocation parameter.
+        /// </summary>
+        public class ParameterTsoSendAllocation : Parameter
+        {
+            /// <summary>
+            /// Allocation units.
+            /// </summary>
+            public TsoAllocationUnits AllocationUnits;
+            /// <summary>
+            /// Primary space.
+            /// </summary>
+            public uint PrimarySpace;
+            /// <summary>
+            /// Secondary space.
+            /// </summary>
+            public uint? SecondarySpace;
+            /// <summary>
+            /// Number of bytes in an avblock.
+            /// </summary>
+            public uint? Avblock;
+
+            /// <summary>
+            /// Constructor for TSO file allocation parameter.
+            /// </summary>
+            /// <param name="allocationUnits">Allocation units.</param>
+            /// <param name="primarySpace">Primary space.</param>
+            /// <param name="secondarySpace">Secondary space.</param>
+            /// <param name="avblock">Bytes per avblock.</param>
+            public ParameterTsoSendAllocation(
+                TsoAllocationUnits allocationUnits,
+                uint primarySpace,
+                uint? secondarySpace = null,
+                uint? avblock = null)
+            {
+                // The way to create an avblock allocation without secondary space is:
+                //  var x = new TransferParameterTsoSendAllocation(TsoAllocationUnits.Avblock, 100, avblock: 200);
+
+                Type = ParameterType.TsoSendAllocation;
+
+                AllocationUnits = allocationUnits;
+                if (primarySpace == 0)
+                {
+                    throw new ArgumentOutOfRangeException("primarySpace");
+                }
+                PrimarySpace = primarySpace;
+                if (secondarySpace.HasValue && secondarySpace.Value == 0)
+                {
+                    throw new ArgumentOutOfRangeException("secondarySpace");
+                }
+                SecondarySpace = secondarySpace;
+                if (allocationUnits == TsoAllocationUnits.Avblock)
+                {
+                    if (!avblock.HasValue)
+                    {
+                        throw new ArgumentException("avblock is required");
+                    }
+                    if (avblock.Value == 0)
+                    {
+                        throw new ArgumentOutOfRangeException("avblock");
+                    }
+                    Avblock = avblock;
+                }
+                else
+                {
+                    if (avblock.HasValue)
+                    {
+                        throw new ArgumentException("avblock is prohibited");
+                    }
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// Transfer parameter for buffer size.
-    /// </summary>
-    public class TransferParameterBufferSize : TransferParameter
-    {
-        /// <summary>
-        /// Buffer size.
-        /// </summary>
-        public uint BufferSize;
 
         /// <summary>
-        /// Constructor.
+        /// Transfer parameter for buffer size.
         /// </summary>
-        /// <param name="bufferSize">Buffer size.</param>
-        public TransferParameterBufferSize(uint bufferSize)
+        public class ParameterBufferSize : Parameter
         {
-            Type = TransferParameterType.BufferSize;
-            if (bufferSize == 0)
+            /// <summary>
+            /// Buffer size.
+            /// </summary>
+            public uint BufferSize;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="bufferSize">Buffer size.</param>
+            public ParameterBufferSize(uint bufferSize)
             {
-                throw new ArgumentOutOfRangeException("bufferSize");
+                Type = ParameterType.BufferSize;
+                if (bufferSize == 0)
+                {
+                    throw new ArgumentOutOfRangeException("bufferSize");
+                }
+                BufferSize = bufferSize;
             }
-            BufferSize = bufferSize;
         }
-    }
 
-    /// <summary>
-    /// Transfer modes.
-    /// </summary>
-    public enum TransferMode
-    {
         /// <summary>
-        /// Text file, translated between EBCDIC and ASCII.
+        /// Transfer modes.
         /// </summary>
-        Ascii,
-        /// <summary>
-        /// Binary file, untranslated.
-        /// </summary>
-        Binary
-    }
+        public enum Mode
+        {
+            /// <summary>
+            /// Text file, translated between EBCDIC and ASCII.
+            /// </summary>
+            Ascii,
+            /// <summary>
+            /// Binary file, untranslated.
+            /// </summary>
+            Binary
+        }
 
-    /// <summary>
-    /// Transfer direction.
-    /// </summary>
-    public enum TransferDirection
-    {
         /// <summary>
-        /// Send file to host.
+        /// Transfer direction.
         /// </summary>
-        Send,
-        /// <summary>
-        /// Receive file from host.
-        /// </summary>
-        Receive
-    }
+        public enum Direction
+        {
+            /// <summary>
+            /// Send file to host.
+            /// </summary>
+            Send,
+            /// <summary>
+            /// Receive file from host.
+            /// </summary>
+            Receive
+        }
 
-    /// <summary>
-    /// Transfer host type.
-    /// </summary>
-    public enum TransferHostType
-    {
         /// <summary>
-        /// TSO (MVS).
+        /// Transfer host type.
         /// </summary>
-        Tso,
-        /// <summary>
-        /// VM/CMS.
-        /// </summary>
-        Vm,
-        /// <summary>
-        /// CICS.
-        /// </summary>
-        Cics
+        public enum HostType
+        {
+            /// <summary>
+            /// TSO (MVS).
+            /// </summary>
+            Tso,
+            /// <summary>
+            /// VM/CMS.
+            /// </summary>
+            Vm,
+            /// <summary>
+            /// CICS.
+            /// </summary>
+            Cics
+        }
     }
 
     public partial class Session
@@ -466,10 +452,10 @@ namespace x3270if
         public async Task<IoResult> TransferAsync(
             string localFile,
             string hostFile,
-            TransferDirection direction,
-            TransferMode mode,
-            TransferHostType hostType,
-            IEnumerable<TransferParameter> parameters)
+            Direction direction,
+            Mode mode,
+            HostType hostType,
+            IEnumerable<Parameter> parameters)
         {
             // Check file names.
             if (string.IsNullOrEmpty(localFile))
@@ -496,67 +482,67 @@ namespace x3270if
                 {
                     switch (p.Type)
                     {
-                        case TransferParameterType.AsciiCr:
-                            if (mode != TransferMode.Ascii)
+                        case ParameterType.AsciiCr:
+                            if (mode != Mode.Ascii)
                             {
                                 throw new ArgumentException("AsciiCr requires Ascii mode");
                             }
-                            argd["cr"] = ((TransferParameterAsciiCr)p).AddRemove ? "add" : "keep";
+                            argd["cr"] = ((ParameterAsciiCr)p).AddRemove ? "add" : "keep";
                             break;
-                        case TransferParameterType.AsciiRemap:
-                            if (mode != TransferMode.Ascii)
+                        case ParameterType.AsciiRemap:
+                            if (mode != Mode.Ascii)
                             {
                                 throw new ArgumentException("AsciiRemap requires Ascii mode");
                             }
-                            var remap = (TransferParameterAsciiRemap)p;
+                            var remap = (ParameterAsciiRemap)p;
                             argd["remap"] = remap.Remap ? "yes" : "no";
                             if (remap.CodePage.HasValue)
                             {
                                 argd["windowscodepage"] = remap.CodePage.ToString();
                             }
                             break;
-                        case TransferParameterType.BlockSize:
-                            if (hostType != TransferHostType.Tso)
+                        case ParameterType.BlockSize:
+                            if (hostType != HostType.Tso)
                             {
                                 throw new ArgumentException("BlockSize only works on TSO hosts");
                             }
-                            argd["blocksize"] = ((TransferParameterBlockSize)p).BlockSize.ToString();
+                            argd["blocksize"] = ((ParameterBlockSize)p).BlockSize.ToString();
                             break;
-                        case TransferParameterType.ExistAction:
-                            argd["exist"] = ((TransferParameterExistAction)p).ExistAction.ToString();
+                        case ParameterType.ExistAction:
+                            argd["exist"] = ((ParameterExistAction)p).ExistAction.ToString();
                             break;
-                        case TransferParameterType.SendLogicalRecordLength:
-                            if (direction != TransferDirection.Send)
+                        case ParameterType.SendLogicalRecordLength:
+                            if (direction != Direction.Send)
                             {
                                 throw new ArgumentException("SendLogicalRecordLength requires send");
                             }
-                            if (hostType == TransferHostType.Cics)
+                            if (hostType == HostType.Cics)
                             {
                                 throw new ArgumentException("SendLogicalRecordLength does not work on CICS");
                             }
-                            argd["lrecl"] = ((TransferParameterSendLogicalRecordLength)p).RecordLength.ToString();
+                            argd["lrecl"] = ((ParameterSendLogicalRecordLength)p).RecordLength.ToString();
                             break;
-                        case TransferParameterType.SendRecordFormat:
-                            if (direction != TransferDirection.Send)
+                        case ParameterType.SendRecordFormat:
+                            if (direction != Direction.Send)
                             {
                                 throw new ArgumentException("SendRecordFormat requires send");
                             }
-                            if (hostType == TransferHostType.Cics)
+                            if (hostType == HostType.Cics)
                             {
                                 throw new ArgumentException("SendRecordFormat does not work with CICS hosts");
                             }
-                            argd["recfm"] = ((TransferParameterSendRecordFormat)p).RecordFormat.ToString();
+                            argd["recfm"] = ((ParameterSendRecordFormat)p).RecordFormat.ToString();
                             break;
-                        case TransferParameterType.TsoSendAllocation:
-                            if (direction != TransferDirection.Send)
+                        case ParameterType.TsoSendAllocation:
+                            if (direction != Direction.Send)
                             {
                                 throw new ArgumentException("SendTsoAllocation requires send");
                             }
-                            if (hostType != TransferHostType.Tso)
+                            if (hostType != HostType.Tso)
                             {
                                 throw new ArgumentException("SendTsoAllocation requires Tso host");
                             }
-                            var alloc = (TransferParameterTsoSendAllocation)p;
+                            var alloc = (ParameterTsoSendAllocation)p;
                             argd["allocation"] = alloc.AllocationUnits.ToString();
                             argd["primaryspace"] = alloc.PrimarySpace.ToString();
                             if (alloc.SecondarySpace.HasValue)
@@ -568,8 +554,8 @@ namespace x3270if
                                 argd["avblock"] = alloc.Avblock.ToString();
                             }
                             break;
-                        case TransferParameterType.BufferSize:
-                            argd["buffersize"] = ((TransferParameterBufferSize)p).BufferSize.ToString();
+                        case ParameterType.BufferSize:
+                            argd["buffersize"] = ((ParameterBufferSize)p).BufferSize.ToString();
                             break;
                     }
                 }
@@ -577,7 +563,7 @@ namespace x3270if
 
             // Check for parameter interference (that's why the keywords went into a Dictionary).
             string v;
-            if (direction == TransferDirection.Send &&
+            if (direction == Direction.Send &&
                 argd.TryGetValue("exist", out v) &&
                 v == ExistAction.Append.ToString() &&
                 (argd.TryGetValue("recfm", out v) ||
@@ -607,12 +593,12 @@ namespace x3270if
         public async Task<IoResult> TransferAsync(
             string localFile,
             string hostFile,
-            TransferDirection direction,
-            TransferMode mode,
-            TransferHostType hostType,
+            Direction direction,
+            Mode mode,
+            HostType hostType,
             params object[] parameters)
         {
-            var pList = new List<TransferParameter>();
+            var pList = new List<Parameter>();
 
             // Validate the parameter types.
             for (int i = 0; i < parameters.Length; i++)
@@ -621,7 +607,7 @@ namespace x3270if
                 {
                     throw new ArgumentNullException("parameter");
                 }
-                var p = parameters[i] as TransferParameter;
+                var p = parameters[i] as Parameter;
                 if (p == null)
                 {
                     throw new ArgumentException("parameter");
@@ -646,10 +632,10 @@ namespace x3270if
         public IoResult Transfer(
             string localFile,
             string hostFile,
-            TransferDirection direction,
-            TransferMode mode,
-            TransferHostType hostType,
-            IEnumerable<TransferParameter> parameters)
+            Direction direction,
+            Mode mode,
+            HostType hostType,
+            IEnumerable<Parameter> parameters)
         {
             try
             {
@@ -674,9 +660,9 @@ namespace x3270if
         public IoResult Transfer(
             string localFile,
             string hostFile,
-            TransferDirection direction,
-            TransferMode mode,
-            TransferHostType hostType,
+            Direction direction,
+            Mode mode,
+            HostType hostType,
             params object[] parameters)
         {
             try

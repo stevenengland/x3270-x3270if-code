@@ -31,31 +31,31 @@ namespace x3270if
     public partial class Session
     {
         /// <summary>
-        /// Async version of Ascii.
+        /// Return the entire 3270 display buffer as text. Async version.
         /// </summary>
-        /// <returns>See Ascii.</returns>
+        /// <returns>Success/failure, array of text.</returns>
         public async Task<IoResult> AsciiAsync()
         {
             return await IoAsync("Ascii()").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
-        /// Async version of Ascii.
+        /// Return the 3270 display buffer as text, from the cursor location. Async version.
         /// </summary>
-        /// <param name="length">See Ascii.</param>
-        /// <returns>See Ascii.</returns>
+        /// <param name="length">Number of characters.</param>
+        /// <returns>Success/failure, one row of text.</returns>
         public async Task<IoResult> AsciiAsync(int length)
         {
             return await IoAsync("Ascii(" + length + ")");
         }
 
         /// <summary>
-        /// Async version of Ascii.
+        /// Return the 3270 display buffer as text, starting at the specified coordinates. Async version.
         /// </summary>
-        /// <param name="row">See Ascii.</param>
-        /// <param name="column">See Ascii.</param>
-        /// <param name="length"></param>
-        /// <returns>See Ascii.</returns>
+        /// <param name="row">Starting row, using session <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using session <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="length">Number of characters.</param>
+        /// <returns>Success/failure, one row of text.</returns>
         public async Task<IoResult> AsciiAsync(int row, int column, int length)
         {
             if (row < Config.Origin)
@@ -72,13 +72,13 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Async version of Ascii.
+        /// Return the 3270 display buffer as an array. Async version.
         /// </summary>
-        /// <param name="row">See Ascii.</param>
-        /// <param name="column">See Ascii.</param>
-        /// <param name="rows">See Ascii.</param>
-        /// <param name="columns">See Ascii.</param>
-        /// <returns>See Ascii.</returns>
+        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="rows">Number of rows.</param>
+        /// <param name="columns">Number of columns.</param>
+        /// <returns>Success/failure, array of text.</returns>
         public async Task<IoResult> AsciiAsync(int row, int column, int rows, int columns)
         {
             if (row < Config.Origin)
@@ -95,9 +95,9 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Get the 3270 display buffer as text.
+        /// Get the entire 3270 display buffer as text.
         /// </summary>
-        /// <returns>success/failure, entire display buffer, one row per element</returns>
+        /// <returns>Success/failure, entire display buffer in an array, one row per element.</returns>
         public IoResult Ascii()
         {
             try
@@ -111,10 +111,10 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Get a region of the display buffer starting at the cursor.
+        /// Get a region of the 3270 display buffer, starting at the cursor.
         /// </summary>
         /// <param name="length">Number of characters to return.</param>
-        /// <returns>success/failure, one row of data</returns>
+        /// <returns>Success/failure, one row of text.</returns>
         public IoResult Ascii(int length)
         {
             try
@@ -128,12 +128,12 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Get a region of the display buffer starting at the specified coordinates.
+        /// Get a region of the 3270 display buffer starting at the specified coordinates.
         /// </summary>
-        /// <param name="row">Starting row.</param>
-        /// <param name="column">Starting column.</param>
+        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="length">Number of characters to return.</param>
-        /// <returns>success/failure, one row of data</returns>
+        /// <returns>Success/failure, one row of text.</returns>
         public IoResult Ascii(int row, int column, int length)
         {
             try
@@ -147,13 +147,13 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Get a rectangular region of the display.
+        /// Get a rectangular region of the 3270 display buffer.
         /// </summary>
         /// <param name="row">Starting row.</param>
         /// <param name="column">Starting column.</param>
         /// <param name="rows">Number of rows.</param>
         /// <param name="columns">Number of columns.</param>
-        /// <returns>success/failure, array of text with 'rows' elements</returns>
+        /// <returns>Success/failure, array of text.</returns>
         public IoResult Ascii(int row, int column, int rows, int columns)
         {
             try

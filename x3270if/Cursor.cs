@@ -69,8 +69,8 @@ namespace x3270if
         /// <summary>
         /// Move cursor to a particular row and column, async version.
         /// </summary>
-        /// <param name="row">Desired row</param>
-        /// <param name="column">Desired column</param>
+        /// <param name="row">Desired row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Desired column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <returns>success/failure and failure reason.</returns>
         public async Task<IoResult> MoveCursorAsync(int row, int column)
         {

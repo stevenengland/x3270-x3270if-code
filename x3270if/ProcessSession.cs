@@ -121,7 +121,7 @@ namespace x3270if
         /// <summary>
         /// Constructor, given a configuration.
         /// </summary>
-        /// <param name="config"></param>
+        /// <param name="config">Process configuration.</param>
         public ProcessBackEnd(ProcessConfig config)
         {
             this.ProcessConfig = config ?? new ProcessConfig();
@@ -190,7 +190,7 @@ namespace x3270if
         /// <summary>
         /// Start a new emulator process, async version.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Success/failure and failure reason.</returns>
         public async Task<startResult> StartAsync()
         {
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))

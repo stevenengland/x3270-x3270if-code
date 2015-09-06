@@ -239,6 +239,10 @@ namespace UnitTests
             }
         }
 
+        /// <summary>
+        /// Return the TCP client associated with the session.
+        /// </summary>
+        /// <returns>TCP client object.</returns>
         public TcpClient GetClient()
         {
             return Client;

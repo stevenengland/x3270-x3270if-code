@@ -50,7 +50,7 @@ namespace x3270if
         /// <summary>
         /// IO result from ReadBuffer and ReadBufferAsync.
         /// An ordinary IoResult, plus the type of ReadBuffer operation that was requested,
-        /// and the coordinate origin, so DisplayBuffer operations can use the same mode as the
+        /// and the coordinate <see cref="x3270if.Config.Origin"/>, so DisplayBuffer operations can use the same mode as the
         /// Session that the ReadBufferIoResult was derived from.
         /// </summary>
         public class ReadBufferIoResult : IoResult

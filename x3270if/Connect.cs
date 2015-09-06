@@ -115,10 +115,10 @@ namespace x3270if
         /// Connect to a host. Asynchronous version.
         /// </summary>
         /// <param name="host">Hostname.</param>
-        /// <param name="port">Optional TCP port number.</param>
+        /// <param name="port">Optional TCP port number or service name.</param>
         /// <param name="lu">Optional set of LU names to try to connect to.</param>
         /// <param name="flags">Connection flags (SSL, etc.).</param>
-        /// <returns>Task returning success/failure and failure text</returns>
+        /// <returns>Task returning success/failure and failure text.</returns>
         public async Task<IoResult> ConnectAsync(string host, string port = null, IEnumerable<string> lu = null, ConnectFlags flags = ConnectFlags.None)
         {
             return await IoAsync("Connect(" + ExpandHostName(host, port, lu, flags) + ")").ConfigureAwait(continueOnCapturedContext: false);
@@ -136,7 +136,11 @@ namespace x3270if
         /// <summary>
         /// Connect to a host.
         /// </summary>
-        /// <returns>success/failure and failure text</returns>
+        /// <param name="host">Hostname.</param>
+        /// <param name="port">Optional TCP port number or service name</param>
+        /// <param name="lu">Optional set of LU names to try to connect to.</param>
+        /// <param name="flags">Connection flags (SSL, etc.).</param>
+        /// <returns>Success/failure and failure text.</returns>
         public IoResult Connect(string host, string port = null, IEnumerable<string> lu = null, ConnectFlags flags = ConnectFlags.None)
         {
             try

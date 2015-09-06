@@ -97,14 +97,14 @@ namespace x3270if
         /// <summary>
         /// Get the TCP client for a successful connection.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>TCP client object.</returns>
         TcpClient GetClient();
 
         /// <summary>
         /// Get asynchronous error text from the emulator.
         /// </summary>
         /// <param name="fallbackText">Fallback text to return, in case there was no output.</param>
-        /// <returns></returns>
+        /// <returns>Error text.</returns>
         string GetErrorOutput(string fallbackText);
 
         /// <summary>
@@ -170,6 +170,10 @@ namespace x3270if
 
         /// <summary>
         /// Fetch the set of recent commands.
+        /// <para>These are the actual commands sent and responses received from the emulator.
+        /// The data reported by the <see cref="Status"/> attribute, the <see cref="Query"/>
+        /// method and the <see cref="StatusField"/> method may be translated to conform to the
+        /// session's <see cref="x3270if.Config.Origin"/>.</para>
         /// </summary>
         public IoResult[] RecentCommands
         {
@@ -185,7 +189,7 @@ namespace x3270if
         private string lastStatus;
         /// <summary>
         /// Fetch the last status.
-        /// This may be different from the StatusLine in the recent history.
+        /// This may be different from the StatusLine in the recent history, because of <see cref="x3270if.Config.Origin"/> translation.
         /// </summary>
         public string Status
         {
@@ -237,6 +241,7 @@ namespace x3270if
 
         /// <summary>
         /// Return a status field.
+        /// <para>For cursor coordinates, the value may have been translated to conform to the session's <see cref="x3270if.Config.Origin"/>.</para>
         /// </summary>
         /// <param name="index">Zero-based index of field to return (int cast of StatusLineField).</param>
         /// <returns>Field value</returns>

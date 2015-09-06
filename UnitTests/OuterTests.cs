@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using x3270if;
+using x3270if.Attributes;
 using System.IO;
 
 namespace UnitTests

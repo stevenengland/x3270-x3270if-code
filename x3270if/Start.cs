@@ -60,7 +60,7 @@ namespace x3270if
         /// <summary>
         /// Constructor for failure, given explanatory text.
         /// </summary>
-        /// <param name="failReason"></param>
+        /// <param name="failReason">Failure reason text.</param>
         public startResult(string failReason)
         {
             Success = false;
@@ -215,9 +215,9 @@ namespace x3270if
         /// <summary>
         /// Start (and retry) the connection to an emulator.
         /// </summary>
-        /// <param name="port"></param>
-        /// <param name="retryMsec">Connect retry timeout</param>
-        /// <returns>Start result</returns>
+        /// <param name="port">TCP port number to connect to.</param>
+        /// <param name="retryMsec">Optional connect retry timeout, in milliseconds.</param>
+        /// <returns>Connect result.</returns>
         public static async Task<ConnectResult> TryConnect(int port, int? retryMsec = null)
         {
             var client = new TcpClient(AddressFamily.InterNetwork);
