@@ -1122,7 +1122,7 @@ namespace x3270if
         /// <returns>String</returns>
         public string[] Ascii()
         {
-            return Ascii(0, 0, rows, columns);
+            return Ascii(Origin, Origin, rows, columns);
         }
 
         /// <summary>
