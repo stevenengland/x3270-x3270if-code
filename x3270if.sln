@@ -19,6 +19,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "x3270ifGuiTest", "x3270ifGu
 		{168F4FBE-6947-42E2-A2CA-D8F816CEAFF7} = {168F4FBE-6947-42E2-A2CA-D8F816CEAFF7}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrvialConsoleApp", "TrvialConsoleApp\TrvialConsoleApp.csproj", "{A40E54E4-A863-473E-89CF-0228C4734CA0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{168F4FBE-6947-42E2-A2CA-D8F816CEAFF7} = {168F4FBE-6947-42E2-A2CA-D8F816CEAFF7}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +50,10 @@ Global
 		{626615C1-4FDD-43D4-BE4B-ADF354505FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{626615C1-4FDD-43D4-BE4B-ADF354505FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{626615C1-4FDD-43D4-BE4B-ADF354505FEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A40E54E4-A863-473E-89CF-0228C4734CA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A40E54E4-A863-473E-89CF-0228C4734CA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A40E54E4-A863-473E-89CF-0228C4734CA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A40E54E4-A863-473E-89CF-0228C4734CA0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
