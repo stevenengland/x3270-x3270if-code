@@ -67,7 +67,8 @@ namespace x3270ifGuiTest
             Running,    // x3270if running or stopped
             Connected,  // connected to host
             LoggedOn,   // logged on to host
-            Processing  // processing request
+            Processing, // processing request
+            Screen      // updated screen image
         }
 
         class WorkerStatus
@@ -170,6 +171,16 @@ namespace x3270ifGuiTest
                 Text = text;
             }
         }
+
+        class WorkerStatusScreen : WorkerStatus
+        {
+            public string Text;
+            public WorkerStatusScreen(string text)
+            {
+                Status = WorkerStatusIndication.Screen;
+                Text = text;
+            }
+        }
         #endregion
 
         private Session session;
@@ -234,9 +245,10 @@ namespace x3270ifGuiTest
             }
         }
 
-        private void nextScreen()
+        private void nextScreen(BackgroundWorker worker)
         {
             displayBuffer = new DisplayBuffer(session.ReadBuffer());
+            worker.ReportProgress(0, new WorkerStatusScreen(string.Join("\n", displayBuffer.Ascii())));
         }
 
         /// <summary>
@@ -294,7 +306,7 @@ namespace x3270ifGuiTest
                 {
                     return -1;
                 }
-                nextScreen();
+                nextScreen(worker);
             }
         }
 
@@ -435,7 +447,7 @@ namespace x3270ifGuiTest
             }
 
             // Wait for the initial logon screen.
-            nextScreen();
+            nextScreen(worker);
             if (!waitForString(worker, 39, 2, "USERID"))
             {
                 abortSession(worker);
@@ -446,7 +458,7 @@ namespace x3270ifGuiTest
             session.Clear();
             session.String("LOGON " + username + "\n");
 
-            nextScreen();
+            nextScreen(worker);
             if (!waitForString(worker, 8, 1, "LOGON " + username))
             {
                 abortSession(worker);
@@ -462,7 +474,7 @@ namespace x3270ifGuiTest
 
             session.String(passwordTextBox.Text + "\n");
 
-            nextScreen();
+            nextScreen(worker);
             switch (rescanUntil(worker, new List<Func<bool>>
             {
                 () => displayBuffer.AsciiEquals(14, 1, "z/VM"),
@@ -547,7 +559,7 @@ namespace x3270ifGuiTest
             //  If MORE..., hit clear and repeat until we get USERNAME Ready;
 
             var ready = " " + username + " Ready;";
-            nextScreen();
+            nextScreen(worker);
 
             if (!waitForString(worker, 1, 1, query) ||
                 (!wasLoggedOn && (!waitForString(worker, 1, 1, query) ||
@@ -566,14 +578,14 @@ namespace x3270ifGuiTest
             do
             {
                 // Snap the screen.
-                nextScreen();
+                nextScreen(worker);
 
                 // If the MORE... prompt is up, clear the screen and start scanning at the top.
                 if (!first && isMore())
                 {
                     session.Clear();
                     dataRow = 1;
-                    nextScreen();
+                    nextScreen(worker);
                 }
                 first = false;
 
@@ -740,7 +752,7 @@ namespace x3270ifGuiTest
                 return;
             }
             var ready = " " + username + " Ready;";
-            nextScreen();
+            nextScreen(worker);
             if (!waitForString(worker, 1, 1, "SET APL OFF") ||
                 (wasLoggedOn && !waitForString(worker, 2, 1, ready)) ||
                 (!wasLoggedOn && (!waitForString(worker, 2, 1, "DMS") ||
@@ -878,6 +890,7 @@ namespace x3270ifGuiTest
                 case WorkerStatusIndication.Idle:
                     stateLabel.Text = string.Empty;
                     resultLabel.Text = string.Empty;
+                    screenLabel.Text = string.Empty;
                     break;
                 case WorkerStatusIndication.Complete:
                     stateLabel.Text = ((WorkerStatusComplete)status).CompleteText;
@@ -942,6 +955,9 @@ namespace x3270ifGuiTest
                 case WorkerStatusIndication.Processing:
                     stateLabel.Text = ((WorkerStatusProcessing)status).Text;
                     stateLabel.ForeColor = Color.Black;
+                    break;
+                case WorkerStatusIndication.Screen:
+                    screenLabel.Text = ((WorkerStatusScreen)status).Text;
                     break;
             }
         }
@@ -1084,6 +1100,11 @@ namespace x3270ifGuiTest
                 runQueryButton_Click(sender, e);
                 e.Handled = true;
             }
+        }
+
+        private void secureCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

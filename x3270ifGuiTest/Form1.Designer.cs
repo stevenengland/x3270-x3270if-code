@@ -106,6 +106,7 @@
             this.loggedOnPictureBox = new System.Windows.Forms.PictureBox();
             this.connectedPictureBox = new System.Windows.Forms.PictureBox();
             this.startedPictureBox = new System.Windows.Forms.PictureBox();
+            this.screenLabel = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.directionBox.SuspendLayout();
             this.modeBox.SuspendLayout();
@@ -125,7 +126,7 @@
             // 
             // hostnameTextBox
             // 
-            this.hostnameTextBox.Location = new System.Drawing.Point(97, 12);
+            this.hostnameTextBox.Location = new System.Drawing.Point(76, 12);
             this.hostnameTextBox.Name = "hostnameTextBox";
             this.hostnameTextBox.Size = new System.Drawing.Size(100, 20);
             this.hostnameTextBox.TabIndex = 1;
@@ -150,7 +151,7 @@
             // 
             // portTextBox
             // 
-            this.portTextBox.Location = new System.Drawing.Point(97, 43);
+            this.portTextBox.Location = new System.Drawing.Point(76, 43);
             this.portTextBox.Name = "portTextBox";
             this.portTextBox.Size = new System.Drawing.Size(99, 20);
             this.portTextBox.TabIndex = 3;
@@ -158,12 +159,13 @@
             // secureCheckBox
             // 
             this.secureCheckBox.AutoSize = true;
-            this.secureCheckBox.Location = new System.Drawing.Point(225, 13);
+            this.secureCheckBox.Location = new System.Drawing.Point(182, 14);
             this.secureCheckBox.Name = "secureCheckBox";
             this.secureCheckBox.Size = new System.Drawing.Size(60, 17);
             this.secureCheckBox.TabIndex = 2;
             this.secureCheckBox.Text = "Secure";
             this.secureCheckBox.UseVisualStyleBackColor = true;
+            this.secureCheckBox.CheckedChanged += new System.EventHandler(this.secureCheckBox_CheckedChanged);
             // 
             // label3
             // 
@@ -176,7 +178,7 @@
             // 
             // usernameTextBox
             // 
-            this.usernameTextBox.Location = new System.Drawing.Point(97, 76);
+            this.usernameTextBox.Location = new System.Drawing.Point(76, 76);
             this.usernameTextBox.MaxLength = 8;
             this.usernameTextBox.Name = "usernameTextBox";
             this.usernameTextBox.Size = new System.Drawing.Size(98, 20);
@@ -193,7 +195,7 @@
             // 
             // passwordTextBox
             // 
-            this.passwordTextBox.Location = new System.Drawing.Point(97, 111);
+            this.passwordTextBox.Location = new System.Drawing.Point(76, 111);
             this.passwordTextBox.MaxLength = 8;
             this.passwordTextBox.Name = "passwordTextBox";
             this.passwordTextBox.Size = new System.Drawing.Size(98, 20);
@@ -215,7 +217,7 @@
             // 
             this.stateLabel.AutoSize = true;
             this.stateLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.stateLabel.Location = new System.Drawing.Point(222, 114);
+            this.stateLabel.Location = new System.Drawing.Point(18, 158);
             this.stateLabel.Name = "stateLabel";
             this.stateLabel.Size = new System.Drawing.Size(37, 13);
             this.stateLabel.TabIndex = 0;
@@ -262,7 +264,7 @@
             // loggedOnLabel
             // 
             this.loggedOnLabel.AutoSize = true;
-            this.loggedOnLabel.Location = new System.Drawing.Point(436, 66);
+            this.loggedOnLabel.Location = new System.Drawing.Point(459, 66);
             this.loggedOnLabel.Name = "loggedOnLabel";
             this.loggedOnLabel.Size = new System.Drawing.Size(74, 13);
             this.loggedOnLabel.TabIndex = 0;
@@ -271,7 +273,7 @@
             // startedLabel
             // 
             this.startedLabel.AutoSize = true;
-            this.startedLabel.Location = new System.Drawing.Point(435, 19);
+            this.startedLabel.Location = new System.Drawing.Point(458, 19);
             this.startedLabel.Name = "startedLabel";
             this.startedLabel.Size = new System.Drawing.Size(59, 13);
             this.startedLabel.TabIndex = 0;
@@ -280,7 +282,7 @@
             // connectedLabel
             // 
             this.connectedLabel.AutoSize = true;
-            this.connectedLabel.Location = new System.Drawing.Point(436, 43);
+            this.connectedLabel.Location = new System.Drawing.Point(459, 43);
             this.connectedLabel.Name = "connectedLabel";
             this.connectedLabel.Size = new System.Drawing.Size(78, 13);
             this.connectedLabel.TabIndex = 0;
@@ -359,7 +361,7 @@
             // 
             this.directionBox.Controls.Add(this.directionSendButton);
             this.directionBox.Controls.Add(this.directionReceiveButton);
-            this.directionBox.Location = new System.Drawing.Point(311, 394);
+            this.directionBox.Location = new System.Drawing.Point(311, 440);
             this.directionBox.Name = "directionBox";
             this.directionBox.Size = new System.Drawing.Size(145, 81);
             this.directionBox.TabIndex = 14;
@@ -371,7 +373,7 @@
             this.modeBox.Controls.Add(this.modeAsciiButton);
             this.modeBox.Controls.Add(this.asciiBox);
             this.modeBox.Controls.Add(this.modeBinaryButton);
-            this.modeBox.Location = new System.Drawing.Point(158, 481);
+            this.modeBox.Location = new System.Drawing.Point(158, 527);
             this.modeBox.Name = "modeBox";
             this.modeBox.Size = new System.Drawing.Size(147, 196);
             this.modeBox.TabIndex = 13;
@@ -463,7 +465,7 @@
             this.hostTypeBox.Controls.Add(this.hostCicsButton);
             this.hostTypeBox.Controls.Add(this.hostTsoButton);
             this.hostTypeBox.Controls.Add(this.hostVmButton);
-            this.hostTypeBox.Location = new System.Drawing.Point(22, 481);
+            this.hostTypeBox.Location = new System.Drawing.Point(22, 527);
             this.hostTypeBox.Name = "hostTypeBox";
             this.hostTypeBox.Size = new System.Drawing.Size(130, 92);
             this.hostTypeBox.TabIndex = 11;
@@ -513,7 +515,7 @@
             this.existsBox.Controls.Add(this.existsAppendButton);
             this.existsBox.Controls.Add(this.existsKeepButton);
             this.existsBox.Controls.Add(this.existsReplaceButton);
-            this.existsBox.Location = new System.Drawing.Point(22, 579);
+            this.existsBox.Location = new System.Drawing.Point(22, 625);
             this.existsBox.Name = "existsBox";
             this.existsBox.Size = new System.Drawing.Size(130, 98);
             this.existsBox.TabIndex = 12;
@@ -572,7 +574,7 @@
             this.recfmBox.Controls.Add(this.recfmUndefinedButton);
             this.recfmBox.Controls.Add(this.recfmFixedButton);
             this.recfmBox.Controls.Add(this.recfmVariableButton);
-            this.recfmBox.Location = new System.Drawing.Point(311, 481);
+            this.recfmBox.Location = new System.Drawing.Point(311, 527);
             this.recfmBox.Name = "recfmBox";
             this.recfmBox.Size = new System.Drawing.Size(145, 196);
             this.recfmBox.TabIndex = 15;
@@ -655,7 +657,7 @@
             this.tsoAllocationBox.Controls.Add(this.allocAvblockButton);
             this.tsoAllocationBox.Controls.Add(this.label8);
             this.tsoAllocationBox.Controls.Add(this.label7);
-            this.tsoAllocationBox.Location = new System.Drawing.Point(462, 394);
+            this.tsoAllocationBox.Location = new System.Drawing.Point(462, 440);
             this.tsoAllocationBox.Name = "tsoAllocationBox";
             this.tsoAllocationBox.Size = new System.Drawing.Size(148, 283);
             this.tsoAllocationBox.TabIndex = 16;
@@ -778,7 +780,7 @@
             this.filesBox.Controls.Add(this.hostFileLabel);
             this.filesBox.Controls.Add(this.localFileTextBox);
             this.filesBox.Controls.Add(this.hostFileTextBox);
-            this.filesBox.Location = new System.Drawing.Point(24, 394);
+            this.filesBox.Location = new System.Drawing.Point(24, 440);
             this.filesBox.Name = "filesBox";
             this.filesBox.Size = new System.Drawing.Size(281, 81);
             this.filesBox.TabIndex = 10;
@@ -791,7 +793,7 @@
             this.sizesBox.Controls.Add(this.blockSizeTextBox);
             this.sizesBox.Controls.Add(this.label11);
             this.sizesBox.Controls.Add(this.blockSizeLabel);
-            this.sizesBox.Location = new System.Drawing.Point(22, 681);
+            this.sizesBox.Location = new System.Drawing.Point(22, 727);
             this.sizesBox.Name = "sizesBox";
             this.sizesBox.Size = new System.Drawing.Size(434, 46);
             this.sizesBox.TabIndex = 17;
@@ -854,7 +856,7 @@
             this.queryGroupBox.Controls.Add(this.queryTextBox);
             this.queryGroupBox.Controls.Add(this.runQueryButton);
             this.queryGroupBox.Controls.Add(this.panel1);
-            this.queryGroupBox.Location = new System.Drawing.Point(12, 137);
+            this.queryGroupBox.Location = new System.Drawing.Point(12, 183);
             this.queryGroupBox.Name = "queryGroupBox";
             this.queryGroupBox.Size = new System.Drawing.Size(614, 233);
             this.queryGroupBox.TabIndex = 8;
@@ -864,7 +866,7 @@
             // fileTransferBox
             // 
             this.fileTransferBox.Controls.Add(this.transferButton);
-            this.fileTransferBox.Location = new System.Drawing.Point(12, 376);
+            this.fileTransferBox.Location = new System.Drawing.Point(12, 422);
             this.fileTransferBox.Name = "fileTransferBox";
             this.fileTransferBox.Size = new System.Drawing.Size(614, 367);
             this.fileTransferBox.TabIndex = 19;
@@ -880,7 +882,7 @@
             // loggedOnPictureBox
             // 
             this.loggedOnPictureBox.Image = global::x3270ifGuiTest.Properties.Resources.red_light;
-            this.loggedOnPictureBox.Location = new System.Drawing.Point(409, 63);
+            this.loggedOnPictureBox.Location = new System.Drawing.Point(432, 63);
             this.loggedOnPictureBox.Name = "loggedOnPictureBox";
             this.loggedOnPictureBox.Size = new System.Drawing.Size(20, 20);
             this.loggedOnPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -890,7 +892,7 @@
             // connectedPictureBox
             // 
             this.connectedPictureBox.Image = global::x3270ifGuiTest.Properties.Resources.red_light;
-            this.connectedPictureBox.Location = new System.Drawing.Point(409, 39);
+            this.connectedPictureBox.Location = new System.Drawing.Point(432, 39);
             this.connectedPictureBox.Name = "connectedPictureBox";
             this.connectedPictureBox.Size = new System.Drawing.Size(20, 20);
             this.connectedPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -900,18 +902,30 @@
             // startedPictureBox
             // 
             this.startedPictureBox.Image = global::x3270ifGuiTest.Properties.Resources.red_light;
-            this.startedPictureBox.Location = new System.Drawing.Point(409, 15);
+            this.startedPictureBox.Location = new System.Drawing.Point(432, 15);
             this.startedPictureBox.Name = "startedPictureBox";
             this.startedPictureBox.Size = new System.Drawing.Size(20, 20);
             this.startedPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.startedPictureBox.TabIndex = 21;
             this.startedPictureBox.TabStop = false;
             // 
+            // screenLabel
+            // 
+            this.screenLabel.BackColor = System.Drawing.Color.Black;
+            this.screenLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.screenLabel.Font = new System.Drawing.Font("Consolas", 1.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.screenLabel.ForeColor = System.Drawing.Color.LightGreen;
+            this.screenLabel.Location = new System.Drawing.Point(332, 12);
+            this.screenLabel.Name = "screenLabel";
+            this.screenLabel.Size = new System.Drawing.Size(85, 137);
+            this.screenLabel.TabIndex = 24;
+            // 
             // x3270ifGuiTest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(638, 760);
+            this.ClientSize = new System.Drawing.Size(633, 796);
+            this.Controls.Add(this.screenLabel);
             this.Controls.Add(this.loggedOnPictureBox);
             this.Controls.Add(this.connectedPictureBox);
             this.Controls.Add(this.startedPictureBox);
@@ -1053,6 +1067,7 @@
         private System.Windows.Forms.PictureBox startedPictureBox;
         private System.Windows.Forms.PictureBox connectedPictureBox;
         private System.Windows.Forms.PictureBox loggedOnPictureBox;
+        private System.Windows.Forms.Label screenLabel;
     }
 }
 
