@@ -77,7 +77,7 @@ namespace x3270if
             /// </summary>
             /// <param name="r">Plain IoResult.</param>
             /// <param name="type">ASCII or EBCDIC mode.</param>
-            /// <param name="origin">Coordinate origin</param>
+            /// <param name="origin">Coordinate origin.</param>
             public ReadBufferIoResult(IoResult r, ReadBufferType type, int origin) : base(r)
             {
                 // Initialize the ReadBufferType.
@@ -101,7 +101,7 @@ namespace x3270if
         /// Read the 3270 display buffer.
         /// </summary>
         /// <param name="type">ASCII or EBCDIC mode.</param>
-        /// <returns>success/failure and result</returns>
+        /// <returns>Success/failure and result.</returns>
         public ReadBufferIoResult ReadBuffer(ReadBufferType type = ReadBufferType.Ascii)
         {
             try

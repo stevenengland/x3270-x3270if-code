@@ -38,7 +38,7 @@ namespace x3270if
         /// </summary>
         BindPluName,
         /// <summary>
-        /// The state of the connection (tn3270|tn3270e nvt|3270|sscp-lu).
+        /// The state of the connection ("tn3270"|"tn3270e" "nvt"|"3270"|"sscp-lu").
         /// </summary>
         ConnectionState,
         /// <summary>
@@ -46,15 +46,15 @@ namespace x3270if
         /// </summary>
         Cursor,
         /// <summary>
-        /// Screen formatting status (formatted|unformatted)
+        /// Screen formatting status ("formatted"|"unformatted").
         /// </summary>
         Formatted,
         /// <summary>
-        /// Host information (host hostname port|process pathname).
+        /// Host information ("host" hostname port|"process" pathname).
         /// </summary>
         Host,
         /// <summary>
-        /// Local encoding (windows codepage or utf-8)
+        /// Local encoding (Windows code page or "utf-8").
         /// </summary>
         LocalEncoding,
         /// <summary>
@@ -62,19 +62,19 @@ namespace x3270if
         /// </summary>
         LuName,
         /// <summary>
-        /// Full model number, e.g., IBM-3278-4-E.
+        /// Full model name, e.g., IBM-3278-4-E.
         /// </summary>
         Model,
         /// <summary>
-        /// Current screen size (rows columns)
+        /// Current screen size (rows columns).
         /// </summary>
         ScreenCurSize,
         /// <summary>
-        /// Maximum screen size (rows columns)
+        /// Maximum screen size (rows columns).
         /// </summary>
         ScreenMaxSize,
         /// <summary>
-        /// SSL state (not secure | secure host-verified|host-unverified).
+        /// SSL state ("not secure" | "secure" "host-verified"|"host-unverified").
         /// </summary>
         Ssl
 	};
@@ -82,10 +82,10 @@ namespace x3270if
     public partial class Session
     {
         /// <summary>
-        /// Asynchronous version of Query().
+        /// Run the emulator Query action, asynchronous version.
         /// </summary>
         /// <param name="queryType">Type of query.</param>
-        /// <returns>Success/failure and failure text</returns>
+        /// <returns>Success/failure and failure text.</returns>
         public async Task<IoResult> QueryAsync(QueryType queryType)
         {
             var result = await IoAsync("Query(" + queryType.ToString() + ")").ConfigureAwait(continueOnCapturedContext: false);
@@ -102,10 +102,10 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Run the Query() action.
+        /// Run the emulator Query action.
         /// </summary>
         /// <param name="queryType">Type of query.</param>
-        /// <returns>Success/failure and failure text</returns>
+        /// <returns>Success/failure and failure text.</returns>
         public IoResult Query(QueryType queryType)
         {
             try

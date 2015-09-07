@@ -428,7 +428,7 @@ namespace x3270if
         /// <summary>
         /// Clone an Attrs object.
         /// </summary>
-        /// <returns>New copy</returns>
+        /// <returns>New copy.</returns>
         public Attrs Clone()
         {
             return new Attrs
@@ -528,7 +528,7 @@ namespace x3270if
         /// <summary>
         /// Increment operator.
         /// </summary>
-        /// <param name="c">Coordinates to increment</param>
+        /// <param name="c">Coordinates to increment.</param>
         /// <returns>New incremented coordinates, wrapped if necessary.</returns>
         public static Coordinates operator ++(Coordinates c)
         {
@@ -568,9 +568,9 @@ namespace x3270if
         /// <summary>
         /// Equality operator.
         /// </summary>
-        /// <param name="c1">First coordinates</param>
-        /// <param name="c2">Second coordinates</param>
-        /// <returns>true if they are equal</returns>
+        /// <param name="c1">First coordinates.</param>
+        /// <param name="c2">Second coordinates.</param>
+        /// <returns>True if <paramref name="c1"/> and <paramref name="c2"/> are equal.</returns>
         public static bool operator ==(Coordinates c1, Coordinates c2)
         {
             if (ReferenceEquals(c1, c2))
@@ -589,7 +589,7 @@ namespace x3270if
         /// </summary>
         /// <param name="c1">First coordinates.</param>
         /// <param name="c2">Second coordinates.</param>
-        /// <returns>True if they are unequal.</returns>
+        /// <returns>True if <paramref name="c1"/> and <paramref name="c2"/> are unequal.</returns>
         public static bool operator !=(Coordinates c1, Coordinates c2)
         {
             return !(c1 == c2);
@@ -599,7 +599,7 @@ namespace x3270if
         /// Equality method.
         /// </summary>
         /// <param name="other">Other coordinates.</param>
-        /// <returns>True if they are equal.</returns>
+        /// <returns>True if this equals <paramref name="other"/>.</returns>
         public bool Equals(Coordinates other)
         {
             return this == other;
@@ -608,8 +608,8 @@ namespace x3270if
         /// <summary>
         /// Equality method.
         /// </summary>
-        /// <param name="other">Other coordinates (which might not be a Coordinates object)</param>
-        /// <returns>True if they are equal.</returns>
+        /// <param name="other">Other coordinates (which might not be a <see cref="Coordinates"/>).</param>
+        /// <returns>True if this equals <paramref name="other"/>.</returns>
         public override bool Equals(object other)
         {
             var otherCoordinate = other as Coordinates;
@@ -687,7 +687,7 @@ namespace x3270if
         /// <summary>
         /// String conversion method.
         /// </summary>
-        /// <returns>Human-readable text</returns>
+        /// <returns>Human-readable text.</returns>
         public override string ToString()
         {
             return "[" + Row + "," + Column + "]";
@@ -824,7 +824,7 @@ namespace x3270if
         /// </summary>
         /// <param name="row">Row, using the defined <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="column">Column, using the defined <see cref="x3270if.Config.Origin"/>.</param>
-        /// <returns>Contents of one screen location</returns>
+        /// <returns>Contents of one screen location.</returns>
         public DisplayPosition Contents(int row, int column)
         {
             return ContentsArray[row - Origin, column - Origin];
@@ -833,7 +833,7 @@ namespace x3270if
         /// <summary>
         /// The screen contents, one location, indexed by Coordinates.
         /// </summary>
-        /// <param name="c">Coordinates</param>
+        /// <param name="c">Coordinates.</param>
         /// <returns>Contents of one screen location.</returns>
         public DisplayPosition Contents(Coordinates c)
         {
@@ -896,8 +896,8 @@ namespace x3270if
         /// </summary>
         /// <param name="text">One line out output from EbdcicField.</param>
         /// <param name="row">Row index.</param>
-        /// <param name="faAttrs">Current FA attributes</param>
-        /// <param name="saAttrs">Current SA attributes</param>
+        /// <param name="faAttrs">Current FA attributes.</param>
+        /// <param name="saAttrs">Current SA attributes.</param>
         private void parseRow(string text, int row, ref Attrs faAttrs, ref Attrs saAttrs)
         {
             string[] split = text.Split(' ');
@@ -985,8 +985,8 @@ namespace x3270if
         /// <summary>
         /// Translate a sequence encoded in hex (e.g., "A1C3" for 'á' in UTF-8 mode) into a character.
         /// </summary>
-        /// <param name="hexChar"></param>
-        /// <returns></returns>
+        /// <param name="hexChar">Hexadecimal text.</param>
+        /// <returns>Decoded character.</returns>
         private char parseHexEncoded(string hexChar)
         {
             var bytes = new byte[hexChar.Length / 2];
@@ -1000,7 +1000,7 @@ namespace x3270if
         /// <summary>
         /// Helper function to parse a hexadecimal byte.
         /// </summary>
-        /// <param name="value">Text to parse</param>
+        /// <param name="value">Text to parse.</param>
         /// <returns>Byte value if valid, or null.</returns>
         private byte? TryParseHex(string value)
         {
@@ -1042,8 +1042,8 @@ namespace x3270if
         /// <summary>
         /// Parse an SA, which defines attributes that override SF attributes.
         /// </summary>
-        /// <param name="field">SA(xx=yy) text</param>
-        /// <param name="attrs">Current/modified attributes</param>
+        /// <param name="field">SA(xx=yy) text.</param>
+        /// <param name="attrs">Current/modified attributes.</param>
         private void parseSA(string field, ref Attrs attrs)
         {
             const byte IntensityMask = 0x0c;
@@ -1102,7 +1102,7 @@ namespace x3270if
         /// <typeparam name="T">Enum type that defines Default.</typeparam>
         /// <param name="fa">Other value.</param>
         /// <param name="sa">Value that takes precedence.</param>
-        /// <returns>sa if non-default, else fa.</returns>
+        /// <returns><paramref name="sa"/> if <paramref name="sa"/> is non-default, else <paramref name="fa"/>.</returns>
         private T setNonDefault<T>(T fa, T sa) where T: IComparable
         {
             T defaultValue = (T)Enum.Parse(typeof(T), "Default");
@@ -1119,9 +1119,9 @@ namespace x3270if
         /// <summary>
         /// Combine SA (override) and FA attributes to determine field attributes for a buffer position.
         /// </summary>
-        /// <param name="faAttrs">Default field attributes</param>
-        /// <param name="saAttrs">Override attributes, if non-default</param>
-        /// <returns>Merged attributes</returns>
+        /// <param name="faAttrs">Default field attributes.</param>
+        /// <param name="saAttrs">Override attributes, if non-default.</param>
+        /// <returns>Merged attributes.</returns>
         private Attrs CombineAttrs(Attrs faAttrs, Attrs saAttrs)
         {
             Attrs resultAttrs = new Attrs();
@@ -1257,7 +1257,7 @@ namespace x3270if
         /// <summary>
         /// Translate one screen position to a character.
         /// </summary>
-        /// <param name="c">Display position to translate</param>
+        /// <param name="c">Display position to translate.</param>
         /// <returns>Character, or null if position contains a hole.</returns>
         private char? TranslatePosition(DisplayPosition c)
         {
@@ -1356,7 +1356,7 @@ namespace x3270if
         /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="rows">Number of rows.</param>
         /// <param name="columns">Number of columns.</param>
-        /// <returns>Array of strings, one entry per row</returns>
+        /// <returns>Array of strings, one entry per row.</returns>
         public string[] Ascii(int row, int column, int rows, int columns)
         {
             if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
@@ -1414,8 +1414,8 @@ namespace x3270if
         /// <summary>
         /// Find the coordinates of the Field Attribute for a given screen position.
         /// </summary>
-        /// <param name="c">coordinates</param>
-        /// <returns>Row and column, or null if the screen is unformatted</returns>
+        /// <param name="c">Coordinates.</param>
+        /// <returns>Row and column, or null if the screen is unformatted.</returns>
         private Coordinates FaPosition(Coordinates c)
         {
             Coordinates b = new Coordinates(c);
@@ -1481,7 +1481,7 @@ namespace x3270if
         /// Return a field value in ASCII.
         /// </summary>
         /// <param name="c">Coordinates.</param>
-        /// <returns>Text</returns>
+        /// <returns>Text.</returns>
         public string AsciiField(Coordinates c = null)
         {
             if (c == null)
@@ -1508,7 +1508,7 @@ namespace x3270if
         /// </summary>
         /// <param name="row">Row number, using the object's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="column">Column number, using the object's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <returns>Text</returns>
+        /// <returns>Text.</returns>
         public string AsciiField(int row, int column)
         {
             return AsciiField(new Coordinates(this, row, column));

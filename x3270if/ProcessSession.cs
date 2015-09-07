@@ -45,7 +45,7 @@ namespace x3270if
         public string ProcessName = "ws3270.exe";
 
         /// <summary>
-        /// Extra options added to the ws3270 command line.
+        /// Extra options added to the emulator process command line.
         /// </summary>
         public string ExtraOptions;
 
@@ -139,7 +139,7 @@ namespace x3270if
         /// <summary>
         /// Internal Dispose method.
         /// </summary>
-        /// <param name="disposing">true if called from public Dispose method</param>
+        /// <param name="disposing">True if called from public Dispose method.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (disposed)
@@ -157,7 +157,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Kill the ws3270 emulator process.
+        /// Kill the emulator process.
         /// </summary>
         private void ZapProcess()
         {
@@ -255,7 +255,7 @@ namespace x3270if
         /// <summary>
         /// Get the TCP client for a session.
         /// </summary>
-        /// <returns>TcpClient object</returns>
+        /// <returns>TcpClient object.</returns>
         public TcpClient GetClient()
         {
             return Client;
@@ -264,7 +264,7 @@ namespace x3270if
         /// <summary>
         /// Get stderr and stdout from the emulator, in case initial communication failed.
         /// </summary>
-        /// <param name="fallbackText">Text to return if there is no output</param>
+        /// <param name="fallbackText">Text to return if there is no output.</param>
         /// <returns>Error text.</returns>
         public string GetErrorOutput(string fallbackText)
         {

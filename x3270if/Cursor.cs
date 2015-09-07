@@ -33,7 +33,9 @@ namespace x3270if
         /// <summary>
         /// Move cursor up, async version.
         /// </summary>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public async Task<IoResult> UpAsync()
         {
             return await IoAsync("Up()").ConfigureAwait(continueOnCapturedContext: false);
@@ -42,7 +44,9 @@ namespace x3270if
         /// <summary>
         /// Move cursor down, async version.
         /// </summary>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public async Task<IoResult> DownAsync()
         {
             return await IoAsync("Down()").ConfigureAwait(continueOnCapturedContext: false);
@@ -51,7 +55,9 @@ namespace x3270if
         /// <summary>
         /// Move cursor left, async version.
         /// </summary>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public async Task<IoResult> LeftAsync()
         {
             return await IoAsync("Left()").ConfigureAwait(continueOnCapturedContext: false);
@@ -60,7 +66,9 @@ namespace x3270if
         /// <summary>
         /// Move cursor right, async version.
         /// </summary>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public async Task<IoResult> RightAsync()
         {
             return await IoAsync("Right()").ConfigureAwait(continueOnCapturedContext: false);
@@ -71,7 +79,9 @@ namespace x3270if
         /// </summary>
         /// <param name="row">Desired row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="column">Desired column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public async Task<IoResult> MoveCursorAsync(int row, int column)
         {
             if (row < Config.Origin)
@@ -90,7 +100,9 @@ namespace x3270if
         /// <summary>
         /// Move the cursor to the next field, async version.
         /// </summary>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public async Task<IoResult> TabAsync()
         {
             return await IoAsync("Tab()").ConfigureAwait(continueOnCapturedContext: false);
@@ -99,7 +111,9 @@ namespace x3270if
         /// <summary>
         /// Move the cursor to the previous field, async version.
         /// </summary>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public async Task<IoResult> BackTabAsync()
         {
             return await IoAsync("BackTab()");
@@ -108,7 +122,9 @@ namespace x3270if
         /// <summary>
         /// Move cursor up.
         /// </summary>
-        /// <returns>success/failure, failure reason</returns>
+        /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public IoResult Up()
         {
             try
@@ -124,7 +140,9 @@ namespace x3270if
         /// <summary>
         /// Move cursor down.
         /// </summary>
-        /// <returns>success/failure, failure reason</returns>
+        /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public IoResult Down()
         {
             try
@@ -140,7 +158,9 @@ namespace x3270if
         /// <summary>
         /// Move cursor left.
         /// </summary>
-        /// <returns>success/failure, failure reason</returns>
+        /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public IoResult Left()
         {
             try
@@ -156,7 +176,9 @@ namespace x3270if
         /// <summary>
         /// Move cursor right.
         /// </summary>
-        /// <returns>success/failure, failure reason</returns>
+        /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public IoResult Right()
         {
             try
@@ -172,9 +194,11 @@ namespace x3270if
         /// <summary>
         /// Move cursor to a specific location.
         /// </summary>
-        /// <param name="row">Row</param>
-        /// <param name="column">Column</param>
-        /// <returns>success/failure, failure reason</returns>
+        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public IoResult MoveCursor(int row, int column)
         {
             try
@@ -190,7 +214,9 @@ namespace x3270if
         /// <summary>
         /// Tab to the next field.
         /// </summary>
-        /// <returns>success/failure, failure reason</returns>
+        /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public IoResult Tab()
         {
             try
@@ -206,7 +232,9 @@ namespace x3270if
         /// <summary>
         /// Tab to the previous field.
         /// </summary>
-        /// <returns>success/failure, failure reason</returns>
+        /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException">Exception mode is enabled and the command fails.</exception>
         public IoResult BackTab()
         {
             try

@@ -40,7 +40,7 @@ namespace x3270if
     public class startResult
     {
         /// <summary>
-        /// true if the operation succeeded.
+        /// True if the operation succeeded.
         /// </summary>
         public bool Success;
 
@@ -73,7 +73,7 @@ namespace x3270if
         /// <summary>
         /// Connect to the emulator.
         /// </summary>
-        /// <returns>Task returning success/failure and failure text</returns>
+        /// <returns>Task returning success/failure and failure text.</returns>
         private async Task<startResult> TryEmptyCommandAsync()
         {
             // Talk to the emulator with a null command.
@@ -89,9 +89,14 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Start a session, asynchronous version.
+        /// Start an emulator session, asynchronous version.
         /// </summary>
-        /// <returns>Task returning success/failure and failure text</returns>
+        /// <returns>Task returning success/failure and failure text.</returns>
+        /// <remarks>
+        /// <note type="caution">
+        /// <para>When an application is finished with the emulator, including when the application exits,
+        /// it must call the <see cref="Close"/> method to clean up. Otherwise, system resources may be leaked, such as
+        /// orphaned server processes.</para></note></remarks>
         public async Task<startResult> StartAsync()
         {
             if (Running)
@@ -147,9 +152,14 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Start an emulator session, synchronous version.
+        /// Start an emulator session.
         /// </summary>
-        /// <returns>success/failure and failure text</returns>
+        /// <returns>Success/failure and failure text.</returns>
+        /// <remarks>
+        /// <note type="caution">
+        /// <para>When an application is finished with the emulator, including when the application exits,
+        /// it must call the <see cref="Close"/> method to clean up. Otherwise, system resources may be leaked, such as
+        /// orphaned server processes.</para></note></remarks>
         public startResult Start()
         {
             try
@@ -163,9 +173,9 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Stop the emulator session.
+        /// Stop the emulator session and clean up resources it is using.
         /// </summary>
-        /// <param name="saveHistory">If true, recent commands will be saved</param>
+        /// <param name="saveHistory">If true, recent commands will be saved.</param>
         public void Close(bool saveHistory = false)
         {
             // Stop the underlying session.

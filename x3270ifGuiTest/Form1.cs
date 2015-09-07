@@ -197,9 +197,9 @@ namespace x3270ifGuiTest
         /// <summary>
         /// Downgrade the session by one step.
         /// </summary>
-        /// <param name="worker">Context</param>
-        /// <param name="andClose">If true, close the session</param>
-        /// <returns>true if there is more to tear down</returns>
+        /// <param name="worker">Context.</param>
+        /// <param name="andClose">If true, close the session.</param>
+        /// <returns>True if there is more to tear down.</returns>
         private bool downgradeSession(BackgroundWorker worker, bool andClose)
         {
             if (session == null)
@@ -258,10 +258,10 @@ namespace x3270ifGuiTest
         /// Checks the predicate, and if it fails, waits for output and tries again.
         /// Gives up after the specified number of seconds.
         /// </summary>
-        /// <param name="worker">Context</param>
-        /// <param name="d">Predicate</param>
-        /// <param name="secs">Seconds to wait</param>
-        /// <returns>true if predicate succeeds</returns>
+        /// <param name="worker">Context.</param>
+        /// <param name="d">Predicate.</param>
+        /// <param name="secs">Seconds to wait.</param>
+        /// <returns>True if predicate succeeds.</returns>
         private bool rescanUntil(BackgroundWorker worker, Func<Boolean> d, int secs = 10)
         {
             return rescanUntil(worker, new List<Func<Boolean>> { d }, secs) >= 0;
@@ -272,10 +272,10 @@ namespace x3270ifGuiTest
         /// Checks the predicate, and if it fails, waits for output and tries again.
         /// Gives up after the specified number of seconds.
         /// </summary>
-        /// <param name="worker">Context</param>
-        /// <param name="d">Set of predicates</param>
-        /// <param name="secs">Seconds to wait</param>
-        /// <returns>true if predicate succeeds</returns>
+        /// <param name="worker">Context.</param>
+        /// <param name="d">Set of predicates.</param>
+        /// <param name="secs">Seconds to wait.</param>
+        /// <returns>True if predicate succeeds.</returns>
         private int rescanUntil(BackgroundWorker worker, IEnumerable<Func<Boolean>> d, int secs = 10)
         {
             if (worker.CancellationPending)
@@ -317,11 +317,11 @@ namespace x3270ifGuiTest
         /// Requires that displayBuffer is valid. Will wait for more output and update displayBuffer if necessary.
         /// Times out after 10 seconds.
         /// </summary>
-        /// <param name="worker">Context</param>
-        /// <param name="row">Row where text needs to appear</param>
-        /// <param name="col">Column</param>
-        /// <param name="text">Desired text</param>
-        /// <returns>true if text was found</returns>
+        /// <param name="worker">Context.</param>
+        /// <param name="row">Row where text needs to appear.</param>
+        /// <param name="col">Column.</param>
+        /// <param name="text">Desired text.</param>
+        /// <returns>True if text was found.</returns>
         private bool waitForString(BackgroundWorker worker, int row, int col, string text)
         {
             if (!rescanUntil(worker, () => displayBuffer.AsciiEquals(row, col, text), 10))
@@ -336,8 +336,8 @@ namespace x3270ifGuiTest
         /// <summary>
         /// Reboot the CMS virtual machine.
         /// </summary>
-        /// <param name="worker">Context</param>
-        /// <returns>true if CMS rebooted successfully</returns>
+        /// <param name="worker">Context.</param>
+        /// <returns>True if CMS rebooted successfully.</returns>
         private bool rebootCMS(BackgroundWorker worker)
         {
             worker.ReportProgress(0, new WorkerStatusError("Attempting CMS reboot"));
@@ -356,7 +356,7 @@ namespace x3270ifGuiTest
         /// Check the screen for the MORE... prompt.
         /// displayBuffer must be valid.
         /// </summary>
-        /// <returns>true if MORE...</returns>
+        /// <returns>True if MORE... was found.</returns>
         private bool isMore()
         {
             return displayBuffer.AsciiEquals(43, 61, "MORE...");
@@ -365,9 +365,9 @@ namespace x3270ifGuiTest
         /// <summary>
         /// Scan the screen buffer for text at the beginning of the line.
         /// </summary>
-        /// <param name="startRow">First row to scan</param>
-        /// <param name="text">Text to scan for</param>
-        /// <returns>true if text found</returns>
+        /// <param name="startRow">First row to scan.</param>
+        /// <param name="text">Text to scan for.</param>
+        /// <returns>True if <paramref name="text"/> found.</returns>
         private bool scanFor(int startRow, string text)
         {
             for (var i = startRow; i < 42; i++)
@@ -383,8 +383,8 @@ namespace x3270ifGuiTest
         /// <summary>
         /// Check logon parameters.
         /// </summary>
-        /// <param name="worker"></param>
-        /// <returns>true if logon parameters are valid</returns>
+        /// <param name="worker">Context.</param>
+        /// <returns>True if logon parameters are valid.</returns>
         private bool checkLoginFields(BackgroundWorker worker)
         {
             if (string.IsNullOrEmpty(hostnameTextBox.Text))
@@ -408,9 +408,9 @@ namespace x3270ifGuiTest
         /// <summary>
         /// Log in to the host.
         /// </summary>
-        /// <param name="worker">Context</param>
-        /// <param name="username">Username</param>
-        /// <returns>true if logon succeeded</returns>
+        /// <param name="worker">Context.</param>
+        /// <param name="username">Username.</param>
+        /// <returns>True if logon succeeded.</returns>
         private bool logon(BackgroundWorker worker, string username)
         {
             if (session == null)
@@ -516,7 +516,7 @@ namespace x3270ifGuiTest
         /// <summary>
         /// Start button action. Runs the query.
         /// </summary>
-        /// <param name="worker">Context</param>
+        /// <param name="worker">Context.</param>
         private void doStartQuery(BackgroundWorker worker)
         {
             System.Diagnostics.Stopwatch overall = new System.Diagnostics.Stopwatch();
@@ -625,8 +625,8 @@ namespace x3270ifGuiTest
         /// <summary>
         /// Find the checked RadioButton in a GroupBox and return its tag as an Enum.
         /// </summary>
-        /// <param name="groupBox"></param>
-        /// <returns>Nullable Enum value</returns>
+        /// <param name="groupBox">Box to search; must contain <see cref="RadioButton"/>s.</param>
+        /// <returns>Nullable Enum value.</returns>
         private Nullable<T> checkedTag<T>(GroupBox groupBox) where T : struct, IConvertible
         {
             foreach (var control in groupBox.Controls)
@@ -643,7 +643,7 @@ namespace x3270ifGuiTest
         /// <summary>
         /// Transfer button action. Runs the transfer.
         /// </summary>
-        /// <param name="worker">Context</param>
+        /// <param name="worker">Context.</param>
         private void doStartTransfer(BackgroundWorker worker)
         {
             worker.ReportProgress(100, new WorkerStatusIdle());
@@ -816,8 +816,6 @@ namespace x3270ifGuiTest
                 string.Empty));
         }
 
-        // TODO: Keep logged in for a while, keep connected for a while.
-
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             // Stop the timer.
@@ -881,8 +879,8 @@ namespace x3270ifGuiTest
         /// Background worker thread progress indicator.
         /// The parameters are pretty badly overloaded:
         /// </summary>
-        /// <param name="sender">Sending object</param>
-        /// <param name="e">Parameters, UserState is a WorkerStatus</param>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Parameters; <see cref="ProgressChangedEventArgs.UserState"/> is a <see cref="WorkerStatus"/>.</param>
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             WorkerStatus status = (WorkerStatus)e.UserState;
@@ -968,8 +966,8 @@ namespace x3270ifGuiTest
         /// Background worker completion function.
         /// If we are quitting, makes sure the session is closed and then exits. 
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender">Context.</param>
+        /// <param name="e">Completion arguments.</param>
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (quitting)

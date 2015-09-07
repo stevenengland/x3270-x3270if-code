@@ -54,7 +54,7 @@ namespace UnitTests
         /// <summary>
         /// Call DumpAsciiConsole, redirecting the console to NUL: unless ConsoleDebug is set.
         /// </summary>
-        /// <param name="b"></param>
+        /// <param name="b">Display buffer.</param>
         private static void WrappedDumpAsciiBuffer(DisplayBuffer b)
         {
             var oldOut = Console.Out;

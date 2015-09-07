@@ -92,7 +92,7 @@ namespace x3270if
         /// <summary>
         /// Constructor, given a configuration.
         /// </summary>
-        /// <param name="config">Configuration</param>
+        /// <param name="config">Configuration.</param>
         public PortBackEnd(PortConfig config)
         {
             PortConfig = config ?? new PortConfig();
@@ -131,7 +131,7 @@ namespace x3270if
         /// <summary>
         /// Connect to an existing emulator process
         /// </summary>
-        /// <returns>Success indication and error message</returns>
+        /// <returns>Success indication and error message.</returns>
         public async Task<startResult> StartAsync()
         {
             int port;
@@ -172,7 +172,7 @@ namespace x3270if
         /// <summary>
         /// Get the TCP client for a session.
         /// </summary>
-        /// <returns>TcpClient object</returns>
+        /// <returns>TcpClient object.</returns>
         public TcpClient GetClient()
         {
             return Client;
@@ -181,8 +181,8 @@ namespace x3270if
         /// <summary>
         /// Fetch the error output from the emulator.
         /// </summary>
-        /// <param name="fallbackText">Text to return if there is nothing from the emulator</param>
-        /// <returns>Error text</returns>
+        /// <param name="fallbackText">Text to return if there is nothing from the emulator.</param>
+        /// <returns>Error text.</returns>
         public string GetErrorOutput(string fallbackText)
         {
             return fallbackText;

@@ -97,7 +97,7 @@ namespace x3270if
     public class IoResult
     {
         /// <summary>
-        /// true if the operation succeeded.
+        /// True if the operation succeeded.
         /// </summary>
         public bool Success;
 
@@ -177,11 +177,15 @@ namespace x3270if
         };
 
         /// <summary>
-        /// Asynchronous version of Io.
+        /// Basic emulator I/O function, asynchronous version.
+        /// Given a command and an optional timeout, send it and return the reply.
+        /// The emulator status is saved in the session and can be queried after.
         /// </summary>
-        /// <param name="command">Command to send to the emulator</param>
-        /// <param name="timeoutMsec">Timeout for initial handshake</param>
-        /// <returns>I/O result</returns>
+        /// <param name="command">The command and parameters to pass to the emulator.
+        /// Must be formatted correctly for the emulator. This method does no translation.</param>
+        /// <param name="timeoutMsec">Optional timeout. The emulator session will be stopped if the timeout expires, so this
+        /// is a dead-man timer, not to be used casually.</param>
+        /// <returns>I/O result.</returns>
         public async Task<IoResult> IoAsync(string command, int? timeoutMsec = null)
         {
             string[] reply = null;
@@ -215,7 +219,7 @@ namespace x3270if
                 var ns = client.GetStream();
                 await ns.WriteAsync(nl, 0, nl.Length).ConfigureAwait(continueOnCapturedContext: false);
 
-                // Create a task to time out the read operations after <n> seconds, in case ws3270 hangs or we get confused.
+                // Create a task to time out the read operations after <n> seconds, in case the emulator hangs or we get confused.
 
                 int thisTimeoutMsec = timeoutMsec ?? Config.DefaultTimeoutMsec;
                 if (thisTimeoutMsec > 0)
@@ -280,7 +284,7 @@ namespace x3270if
             if (timeoutTask != null)
             {
                 // Cancel the timeout. Yes, there is a race here, but if we lose, it means that
-                // ws3270 took a long time to answer, and something is wrong.
+                // the emulator took a long time to answer, and something is wrong.
                 tokenSource.Cancel();
 
                 // Collect the status of the timeout task.
@@ -374,7 +378,7 @@ namespace x3270if
                 Encoding = this.Encoding
             };
             SaveRecentCommand(ioResult);
-            lastStatus = statusLine;
+            lastStatusLine = statusLine;
 
             if (Config.Origin == 0 || statusLine == null)
             {
@@ -385,22 +389,22 @@ namespace x3270if
             var statusFields = statusLine.Split(' ');
             statusFields[(int)StatusLineField.CursorRow] = (int.Parse(statusFields[(int)StatusLineField.CursorRow]) + Config.Origin).ToString();
             statusFields[(int)StatusLineField.CursorColumn] = (int.Parse(statusFields[(int)StatusLineField.CursorColumn]) + Config.Origin).ToString();
-            lastStatus = string.Join(" ", statusFields);
+            lastStatusLine = string.Join(" ", statusFields);
             var retIoResult = new IoResult(ioResult);
-            retIoResult.StatusLine = lastStatus;
+            retIoResult.StatusLine = lastStatusLine;
             return retIoResult;
         }
 
         /// <summary>
-        /// Basic ws3270 I/O function.
+        /// Basic emulator I/O function.
         /// Given a command and an optional timeout, send it and return the reply.
         /// The emulator status is saved in the session and can be queried after.
         /// </summary>
-        /// <param name="command">The command and parameters to pass to the emulator.</param>
-        /// Must be formatted correctly for ws3270. This method does no translation.
-        /// <param name="timeoutMsec">Optional timeout. The ws3270 session will be stopped if the timeout expires, so this
+        /// <param name="command">The command and parameters to pass to the emulator.
+        /// Must be formatted correctly for the emulator. This method does no translation.</param>
+        /// <param name="timeoutMsec">Optional timeout. The emulator session will be stopped if the timeout expires, so this
         /// is a dead-man timer, not to be used casually.</param>
-        /// <returns>success/failure and result or error text</returns>
+        /// <returns>Success/failure and result or error text.</returns>
         public IoResult Io(string command, int? timeoutMsec = null)
         {
             try

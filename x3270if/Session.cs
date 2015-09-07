@@ -115,11 +115,12 @@ namespace x3270if
 
     /// <summary>
     /// An emulator session.
+    /// <para>This is an abstract class. To create a session, use a concrete class like <see cref="ProcessSession"/> or <see cref="PortSession"/>.</para>
     /// </summary>
-    public partial class Session
+    public abstract partial class Session
     {
         /// <summary>
-        /// Is this instance running?
+        /// True if the instance is running (started).
         /// </summary>
         public bool Running
         {
@@ -170,8 +171,8 @@ namespace x3270if
 
         /// <summary>
         /// Fetch the set of recent commands.
-        /// <para>These are the actual commands sent and responses received from the emulator.
-        /// The data reported by the <see cref="Status"/> attribute, the <see cref="Query"/>
+        /// <para>These are the unmodified commands sent to and responses received from the emulator.
+        /// The data reported by the <see cref="StatusLine"/> attribute, the <see cref="Query"/>
         /// method and the <see cref="StatusField"/> method may be translated to conform to the
         /// session's <see cref="x3270if.Config.Origin"/>.</para>
         /// </summary>
@@ -186,16 +187,16 @@ namespace x3270if
             }
         }
 
-        private string lastStatus;
+        private string lastStatusLine;
         /// <summary>
         /// Fetch the last status.
-        /// This may be different from the StatusLine in the recent history, because of <see cref="x3270if.Config.Origin"/> translation.
+        /// <para>This may be different from the StatusLine in the recent history, because of <see cref="x3270if.Config.Origin"/> translation.</para>
         /// </summary>
-        public string Status
+        public string StatusLine
         {
             get
             {
-                return lastStatus;
+                return lastStatusLine;
             }
         }
 
@@ -226,8 +227,8 @@ namespace x3270if
         /// <summary>
         /// Constructor, given a configuration and a back end.
         /// </summary>
-        /// <param name="config">Configuration</param>
-        /// <param name="emulatorConnection">Back end</param>
+        /// <param name="config">Configuration.</param>
+        /// <param name="emulatorConnection">Back end.</param>
         protected Session(Config config, IBackEnd emulatorConnection)
         {
             this.Config = config ?? new Config();
@@ -244,14 +245,14 @@ namespace x3270if
         /// <para>For cursor coordinates, the value may have been translated to conform to the session's <see cref="x3270if.Config.Origin"/>.</para>
         /// </summary>
         /// <param name="index">Zero-based index of field to return (int cast of StatusLineField).</param>
-        /// <returns>Field value</returns>
+        /// <returns>Field value.</returns>
         public string StatusField(StatusLineField index)
         {
             if (!Running)
             {
                 throw new InvalidOperationException("Not running");
             }
-            return Status.Split(' ')[(int)index];
+            return StatusLine.Split(' ')[(int)index];
         }
     }
 }

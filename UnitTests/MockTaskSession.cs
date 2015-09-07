@@ -280,7 +280,7 @@ namespace UnitTests
         /// <summary>
         /// Internal Dispose method.
         /// </summary>
-        /// <param name="disposing">true if called from public Dispose method</param>
+        /// <param name="disposing">True if called from public Dispose method.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (disposed)

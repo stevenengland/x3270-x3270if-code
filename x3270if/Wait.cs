@@ -34,7 +34,7 @@ namespace x3270if
     public enum WaitMode
 	{
         /// <summary>
-        /// Wait for a modifiable field.
+        /// Wait for the host to draw a screen containing a modifiable field.
         /// </summary>
         InputField,
         /// <summary>
@@ -59,6 +59,8 @@ namespace x3270if
         Disconnect,
         /// <summary>
         /// Wait for the keyboard to be unlocked by the host.
+        /// This is useful only when the aidWait toggle (set by default) is clear, which means that methods
+        /// that send the host an AID do not automatically wait for the keyboard to be unlocked.
         /// </summary>
         Unlock
 	};
@@ -66,11 +68,11 @@ namespace x3270if
     public partial class Session
     {
         /// <summary>
-        /// Asynchronous version of Wait().
+        /// Block until an emulator event occurs, asynchronous version.
         /// </summary>
         /// <param name="waitMode">What to wait for.</param>
         /// <param name="timeoutSecs">Optional timeout. This is not destructive if it fails.</param>
-        /// <returns>Success/failure and failure text</returns>
+        /// <returns>Success/failure and failure text.</returns>
         public async Task<IoResult> WaitAsync(WaitMode waitMode, int? timeoutSecs = null)
         {
             string command = "Wait(";
@@ -90,11 +92,11 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Run the Wait() action.
+        /// Block until an emulator event occurs.
         /// </summary>
         /// <param name="waitMode">What to wait for.</param>
         /// <param name="timeoutSecs">Optional timeout. This is not destructive if it fails.</param>
-        /// <returns>success/failure and failure text</returns>
+        /// <returns>Success/failure and failure text.</returns>
         public IoResult Wait(WaitMode waitMode, int? timeoutSecs = null)
         {
             try

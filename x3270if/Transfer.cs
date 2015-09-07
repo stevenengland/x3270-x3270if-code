@@ -440,15 +440,15 @@ namespace x3270if
     public partial class Session
     {
         /// <summary>
-        /// Asynchronous version of Transfer().
+        /// IND$FILE file transfer, asynchronous version.
         /// </summary>
         /// <param name="localFile">Local file name.</param>
         /// <param name="hostFile">Host file name.</param>
         /// <param name="direction">Direction of transfer.</param>
-        /// <param name="mode">Type of transfer (ASCII/binary)</param>
-        /// <param name="hostType">Host type (TSO/VM/CICS)</param>
-        /// <param name="parameters">Additional parameters</param>
-        /// <returns>Success/failure and failure text</returns>
+        /// <param name="mode">Type of transfer (ASCII/binary).</param>
+        /// <param name="hostType">Host type (TSO/VM/CICS).</param>
+        /// <param name="parameters">Additional parameters.</param>
+        /// <returns>Success/failure and failure text.</returns>
         public async Task<IoResult> TransferAsync(
             string localFile,
             string hostFile,
@@ -581,15 +581,15 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Asynchronous version of Transfer().
+        /// IND$FILE file transfer, asynchronous version.
         /// </summary>
         /// <param name="localFile">Local file name.</param>
         /// <param name="hostFile">Host file name.</param>
         /// <param name="direction">Direction of transfer.</param>
-        /// <param name="mode">Type of transfer (ASCII/binary)</param>
-        /// <param name="hostType">Host type (TSO/VM/CICS)</param>
-        /// <param name="parameters">Additional parameters</param>
-        /// <returns>Success/failure and failure text</returns>
+        /// <param name="mode">Type of transfer (ASCII/binary).</param>
+        /// <param name="hostType">Host type (TSO/VM/CICS).</param>
+        /// <param name="parameters">Additional parameters.</param>
+        /// <returns>Success/failure and failure text.</returns>
         public async Task<IoResult> TransferAsync(
             string localFile,
             string hostFile,
@@ -625,10 +625,10 @@ namespace x3270if
         /// <param name="localFile">Local file name.</param>
         /// <param name="hostFile">Host file name.</param>
         /// <param name="direction">Direction of transfer.</param>
-        /// <param name="mode">Type of transfer (ASCII/binary)</param>
-        /// <param name="hostType">Host type (TSO/VM/CICS)</param>
-        /// <param name="parameters">Additional parameters</param>
-        /// <returns>Success/failure and failure text</returns>
+        /// <param name="mode">Type of transfer (ASCII/binary).</param>
+        /// <param name="hostType">Host type (TSO/VM/CICS).</param>
+        /// <param name="parameters">Additional parameters.</param>
+        /// <returns>Success/failure and failure text.</returns>
         public IoResult Transfer(
             string localFile,
             string hostFile,
@@ -653,10 +653,10 @@ namespace x3270if
         /// <param name="localFile">Local file name.</param>
         /// <param name="hostFile">Host file name.</param>
         /// <param name="direction">Direction of transfer.</param>
-        /// <param name="mode">Type of transfer (ASCII/binary)</param>
-        /// <param name="hostType">Host type (TSO/VM/CICS)</param>
-        /// <param name="parameters">Additional parameters</param>
-        /// <returns>Success/failure and failure text</returns>
+        /// <param name="mode">Type of transfer (ASCII/binary).</param>
+        /// <param name="hostType">Host type (TSO/VM/CICS).</param>
+        /// <param name="parameters">Additional parameters.</param>
+        /// <returns>Success/failure and failure text.</returns>
         public IoResult Transfer(
             string localFile,
             string hostFile,

@@ -123,7 +123,7 @@ namespace UnitTests
             Assert.AreEqual(null, session.LastCommand);
             var emptyIoResult = new IoResult[0];
             Assert.AreEqual(emptyIoResult, session.RecentCommands);
-            Assert.AreEqual(null, session.Status);
+            Assert.AreEqual(null, session.StatusLine);
         }
 
         /// <summary>

@@ -31,28 +31,28 @@ namespace x3270if
     public partial class Session
     {
         /// <summary>
-        /// Enter AID, async version.
+        /// Send an Enter AID, async version.
         /// </summary>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <returns>Success/failure and failure reason.</returns>
         public async Task<IoResult> EnterAsync()
         {
             return await IoAsync("Enter()").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
-        /// Clear AID, async version.
+        /// Send a Clear AID, async version.
         /// </summary>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <returns>Success/failure and failure reason.</returns>
         public async Task<IoResult> ClearAsync()
         {
             return await IoAsync("Clear()").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
-        /// PF AID, async version.
+        /// Send a PF AID, async version.
         /// </summary>
-        /// <param name="n">PF index</param>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <param name="n">PF index.</param>
+        /// <returns>Success/failure and failure reason.</returns>
         public async Task<IoResult> PFAsync(int n)
         {
             if (n < 1 || n > 24)
@@ -63,10 +63,10 @@ namespace x3270if
         }
 
         /// <summary>
-        /// PA AID, async version.
+        /// Send a PA AID, async version.
         /// </summary>
-        /// <param name="n">PA index</param>
-        /// <returns>success/failure and failure reason.</returns>
+        /// <param name="n">PA index.</param>
+        /// <returns>Success/failure and failure reason.</returns>
         public async Task<IoResult> PAAsync(int n)
         {
             if (n < 1 || n > 3)
@@ -77,9 +77,9 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Enter AID.
+        /// Send an Enter AID.
         /// </summary>
-        /// <returns>success/failure, failure reason</returns>
+        /// <returns>Success/failure, failure reason.</returns>
         public IoResult Enter()
         {
             try
@@ -93,9 +93,9 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Clear AID.
+        /// Send a Clear AID.
         /// </summary>
-        /// <returns>success/failure, failure reason</returns>
+        /// <returns>Success/failure, failure reason.</returns>
         public IoResult Clear()
         {
             try
@@ -109,10 +109,10 @@ namespace x3270if
         }
 
         /// <summary>
-        /// PF AID.
+        /// Send a PF AID.
         /// </summary>
-        /// <param name="n">PF index</param>
-        /// <returns>success/failure, failure reason</returns>
+        /// <param name="n">PF index.</param>
+        /// <returns>Success/failure, failure reason.</returns>
         public IoResult PF(int n)
         {
             try
@@ -126,10 +126,10 @@ namespace x3270if
         }
 
         /// <summary>
-        /// PA AID.
+        /// Send a PA AID.
         /// </summary>
-        /// <param name="n">PA index</param>
-        /// <returns>success/failure, failure reason</returns>
+        /// <param name="n">PA index.</param>
+        /// <returns>Success/failure, failure reason.</returns>
         public IoResult PA(int n)
         {
             try

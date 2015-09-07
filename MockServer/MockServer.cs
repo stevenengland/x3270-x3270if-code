@@ -59,8 +59,8 @@ namespace Mock
         /// <summary>
         /// Write a prompt to the stream.
         /// </summary>
-        /// <param name="streamWriter">StreamWriter to write to</param>
-        /// <param name="success">True if success, false if failure</param>
+        /// <param name="streamWriter">StreamWriter to write to.</param>
+        /// <param name="success">True if success, false if failure.</param>
         private void Prompt(StreamWriter streamWriter, bool success)
         {
             streamWriter.WriteLine("U F U U I 2 24 80 0 0 0x0 -");
@@ -71,7 +71,7 @@ namespace Mock
         /// <summary>
         /// Fail a command with some canned data.
         /// </summary>
-        /// <param name="streamWriter">StreamWrite to write to</param>
+        /// <param name="streamWriter">StreamWrite to write to.</param>
         private void Fail(StreamWriter streamWriter)
         {
             streamWriter.WriteLine("data: failed");
@@ -80,7 +80,7 @@ namespace Mock
 
         /// <summary>
         /// Mock ws3270 server, given a listening socket.
-        /// <param name="listeningSocket">Socket to accept connection on and close</param>
+        /// <param name="listeningSocket">Socket to accept connection on and close.</param>
         public void Ws3270(Socket listeningSocket)
         {
             var connection = listeningSocket.Accept();
@@ -117,7 +117,7 @@ namespace Mock
         /// This code is used both inline as a mock server, in a task, and in the standalone mock
         /// ws3270 program.
         /// </summary>
-        /// <param name="connection">Socket with accepted connection</param>
+        /// <param name="connection">Socket with accepted connection.</param>
         public void Ws3270Common(Socket connection)
         {
             // Set up streams to process network I/O.

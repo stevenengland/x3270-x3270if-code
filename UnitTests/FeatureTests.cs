@@ -45,9 +45,9 @@ namespace UnitTests
         /// <summary>
         /// Verify that an action succeeds and produces a particular emulator command.
         /// </summary>
-        /// <param name="session">Mock session</param>
-        /// <param name="del"></param>
-        /// <param name="expected"></param>
+        /// <param name="session">Mock session.</param>
+        /// <param name="del">Action to test.</param>
+        /// <param name="expected">Expected text.</param>
         public static void VerifyCommand(this MockTaskSession session, VerifyDelegate del, string expected)
         {
             IoResult result;
@@ -59,7 +59,7 @@ namespace UnitTests
         /// <summary>
         /// Start a mock session and make sure it was successful.
         /// </summary>
-        /// <param name="session"></param>
+        /// <param name="session">Session to start.</param>
         public static void VerifyStart(this MockTaskSession session)
         {
             var result = session.Start();

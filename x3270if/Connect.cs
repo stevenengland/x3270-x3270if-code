@@ -37,7 +37,7 @@ namespace x3270if
         /// Check a name (host, port or LU) for the presence of metacharacters that could confuse the hostname parser.
         /// </summary>
         /// <param name="name">Name to check.</param>
-        /// <param name="extraChars">Additional illegal characters</param>
+        /// <param name="extraChars">Additional illegal characters.</param>
         private void CheckName(string name, string extraChars = null)
         {
             if (string.IsNullOrEmpty(name))
@@ -127,7 +127,7 @@ namespace x3270if
         /// <summary>
         /// Disconnect from the host. Asynchronous version.
         /// </summary>
-        /// <returns>Task returning success/failure and failure text</returns>
+        /// <returns>Task returning success/failure and failure text.</returns>
         public async Task<IoResult> DisconnectAsync()
         {
             return await IoAsync("Disconnect()").ConfigureAwait(continueOnCapturedContext: false);
@@ -137,7 +137,7 @@ namespace x3270if
         /// Connect to a host.
         /// </summary>
         /// <param name="host">Hostname.</param>
-        /// <param name="port">Optional TCP port number or service name</param>
+        /// <param name="port">Optional TCP port number or service name.</param>
         /// <param name="lu">Optional set of LU names to try to connect to.</param>
         /// <param name="flags">Connection flags (SSL, etc.).</param>
         /// <returns>Success/failure and failure text.</returns>
@@ -156,7 +156,7 @@ namespace x3270if
         /// <summary>
         /// Disconnect from a host.
         /// </summary>
-        /// <returns>success/failure and failure text</returns>
+        /// <returns>Success/failure and failure text.</returns>
         public IoResult Disconnect()
         {
             try

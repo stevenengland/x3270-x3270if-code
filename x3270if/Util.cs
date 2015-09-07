@@ -34,16 +34,23 @@ namespace x3270if
     public static class Util
     {
         /// <summary>
-        /// Return a string by building up a result with a separator. Start with an empty
-        /// string 's' and use it like this:
-        ///  s += s.JoinNonEmpty(" ", newElement);
-        /// This lets us build up a result with only single separators between non-empty elements,
-        /// and no separators on the ends.
+        /// Return a string by building up a result with a separator. An incremental form of <see cref="string.Join(string,string[])"/>.
         /// </summary>
-        /// <param name="left">The original string</param>
-        /// <param name="separator">The separator</param>
-        /// <param name="right">The string to add</param>
-        /// <returns>incremental string to concatenate</returns>
+        /// <param name="left">The original string.</param>
+        /// <param name="separator">The separator.</param>
+        /// <param name="right">The string to add, which might be null or empty.</param>
+        /// <returns>Incremental string to concatenate to <paramref name="left"/>.</returns>
+        /// <remarks>
+        /// Start with an empty
+        /// string 's' and use it like this:
+        /// <code>
+        /// String s = String.Empty;
+        /// //...
+        /// s += s.JoinNonEmpty(" ", newElement);
+        /// </code>
+        /// This lets you build up a result with only single separators between non-empty elements,
+        /// and no separators on the ends.
+        /// </remarks>
         public static string JoinNonEmpty(this string left, string separator, string right)
         {
             if (string.IsNullOrEmpty(right))
@@ -68,8 +75,8 @@ namespace x3270if
         /// <summary>
         /// Conditionally write debug output to the console.
         /// </summary>
-        /// <param name="format">string.Format</param>
-        /// <param name="args">Format arguments</param>
+        /// <param name="format"><see cref="String.Format(String,object)"/> specifier.</param>
+        /// <param name="args">Format arguments.</param>
         public static void Log(string format, params object[] args)
         {
             if (ConsoleDebug)

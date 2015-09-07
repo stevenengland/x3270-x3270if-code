@@ -55,9 +55,9 @@ namespace x3270if
         /// <summary>
         /// Quote a string for transmission to the String action.
         /// </summary>
-        /// <param name="text">Text to quote</param>
+        /// <param name="text">Text to quote.</param>
         /// <param name="quoteBackslashes">If true, quote backslash characters.</param>
-        /// <returns>Quoted string</returns>
+        /// <returns>Quoted string.</returns>
         public static string QuoteString(string text, bool quoteBackslashes)
         {
             const string metaChars = " ,\"()\\";
@@ -121,7 +121,7 @@ namespace x3270if
         /// </summary>
         /// <param name="text">Text to send. It will be quoted as necessary.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
-        /// <returns>Success indication</returns>
+        /// <returns>Success indication.</returns>
         public async Task<IoResult>StringAsync(string text, bool quoteBackslashes = true)
         {
             return await IoAsync("String(" + QuoteString(text, quoteBackslashes) + ")").ConfigureAwait(continueOnCapturedContext: false);
@@ -134,8 +134,8 @@ namespace x3270if
         /// <param name="column">Column.</param>
         /// <param name="text">Text to send. It will be quoted as necessary.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
-        /// <param name="eraseEof">If true, do EraseEOF before each string</param>
-        /// <returns>Success indication</returns>
+        /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
+        /// <returns>Success indication.</returns>
         public async Task<IoResult> StringAtAsync(int row, int column, string text, bool quoteBackslashes = true, bool eraseEof = false)
         {
             var strings = new [] { new StringAtBlock { Row = row, Column = column, Text = text } };
@@ -145,10 +145,10 @@ namespace x3270if
         /// <summary>
         /// Async multi-argument version of StringAt.
         /// </summary>
-        /// <param name="strings">Set strings to add</param>
+        /// <param name="strings">Set strings to add.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
-        /// <param name="eraseEof">If true, do EraseEOF before each string</param>
-        /// <returns>Success indication</returns>
+        /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
+        /// <returns>Success indication.</returns>
         public async Task<IoResult> StringAtAsync(IEnumerable<StringAtBlock> strings, bool quoteBackslashes = true, bool eraseEof = false)
         {
             string command = string.Empty;
@@ -198,8 +198,8 @@ namespace x3270if
         /// <param name="column">Column.</param>
         /// <param name="text">Text to send. It will be quoted as necessary.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
-        /// <param name="eraseEof">If true, do EraseEOF before each string</param>
-        /// <returns>Success indication</returns>
+        /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
+        /// <returns>Success indication.</returns>
         public IoResult StringAt(int row, int column, string text, bool quoteBackslashes = true, bool eraseEof = false)
         {
             try
@@ -217,8 +217,8 @@ namespace x3270if
         /// </summary>
         /// <param name="strings">Set of strings to add.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
-        /// <param name="eraseEof">If true, do EraseEOF before each string</param>
-        /// <returns>Success indication</returns>
+        /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
+        /// <returns>Success indication.</returns>
         public IoResult StringAt(IEnumerable<StringAtBlock> strings, bool quoteBackslashes = true, bool eraseEof = false)
         {
             try
