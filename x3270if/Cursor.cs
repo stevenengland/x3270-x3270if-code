@@ -116,7 +116,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> BackTabAsync()
         {
-            return await IoAsync("BackTab()");
+            return await IoAsync("BackTab()").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>

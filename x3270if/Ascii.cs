@@ -50,7 +50,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> AsciiAsync(int length)
         {
-            return await IoAsync("Ascii(" + length + ")");
+            return await IoAsync("Ascii(" + length + ")").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>

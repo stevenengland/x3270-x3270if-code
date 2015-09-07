@@ -143,7 +143,7 @@ namespace x3270if
         public async Task<IoResult> StringAtAsync(int row, int column, string text, bool quoteBackslashes = true, bool eraseEof = false)
         {
             var strings = new [] { new StringAtBlock { Row = row, Column = column, Text = text } };
-            return await StringAtAsync(strings, quoteBackslashes, eraseEof);
+            return await StringAtAsync(strings, quoteBackslashes, eraseEof).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>

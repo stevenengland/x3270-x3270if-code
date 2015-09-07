@@ -83,7 +83,7 @@ namespace x3270if
             {
                 throw new ArgumentOutOfRangeException("n");
             }
-            return await IoAsync("PA(" + n.ToString() + ")");
+            return await IoAsync("PA(" + n.ToString() + ")").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
