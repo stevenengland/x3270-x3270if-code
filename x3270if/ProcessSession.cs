@@ -199,8 +199,11 @@ namespace x3270if
                 socket.Bind(new IPEndPoint(IPAddress.Any, 0));
                 int port = ((IPEndPoint)socket.LocalEndPoint).Port;
 
-                // Start with basic arguments: UTF-8 mode and the model number.
-                var arguments = string.Format("-utf8 -model {0}", ProcessConfig.Model);
+                // Start with basic arguments:
+                //  -utf8             UTF-8 mode
+                //  -model n          Model number
+                //  -scriptportonce   Make sure the emulator exists if the socket connection breaks
+                var arguments = string.Format("-utf8 -model {0} -scriptportonce", ProcessConfig.Model);
 
                 // Add arbitrary extra options.
                 arguments += arguments.JoinNonEmpty(" ", ProcessConfig.ExtraOptions);
