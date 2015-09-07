@@ -91,6 +91,8 @@ namespace x3270if
         /// </summary>
         /// <param name="type">See ReadBuffer.</param>
         /// <returns>See ReadBuffer.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<ReadBufferIoResult> ReadBufferAsync(ReadBufferType type = ReadBufferType.Ascii)
         {
             var result = await IoAsync("ReadBuffer(" + type.ToString() + ")").ConfigureAwait(continueOnCapturedContext: false);
@@ -102,6 +104,8 @@ namespace x3270if
         /// </summary>
         /// <param name="type">ASCII or EBCDIC mode.</param>
         /// <returns>Success/failure and result.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public ReadBufferIoResult ReadBuffer(ReadBufferType type = ReadBufferType.Ascii)
         {
             try

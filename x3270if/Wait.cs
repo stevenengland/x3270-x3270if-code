@@ -73,6 +73,8 @@ namespace x3270if
         /// <param name="waitMode">What to wait for.</param>
         /// <param name="timeoutSecs">Optional timeout. This is not destructive if it fails.</param>
         /// <returns>Success/failure and failure text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> WaitAsync(WaitMode waitMode, int? timeoutSecs = null)
         {
             string command = "Wait(";
@@ -97,6 +99,8 @@ namespace x3270if
         /// <param name="waitMode">What to wait for.</param>
         /// <param name="timeoutSecs">Optional timeout. This is not destructive if it fails.</param>
         /// <returns>Success/failure and failure text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult Wait(WaitMode waitMode, int? timeoutSecs = null)
         {
             try

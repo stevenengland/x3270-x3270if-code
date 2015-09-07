@@ -86,6 +86,8 @@ namespace x3270if
         /// </summary>
         /// <param name="queryType">Type of query.</param>
         /// <returns>Success/failure and failure text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> QueryAsync(QueryType queryType)
         {
             var result = await IoAsync("Query(" + queryType.ToString() + ")").ConfigureAwait(continueOnCapturedContext: false);
@@ -106,6 +108,8 @@ namespace x3270if
         /// </summary>
         /// <param name="queryType">Type of query.</param>
         /// <returns>Success/failure and failure text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult Query(QueryType queryType)
         {
             try

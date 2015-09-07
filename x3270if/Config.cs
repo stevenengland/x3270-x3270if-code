@@ -70,6 +70,7 @@ namespace x3270if
 
         /// <summary>
         /// If nonzero, all <see cref="Session.Io"/> requests that don't specify a timeout use this value as a timeout. In milliseconds.
+        /// If a command fails due to this timer, the session will be stopped.
         /// </summary>
         public int DefaultTimeoutMsec
         {

@@ -151,8 +151,6 @@ namespace x3270if
 
     public partial class Session
     {
-
-
         /// <summary>
         /// Processing states for the emulator while a command is in progress.
         /// </summary>
@@ -178,7 +176,7 @@ namespace x3270if
 
         /// <summary>
         /// Basic emulator I/O function, asynchronous version.
-        /// Given a command and an optional timeout, send it and return the reply.
+        /// Given a command string and an optional timeout, send it and return the reply.
         /// The emulator status is saved in the session and can be queried after.
         /// </summary>
         /// <param name="command">The command and parameters to pass to the emulator.
@@ -186,6 +184,9 @@ namespace x3270if
         /// <param name="timeoutMsec">Optional timeout. The emulator session will be stopped if the timeout expires, so this
         /// is a dead-man timer, not to be used casually.</param>
         /// <returns>I/O result.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentException"><paramref name="command"/> contains control characters.</exception>
         public async Task<IoResult> IoAsync(string command, int? timeoutMsec = null)
         {
             string[] reply = null;
@@ -405,6 +406,8 @@ namespace x3270if
         /// <param name="timeoutMsec">Optional timeout. The emulator session will be stopped if the timeout expires, so this
         /// is a dead-man timer, not to be used casually.</param>
         /// <returns>Success/failure and result or error text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult Io(string command, int? timeoutMsec = null)
         {
             try

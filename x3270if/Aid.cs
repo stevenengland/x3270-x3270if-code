@@ -34,6 +34,8 @@ namespace x3270if
         /// Send an Enter AID, async version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> EnterAsync()
         {
             return await IoAsync("Enter()").ConfigureAwait(continueOnCapturedContext: false);
@@ -43,6 +45,8 @@ namespace x3270if
         /// Send a Clear AID, async version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> ClearAsync()
         {
             return await IoAsync("Clear()").ConfigureAwait(continueOnCapturedContext: false);
@@ -53,6 +57,9 @@ namespace x3270if
         /// </summary>
         /// <param name="n">PF index.</param>
         /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> is not between 1 and 24.</exception>
         public async Task<IoResult> PFAsync(int n)
         {
             if (n < 1 || n > 24)
@@ -67,6 +74,9 @@ namespace x3270if
         /// </summary>
         /// <param name="n">PA index.</param>
         /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> is not between 1 and 3.</exception>
         public async Task<IoResult> PAAsync(int n)
         {
             if (n < 1 || n > 3)
@@ -80,6 +90,8 @@ namespace x3270if
         /// Send an Enter AID.
         /// </summary>
         /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult Enter()
         {
             try
@@ -96,6 +108,8 @@ namespace x3270if
         /// Send a Clear AID.
         /// </summary>
         /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult Clear()
         {
             try
@@ -113,6 +127,9 @@ namespace x3270if
         /// </summary>
         /// <param name="n">PF index.</param>
         /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> is not between 1 and 24.</exception>        
         public IoResult PF(int n)
         {
             try
@@ -130,6 +147,9 @@ namespace x3270if
         /// </summary>
         /// <param name="n">PA index.</param>
         /// <returns>Success/failure, failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> is not between 1 and 3.</exception> 
         public IoResult PA(int n)
         {
             try

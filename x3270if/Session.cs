@@ -50,7 +50,7 @@ namespace x3270if
 
     /// <summary>
     /// Exception class for command exceptions (generated when a command fails and
-    /// exception mode is set).
+    /// <see cref="Session.ExceptionMode"/> is set).
     /// </summary>
     [Serializable]
     public class X3270ifCommandException : X3270ifException
@@ -220,7 +220,9 @@ namespace x3270if
         }
 
         /// <summary>
-        /// If true, failed commands will raise exceptions.
+        /// If true, failed commands will raise exceptions. Failures include the emulator scripting API returning bad status,
+        /// the command fatally timing out (see <see cref="x3270if.Config.DefaultTimeoutMsec"/>) and the emulator closing
+        /// the scripting API connection.
         /// </summary>
         public bool ExceptionMode = false;
 

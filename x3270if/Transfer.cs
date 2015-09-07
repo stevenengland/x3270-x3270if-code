@@ -449,6 +449,8 @@ namespace x3270if
         /// <param name="hostType">Host type (TSO/VM/CICS).</param>
         /// <param name="parameters">Additional parameters.</param>
         /// <returns>Success/failure and failure text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> TransferAsync(
             string localFile,
             string hostFile,
@@ -590,6 +592,8 @@ namespace x3270if
         /// <param name="hostType">Host type (TSO/VM/CICS).</param>
         /// <param name="parameters">Additional parameters.</param>
         /// <returns>Success/failure and failure text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> TransferAsync(
             string localFile,
             string hostFile,
@@ -620,7 +624,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Run the Transfer() action.
+        /// IND$FILE file transfer.
         /// </summary>
         /// <param name="localFile">Local file name.</param>
         /// <param name="hostFile">Host file name.</param>
@@ -629,6 +633,8 @@ namespace x3270if
         /// <param name="hostType">Host type (TSO/VM/CICS).</param>
         /// <param name="parameters">Additional parameters.</param>
         /// <returns>Success/failure and failure text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult Transfer(
             string localFile,
             string hostFile,
@@ -648,7 +654,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Run the Transfer() action.
+        /// IND$FILE file transfer.
         /// </summary>
         /// <param name="localFile">Local file name.</param>
         /// <param name="hostFile">Host file name.</param>
@@ -657,6 +663,8 @@ namespace x3270if
         /// <param name="hostType">Host type (TSO/VM/CICS).</param>
         /// <param name="parameters">Additional parameters.</param>
         /// <returns>Success/failure and failure text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult Transfer(
             string localFile,
             string hostFile,

@@ -34,6 +34,8 @@ namespace x3270if
         /// Return the entire 3270 display buffer as text. Async version.
         /// </summary>
         /// <returns>Success/failure, array of text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> AsciiAsync()
         {
             return await IoAsync("Ascii()").ConfigureAwait(continueOnCapturedContext: false);
@@ -44,6 +46,8 @@ namespace x3270if
         /// </summary>
         /// <param name="length">Number of characters.</param>
         /// <returns>Success/failure, one row of text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> AsciiAsync(int length)
         {
             return await IoAsync("Ascii(" + length + ")");
@@ -56,6 +60,9 @@ namespace x3270if
         /// <param name="column">Starting column, using session <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="length">Number of characters.</param>
         /// <returns>Success/failure, one row of text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>
         public async Task<IoResult> AsciiAsync(int row, int column, int length)
         {
             if (row < Config.Origin)
@@ -72,13 +79,16 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Return the 3270 display buffer as an array. Async version.
+        /// Return the 3270 display buffer as text in an array. Async version.
         /// </summary>
         /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="rows">Number of rows.</param>
         /// <param name="columns">Number of columns.</param>
         /// <returns>Success/failure, array of text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>        
         public async Task<IoResult> AsciiAsync(int row, int column, int rows, int columns)
         {
             if (row < Config.Origin)
@@ -95,9 +105,11 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Get the entire 3270 display buffer as text.
+        /// Return the entire 3270 display buffer as text.
         /// </summary>
         /// <returns>Success/failure, entire display buffer in an array, one row per element.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult Ascii()
         {
             try
@@ -111,10 +123,12 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Get a region of the 3270 display buffer, starting at the cursor.
+        /// Return a region of the 3270 display buffer as text, starting at the cursor.
         /// </summary>
         /// <param name="length">Number of characters to return.</param>
         /// <returns>Success/failure, one row of text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult Ascii(int length)
         {
             try
@@ -128,12 +142,15 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Get a region of the 3270 display buffer starting at the specified coordinates.
+        /// Return a region of the 3270 display buffer as text, starting at the specified coordinates.
         /// </summary>
         /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="length">Number of characters to return.</param>
         /// <returns>Success/failure, one row of text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>        
         public IoResult Ascii(int row, int column, int length)
         {
             try
@@ -147,13 +164,16 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Get a rectangular region of the 3270 display buffer.
+        /// Return a rectangular region of the 3270 display buffer as text.
         /// </summary>
         /// <param name="row">Starting row.</param>
         /// <param name="column">Starting column.</param>
         /// <param name="rows">Number of rows.</param>
         /// <param name="columns">Number of columns.</param>
         /// <returns>Success/failure, array of text.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>
         public IoResult Ascii(int row, int column, int rows, int columns)
         {
             try

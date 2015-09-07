@@ -117,25 +117,29 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Async version of String.
+        /// Input text to the emulator at the current cursor position. Asynchronous version.
         /// </summary>
         /// <param name="text">Text to send. It will be quoted as necessary.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
         /// <returns>Success indication.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult>StringAsync(string text, bool quoteBackslashes = true)
         {
             return await IoAsync("String(" + QuoteString(text, quoteBackslashes) + ")").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
-        /// Async version of StringAt.
+        /// Input text to the emulator at a specified position. Asynchronous version.
         /// </summary>
-        /// <param name="row">Row.</param>
-        /// <param name="column">Column.</param>
+        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="text">Text to send. It will be quoted as necessary.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
         /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
         /// <returns>Success indication.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> StringAtAsync(int row, int column, string text, bool quoteBackslashes = true, bool eraseEof = false)
         {
             var strings = new [] { new StringAtBlock { Row = row, Column = column, Text = text } };
@@ -143,12 +147,14 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Async multi-argument version of StringAt.
+        /// Input blocks of text to the emulator at specified positions. Asynchronous version.
         /// </summary>
         /// <param name="strings">Set strings to add.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
         /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
         /// <returns>Success indication.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> StringAtAsync(IEnumerable<StringAtBlock> strings, bool quoteBackslashes = true, bool eraseEof = false)
         {
             string command = string.Empty;
@@ -174,11 +180,13 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Send a String command to the host.
+        /// Input text to the emulator.
         /// </summary>
         /// <param name="text">Text to send. It will be quoted as necessary.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
         /// <returns>Success indication.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult String(string text, bool quoteBackslashes = true)
         {
             try
@@ -192,14 +200,16 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Send a string to the host at a particular location.
+        /// Input text to the emulator at a particular location.
         /// </summary>
-        /// <param name="row">Row.</param>
-        /// <param name="column">Column.</param>
+        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="text">Text to send. It will be quoted as necessary.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
         /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
         /// <returns>Success indication.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult StringAt(int row, int column, string text, bool quoteBackslashes = true, bool eraseEof = false)
         {
             try
@@ -213,12 +223,14 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Send a string to the host at a particular location.
+        /// Input blocks of text to the emulator at specified locations.
         /// </summary>
         /// <param name="strings">Set of strings to add.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
         /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
         /// <returns>Success indication.</returns>
+        /// <exception cref="InvalidOperationException">Session is not started.</exception>
+        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public IoResult StringAt(IEnumerable<StringAtBlock> strings, bool quoteBackslashes = true, bool eraseEof = false)
         {
             try
