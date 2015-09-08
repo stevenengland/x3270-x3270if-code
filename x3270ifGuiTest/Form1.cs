@@ -242,6 +242,7 @@ namespace x3270ifGuiTest
 
         private void AbortSession(BackgroundWorker worker)
         {
+            session.ExceptionMode = false;
             while (DowngradeSession(worker, andClose: false))
             {
             }
@@ -262,9 +263,9 @@ namespace x3270ifGuiTest
         /// <param name="d">Predicate.</param>
         /// <param name="secs">Seconds to wait.</param>
         /// <returns>True if predicate succeeds.</returns>
-        private bool rescanUntil(BackgroundWorker worker, Func<Boolean> d, int secs = 10)
+        private bool RescanUntil(BackgroundWorker worker, Func<Boolean> d, int secs = 10)
         {
-            return rescanUntil(worker, new List<Func<Boolean>> { d }, secs) >= 0;
+            return RescanUntil(worker, new List<Func<Boolean>> { d }, secs) >= 0;
         }
 
         /// <summary>
@@ -276,7 +277,7 @@ namespace x3270ifGuiTest
         /// <param name="d">Set of predicates.</param>
         /// <param name="secs">Seconds to wait.</param>
         /// <returns>True if predicate succeeds.</returns>
-        private int rescanUntil(BackgroundWorker worker, IEnumerable<Func<Boolean>> d, int secs = 10)
+        private int RescanUntil(BackgroundWorker worker, IEnumerable<Func<Boolean>> d, int secs = 10)
         {
             if (worker.CancellationPending)
             {
@@ -324,7 +325,7 @@ namespace x3270ifGuiTest
         /// <returns>True if text was found.</returns>
         private bool WaitForString(BackgroundWorker worker, int row, int col, string text)
         {
-            if (!rescanUntil(worker, () => displayBuffer.AsciiEquals(row, col, text), 10))
+            if (!RescanUntil(worker, () => displayBuffer.AsciiEquals(row, col, text), 10))
             {
                 worker.ReportProgress(0, new WorkerStatusError(worker, "Could not find '" + text + "'"));
                 return false;
@@ -406,7 +407,8 @@ namespace x3270ifGuiTest
         }
 
         /// <summary>
-        /// Log in to the host.
+        /// Log on to the host. Creates the session and connects to the host if necessary.
+        /// If successful, leaves exception mode enabled on the session.
         /// </summary>
         /// <param name="worker">Context.</param>
         /// <param name="username">Username.</param>
@@ -448,55 +450,68 @@ namespace x3270ifGuiTest
                 return false;
             }
 
-            // Wait for the initial logon screen.
-            NextScreen(worker);
-            if (!WaitForString(worker, 39, 2, "USERID"))
+            // Catch errors with exceptions from here on out.
+            session.ExceptionMode = true;
+            try
             {
-                AbortSession(worker);
-                return false;
-            }
+                // Wait for the initial logon screen.
+                NextScreen(worker);
+                if (!WaitForString(worker, 39, 2, "USERID"))
+                {
+                    AbortSession(worker);
+                    return false;
+                }
 
-            // Fill in username and password, do an Enter.
-            session.StringAt(
-                new[] {
+                // Fill in username and password, do an Enter.
+                session.StringAt(
+                    new[] {
                     new StringAtBlock { Row = 39, Column = 17, Text = username },
                     new StringAtBlock { Row = 40, Column = 17, Text = passwordTextBox.Text + "\n" }
                 });
 
-            NextScreen(worker);
-            switch (rescanUntil(worker, new List<Func<bool>>
+                NextScreen(worker);
+                switch (RescanUntil(worker, new List<Func<bool>>
             {
                 () => displayBuffer.AsciiMatches(2, 1, 80, ".*not in CP directory.*"),
                 () => displayBuffer.AsciiMatches(2, 1, 80, ".*unsuccessful.*"),
                 () => displayBuffer.AsciiEquals(4, 1, "RECONNECTED"),
                 () => displayBuffer.AsciiEquals(5, 1, "z/VM"),
             }))
-            {
-                case 0:
-                case 1:
-                    // Failed logon
-                    worker.ReportProgress(0, new WorkerStatusError("Logon failed: " + displayBuffer.Ascii(2, 1, 80).Trim()));
-                    AbortSession(worker);
-                    return false;
-                case 2: // RECONNECTED (disconnected without logoff; need reboot)
-                    if (!RebootCMS(worker))
-                    {
+                {
+                    case 0:
+                    case 1:
+                        // Failed logon
+                        worker.ReportProgress(0, new WorkerStatusError("Logon failed: " + displayBuffer.Ascii(2, 1, 80).Trim()));
+                        AbortSession(worker);
                         return false;
-                    }
-                    break;
-                case 3: // z/VM (success)
-                    break;
-                default: // Timed out without a match
-                    worker.ReportProgress(0, new WorkerStatusError(worker, "Logon failed"));
-                    AbortSession(worker);
-                    return false;
+                    case 2: // RECONNECTED (disconnected without logoff; need reboot)
+                        if (!RebootCMS(worker))
+                        {
+                            return false;
+                        }
+                        break;
+                    case 3: // z/VM (success)
+                        break;
+                    default: // Timed out without a match
+                        worker.ReportProgress(0, new WorkerStatusError(worker, "Logon failed"));
+                        AbortSession(worker);
+                        return false;
+                }
+
+                loggedOn = true;
+                worker.ReportProgress(0, new WorkerStatusLoggedOn(true));
+
+                // Send the command we want to capture.
+                session.Clear();
+            }
+            catch (X3270ifCommandException e)
+            {
+                // One of the commands failed, likely because something broke (network, emulator).
+                worker.ReportProgress(0, new WorkerStatusError(worker, "Session error: " + e.Message));
+                AbortSession(worker);
+                return false;
             }
 
-            loggedOn = true;
-            worker.ReportProgress(0, new WorkerStatusLoggedOn(true));
-
-            // Send the command we want to capture.
-            session.Clear();
             return true;
         }
         #endregion
@@ -520,89 +535,110 @@ namespace x3270ifGuiTest
             }
 
             var username = usernameTextBox.Text.ToUpper();
-
-            var wasLoggedOn = loggedOn;
-            if (!loggedOn)
-            {
-                if (!LogOn(worker, username))
-                {
-                    return;
-                }
-            } else {
-                session.Clear();
-            }
-
-            // Send the command we want to capture.
-            string query = queryTextBox.Text;
-            if (string.IsNullOrEmpty(query))
-            {
-                query = "LISTFILE";
-            }
-            query = query.ToUpper();
-            session.String(query + "\n");
-
-            // Look for:
-            //  query echoed on line 1
-            //   DMS on line 2
-            //   USERNAME Ready; on line 3
-            //  file names dribbling out
-            //   a second USERNAME Ready; somewhere, -or- MORE... at 43,61
-            //  If MORE..., hit clear and repeat until we get USERNAME Ready;
-
-            var ready = " " + username + " Ready;";
-            NextScreen(worker);
-
-            if (!WaitForString(worker, 1, 1, query) ||
-                (!wasLoggedOn && (!WaitForString(worker, 1, 1, query) ||
-                                  !WaitForString(worker, 2, 1, "DMS") ||
-                                  !WaitForString(worker, 3, 1, ready))))
-            {
-                worker.ReportProgress(0, new WorkerStatusError(worker, "Command failed"));
-                AbortSession(worker);
-                return;
-            }
-
             List<string> lines = new List<String>();
 
-            var dataRow = wasLoggedOn ? 2 : 4;
-            bool first = true;
-            do
+            // Do the rest of the work catching command errors (socket or emulator process failures).
+            try
             {
-                // Snap the screen.
+                var wasLoggedOn = loggedOn;
+                if (!loggedOn)
+                {
+                    if (!LogOn(worker, username))
+                    {
+                        return;
+                    }
+                    // Leaves exception mode on.
+                }
+                else
+                {
+                    session.ExceptionMode = true;
+                    session.Clear();
+                }
+
+                // Send the command we want to capture.
+                string query = queryTextBox.Text;
+                if (string.IsNullOrEmpty(query))
+                {
+                    query = "LISTFILE";
+                }
+                query = query.ToUpper();
+                session.String(query + "\n");
+
+                // This will (artificially) trigger an X3270ifCommandException.
+                //session.Io("woof");
+
+                // Look for:
+                //  query echoed on line 1
+                //   DMS on line 2
+                //   USERNAME Ready; on line 3
+                //  file names dribbling out
+                //   a second USERNAME Ready; somewhere, -or- MORE... at 43,61
+                //  If MORE..., hit clear and repeat until we get USERNAME Ready;
+
+                var ready = " " + username + " Ready;";
                 NextScreen(worker);
 
-                // If the MORE... prompt is up, clear the screen and start scanning at the top.
-                if (!first && IsMore())
+                if (!WaitForString(worker, 1, 1, query) ||
+                    (!wasLoggedOn && (!WaitForString(worker, 1, 1, query) ||
+                                      !WaitForString(worker, 2, 1, "DMS") ||
+                                      !WaitForString(worker, 3, 1, ready))))
                 {
-                    session.Clear();
-                    dataRow = 1;
-                    NextScreen(worker);
-                }
-                first = false;
-
-                // Wait for the concluding prompt or MORE...
-                if (!rescanUntil(worker, () => ScanFor(dataRow, ready) || IsMore(), 30))
-                {
+                    worker.ReportProgress(0, new WorkerStatusError(worker, "Command failed"));
                     AbortSession(worker);
-                    worker.ReportProgress(0, new WorkerStatusError(worker, "Result not found"));
                     return;
                 }
 
-                // Collect the file names.
-                for (var i = dataRow; i < 42; i++)
+                var dataRow = wasLoggedOn ? 2 : 4;
+                bool first = true;
+                do
                 {
-                    if (displayBuffer.AsciiEquals(i, 1, ready))
+                    // Snap the screen.
+                    NextScreen(worker);
+
+                    // If the MORE... prompt is up, clear the screen and start scanning at the top.
+                    if (!first && IsMore())
                     {
-                        break;
+                        session.Clear();
+                        dataRow = 1;
+                        NextScreen(worker);
                     }
-                    var filename = displayBuffer.Ascii(i, 1, 80).Trim();
-                    if (!string.IsNullOrEmpty(filename))
+                    first = false;
+
+                    // Wait for the concluding prompt or MORE...
+                    if (!RescanUntil(worker, () => ScanFor(dataRow, ready) || IsMore(), 30))
                     {
-                        lines.Add(filename);
-                        worker.ReportProgress(0, new WorkerStatusFound(lines.Count.ToString() + " lines"));
+                        AbortSession(worker);
+                        worker.ReportProgress(0, new WorkerStatusError(worker, "Result not found"));
+                        return;
                     }
-                }
-            } while (IsMore());
+
+                    // Collect the file names.
+                    for (var i = dataRow; i < 42; i++)
+                    {
+                        if (displayBuffer.AsciiEquals(i, 1, ready))
+                        {
+                            break;
+                        }
+                        var filename = displayBuffer.Ascii(i, 1, 80).Trim();
+                        if (!string.IsNullOrEmpty(filename))
+                        {
+                            lines.Add(filename);
+                            worker.ReportProgress(0, new WorkerStatusFound(lines.Count.ToString() + " lines"));
+                        }
+                    }
+                } while (IsMore());
+            }
+            catch (X3270ifCommandException e)
+            {
+                AbortSession(worker);
+                worker.ReportProgress(0, new WorkerStatusError(worker, "Session failure: " + e.Message));
+                return;
+            }
+            finally
+            {
+                // All done with exceptions.
+                session.ExceptionMode = false;
+            }
 
             // Report results.
             overall.Stop();
@@ -722,80 +758,97 @@ namespace x3270ifGuiTest
             var username = usernameTextBox.Text.ToUpper();
             bool wasLoggedOn = loggedOn;
 
-            if (!loggedOn)
+            try
             {
-                if (!LogOn(worker, username))
+                if (!loggedOn)
                 {
+                    if (!LogOn(worker, username))
+                    {
+                        return;
+                    }
+                    // Leaves exception mode set.
+                }
+                else
+                {
+                    session.ExceptionMode = true;
+                    session.Clear();
+                }
+
+                // Send a harmless command and wait for the response.
+                var result = session.String("SET APL OFF\n");
+                if (!result.Success)
+                {
+                    worker.ReportProgress(0, new WorkerStatusError(result.Result[0]));
+                    AbortSession(worker);
                     return;
                 }
-            }
-            else
-            {
-                session.Clear();
-            }
-
-            // Send a harmless command and wait for the response.
-            var result = session.String("SET APL OFF\n");
-            if (!result.Success)
-            {
-                worker.ReportProgress(0, new WorkerStatusError(result.Result[0]));
-                AbortSession(worker);
-                return;
-            }
-            var ready = " " + username + " Ready;";
-            NextScreen(worker);
-            if (!WaitForString(worker, 1, 1, "SET APL OFF") ||
-                (wasLoggedOn && !WaitForString(worker, 2, 1, ready)) ||
-                (!wasLoggedOn && (!WaitForString(worker, 2, 1, "DMS") ||
-                                  !WaitForString(worker, 3, 1, ready) ||
-                                  !WaitForString(worker, 4, 1, ready))))
-            {
-                worker.ReportProgress(0, new WorkerStatusError(worker, "Setup failed"));
-                AbortSession(worker);
-                return;
-            }
-
-            // Marshal transfer options
-            var transferParams = new List<Parameter>();
-            transferParams.Add(new ParameterExistAction(checkedTag<ExistAction>(existsBox).Value));
-            if (modeAsciiButton.Checked)
-            {
-                transferParams.Add(new ParameterAsciiCr(crCheckBox.Checked));
-                transferParams.Add(new ParameterAsciiRemap(remapCheckBox.Checked, (codePage != 0) ? (uint?)codePage : null));
-            }
-            if (recfmBox.Enabled && !recfmDefaultButton.Checked)
-            {
-                transferParams.Add(new ParameterSendRecordFormat(checkedTag<RecordFormat>(recfmBox).Value));
-                if (lrecl != 0) {
-                    transferParams.Add(new ParameterSendLogicalRecordLength(lrecl));
+                var ready = " " + username + " Ready;";
+                NextScreen(worker);
+                if (!WaitForString(worker, 1, 1, "SET APL OFF") ||
+                    (wasLoggedOn && !WaitForString(worker, 2, 1, ready)) ||
+                    (!wasLoggedOn && (!WaitForString(worker, 2, 1, "DMS") ||
+                                      !WaitForString(worker, 3, 1, ready) ||
+                                      !WaitForString(worker, 4, 1, ready))))
+                {
+                    worker.ReportProgress(0, new WorkerStatusError(worker, "Setup failed"));
+                    AbortSession(worker);
+                    return;
                 }
-            }
-            if (tsoAllocationBox.Enabled && primarySpace != 0)
-            {
-                var allocationUnits = checkedTag<TsoAllocationUnits>(tsoAllocationBox).Value;
-                transferParams.Add(new ParameterTsoSendAllocation(
-                    allocationUnits,
-                    primarySpace,
-                    secondarySpace > 0 ? (uint?)secondarySpace : null,
-                    allocationUnits == TsoAllocationUnits.Avblock ? (uint?)avblock : null));
-            }
 
-            var hostType = checkedTag<HostType>(hostTypeBox);
-            worker.ReportProgress(0, new WorkerStatusProcessing("Transfer in progress"));
+                // Marshal transfer options
+                var transferParams = new List<Parameter>();
+                transferParams.Add(new ParameterExistAction(checkedTag<ExistAction>(existsBox).Value));
+                if (modeAsciiButton.Checked)
+                {
+                    transferParams.Add(new ParameterAsciiCr(crCheckBox.Checked));
+                    transferParams.Add(new ParameterAsciiRemap(remapCheckBox.Checked, (codePage != 0) ? (uint?)codePage : null));
+                }
+                if (recfmBox.Enabled && !recfmDefaultButton.Checked)
+                {
+                    transferParams.Add(new ParameterSendRecordFormat(checkedTag<RecordFormat>(recfmBox).Value));
+                    if (lrecl != 0)
+                    {
+                        transferParams.Add(new ParameterSendLogicalRecordLength(lrecl));
+                    }
+                }
+                if (tsoAllocationBox.Enabled && primarySpace != 0)
+                {
+                    var allocationUnits = checkedTag<TsoAllocationUnits>(tsoAllocationBox).Value;
+                    transferParams.Add(new ParameterTsoSendAllocation(
+                        allocationUnits,
+                        primarySpace,
+                        secondarySpace > 0 ? (uint?)secondarySpace : null,
+                        allocationUnits == TsoAllocationUnits.Avblock ? (uint?)avblock : null));
+                }
 
-            // Do the transfer.
-            result = session.Transfer(
-                localFileTextBox.Text,
-                hostFileTextBox.Text,
-                checkedTag<Direction>(directionBox).Value,
-                checkedTag<Mode>(modeBox).Value,
-                checkedTag<HostType>(hostTypeBox).Value,
-                transferParams);
-            if (!result.Success)
+                var hostType = checkedTag<HostType>(hostTypeBox);
+                worker.ReportProgress(0, new WorkerStatusProcessing("Transfer in progress"));
+
+                // Do the transfer.
+                result = session.Transfer(
+                    localFileTextBox.Text,
+                    hostFileTextBox.Text,
+                    checkedTag<Direction>(directionBox).Value,
+                    checkedTag<Mode>(modeBox).Value,
+                    checkedTag<HostType>(hostTypeBox).Value,
+                    transferParams);
+                if (!result.Success)
+                {
+                    worker.ReportProgress(0, new WorkerStatusError("Transfer failed: " + result.Result[0]));
+                    AbortSession(worker);
+                    return;
+                }
+
+            }
+            catch (X3270ifCommandException e)
             {
-                worker.ReportProgress(0, new WorkerStatusError("Transfer failed: " + result.Result[0]));
                 AbortSession(worker);
-                return;
+                worker.ReportProgress(0, new WorkerStatusError("Session error: " + e.Message));
+            }
+            finally
+            {
+                // All done with exceptions.
+                session.ExceptionMode = false;
             }
 
             // Report results.
