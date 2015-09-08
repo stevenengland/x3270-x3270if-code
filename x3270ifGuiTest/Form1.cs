@@ -200,7 +200,7 @@ namespace x3270ifGuiTest
         /// <param name="worker">Context.</param>
         /// <param name="andClose">If true, close the session.</param>
         /// <returns>True if there is more to tear down.</returns>
-        private bool downgradeSession(BackgroundWorker worker, bool andClose)
+        private bool DowngradeSession(BackgroundWorker worker, bool andClose)
         {
             if (session == null)
             {
@@ -240,14 +240,14 @@ namespace x3270ifGuiTest
             return false;
         }
 
-        private void abortSession(BackgroundWorker worker)
+        private void AbortSession(BackgroundWorker worker)
         {
-            while (downgradeSession(worker, andClose: false))
+            while (DowngradeSession(worker, andClose: false))
             {
             }
         }
 
-        private void nextScreen(BackgroundWorker worker)
+        private void NextScreen(BackgroundWorker worker)
         {
             displayBuffer = new DisplayBuffer(session.ReadBuffer());
             worker.ReportProgress(0, new WorkerStatusScreen(string.Join("\n", displayBuffer.Ascii())));
@@ -308,7 +308,7 @@ namespace x3270ifGuiTest
                 {
                     return -1;
                 }
-                nextScreen(worker);
+                NextScreen(worker);
             }
         }
 
@@ -322,7 +322,7 @@ namespace x3270ifGuiTest
         /// <param name="col">Column.</param>
         /// <param name="text">Desired text.</param>
         /// <returns>True if text was found.</returns>
-        private bool waitForString(BackgroundWorker worker, int row, int col, string text)
+        private bool WaitForString(BackgroundWorker worker, int row, int col, string text)
         {
             if (!rescanUntil(worker, () => displayBuffer.AsciiEquals(row, col, text), 10))
             {
@@ -338,15 +338,15 @@ namespace x3270ifGuiTest
         /// </summary>
         /// <param name="worker">Context.</param>
         /// <returns>True if CMS rebooted successfully.</returns>
-        private bool rebootCMS(BackgroundWorker worker)
+        private bool RebootCMS(BackgroundWorker worker)
         {
             worker.ReportProgress(0, new WorkerStatusError("Attempting CMS reboot"));
 
             session.String("IPL CMS\n");
-            if (!waitForString(worker, 15, 1, "z/VM"))
+            if (!WaitForString(worker, 6, 1, "z/VM"))
             {
                 worker.ReportProgress(0, new WorkerStatusError(worker, "Reboot failed"));
-                abortSession(worker);
+                AbortSession(worker);
                 return false;
             }
             return true;
@@ -357,7 +357,7 @@ namespace x3270ifGuiTest
         /// displayBuffer must be valid.
         /// </summary>
         /// <returns>True if MORE... was found.</returns>
-        private bool isMore()
+        private bool IsMore()
         {
             return displayBuffer.AsciiEquals(43, 61, "MORE...");
         }
@@ -368,7 +368,7 @@ namespace x3270ifGuiTest
         /// <param name="startRow">First row to scan.</param>
         /// <param name="text">Text to scan for.</param>
         /// <returns>True if <paramref name="text"/> found.</returns>
-        private bool scanFor(int startRow, string text)
+        private bool ScanFor(int startRow, string text)
         {
             for (var i = startRow; i < 42; i++)
             {
@@ -385,7 +385,7 @@ namespace x3270ifGuiTest
         /// </summary>
         /// <param name="worker">Context.</param>
         /// <returns>True if logon parameters are valid.</returns>
-        private bool checkLoginFields(BackgroundWorker worker)
+        private bool CheckLogonFields(BackgroundWorker worker)
         {
             if (string.IsNullOrEmpty(hostnameTextBox.Text))
             {
@@ -411,7 +411,7 @@ namespace x3270ifGuiTest
         /// <param name="worker">Context.</param>
         /// <param name="username">Username.</param>
         /// <returns>True if logon succeeded.</returns>
-        private bool logon(BackgroundWorker worker, string username)
+        private bool LogOn(BackgroundWorker worker, string username)
         {
             if (session == null)
             {
@@ -449,57 +449,46 @@ namespace x3270ifGuiTest
             }
 
             // Wait for the initial logon screen.
-            nextScreen(worker);
-            if (!waitForString(worker, 39, 2, "USERID"))
+            NextScreen(worker);
+            if (!WaitForString(worker, 39, 2, "USERID"))
             {
-                abortSession(worker);
+                AbortSession(worker);
                 return false;
             }
 
-            // Try logging on.
-            session.Clear();
-            session.String("LOGON " + username + "\n");
+            // Fill in username and password, do an Enter.
+            session.StringAt(
+                new[] {
+                    new StringAtBlock { Row = 39, Column = 17, Text = username },
+                    new StringAtBlock { Row = 40, Column = 17, Text = passwordTextBox.Text + "\n" }
+                });
 
-            nextScreen(worker);
-            if (!waitForString(worker, 8, 1, "LOGON " + username))
-            {
-                abortSession(worker);
-                return false;
-            }
-            if (!displayBuffer.AsciiEquals(9, 1, "ENTER PASSWORD"))
-            {
-                var errmsg = displayBuffer.Ascii(9, 1, 80).Trim();
-                worker.ReportProgress(0, new WorkerStatusError(string.IsNullOrWhiteSpace(errmsg) ? "Logon failed" : "Logon failed: " + errmsg));
-                abortSession(worker);
-                return false;
-            }
-
-            session.String(passwordTextBox.Text + "\n");
-
-            nextScreen(worker);
+            NextScreen(worker);
             switch (rescanUntil(worker, new List<Func<bool>>
             {
-                () => displayBuffer.AsciiEquals(14, 1, "z/VM"),
-                () => displayBuffer.AsciiEquals(13, 1, "RECONNECTED"),
-                () => displayBuffer.AsciiMatches(11, 1, 80, ".*unsuccessful.*")
+                () => displayBuffer.AsciiMatches(2, 1, 80, ".*not in CP directory.*"),
+                () => displayBuffer.AsciiMatches(2, 1, 80, ".*unsuccessful.*"),
+                () => displayBuffer.AsciiEquals(4, 1, "RECONNECTED"),
+                () => displayBuffer.AsciiEquals(5, 1, "z/VM"),
             }))
             {
-                case 0: // z/VM (success)
-                    break;
-                case 1: // RECONNECTED (disconnected without logoff; need reboot)
-                    if (!rebootCMS(worker))
+                case 0:
+                case 1:
+                    // Failed logon
+                    worker.ReportProgress(0, new WorkerStatusError("Logon failed: " + displayBuffer.Ascii(2, 1, 80).Trim()));
+                    AbortSession(worker);
+                    return false;
+                case 2: // RECONNECTED (disconnected without logoff; need reboot)
+                    if (!RebootCMS(worker))
                     {
                         return false;
                     }
                     break;
-                case 2: // Probably a bad password
-                    // Failed logon.
-                    worker.ReportProgress(0, new WorkerStatusError("Logon failed: " + displayBuffer.Ascii(11, 1, 80).Trim()));
-                    abortSession(worker);
-                    return false;
+                case 3: // z/VM (success)
+                    break;
                 default: // Timed out without a match
                     worker.ReportProgress(0, new WorkerStatusError(worker, "Logon failed"));
-                    abortSession(worker);
+                    AbortSession(worker);
                     return false;
             }
 
@@ -517,7 +506,7 @@ namespace x3270ifGuiTest
         /// Start button action. Runs the query.
         /// </summary>
         /// <param name="worker">Context.</param>
-        private void doStartQuery(BackgroundWorker worker)
+        private void DoStartQuery(BackgroundWorker worker)
         {
             System.Diagnostics.Stopwatch overall = new System.Diagnostics.Stopwatch();
             overall.Start();
@@ -525,7 +514,7 @@ namespace x3270ifGuiTest
             worker.ReportProgress(100, new WorkerStatusIdle());
 
             // Make sure we have the fields we need.
-            if (!checkLoginFields(worker))
+            if (!CheckLogonFields(worker))
             {
                 return;
             }
@@ -535,7 +524,7 @@ namespace x3270ifGuiTest
             var wasLoggedOn = loggedOn;
             if (!loggedOn)
             {
-                if (!logon(worker, username))
+                if (!LogOn(worker, username))
                 {
                     return;
                 }
@@ -561,15 +550,15 @@ namespace x3270ifGuiTest
             //  If MORE..., hit clear and repeat until we get USERNAME Ready;
 
             var ready = " " + username + " Ready;";
-            nextScreen(worker);
+            NextScreen(worker);
 
-            if (!waitForString(worker, 1, 1, query) ||
-                (!wasLoggedOn && (!waitForString(worker, 1, 1, query) ||
-                                  !waitForString(worker, 2, 1, "DMS") ||
-                                  !waitForString(worker, 3, 1, ready))))
+            if (!WaitForString(worker, 1, 1, query) ||
+                (!wasLoggedOn && (!WaitForString(worker, 1, 1, query) ||
+                                  !WaitForString(worker, 2, 1, "DMS") ||
+                                  !WaitForString(worker, 3, 1, ready))))
             {
                 worker.ReportProgress(0, new WorkerStatusError(worker, "Command failed"));
-                abortSession(worker);
+                AbortSession(worker);
                 return;
             }
 
@@ -580,21 +569,21 @@ namespace x3270ifGuiTest
             do
             {
                 // Snap the screen.
-                nextScreen(worker);
+                NextScreen(worker);
 
                 // If the MORE... prompt is up, clear the screen and start scanning at the top.
-                if (!first && isMore())
+                if (!first && IsMore())
                 {
                     session.Clear();
                     dataRow = 1;
-                    nextScreen(worker);
+                    NextScreen(worker);
                 }
                 first = false;
 
                 // Wait for the concluding prompt or MORE...
-                if (!rescanUntil(worker, () => scanFor(dataRow, ready) || isMore(), 30))
+                if (!rescanUntil(worker, () => ScanFor(dataRow, ready) || IsMore(), 30))
                 {
-                    abortSession(worker);
+                    AbortSession(worker);
                     worker.ReportProgress(0, new WorkerStatusError(worker, "Result not found"));
                     return;
                 }
@@ -613,7 +602,7 @@ namespace x3270ifGuiTest
                         worker.ReportProgress(0, new WorkerStatusFound(lines.Count.ToString() + " lines"));
                     }
                 }
-            } while (isMore());
+            } while (IsMore());
 
             // Report results.
             overall.Stop();
@@ -644,12 +633,12 @@ namespace x3270ifGuiTest
         /// Transfer button action. Runs the transfer.
         /// </summary>
         /// <param name="worker">Context.</param>
-        private void doStartTransfer(BackgroundWorker worker)
+        private void DoStartTransfer(BackgroundWorker worker)
         {
             worker.ReportProgress(100, new WorkerStatusIdle());
 
             // Make sure we have the fields we need.
-            if (!checkLoginFields(worker))
+            if (!CheckLogonFields(worker))
             {
                 return;
             }
@@ -735,7 +724,7 @@ namespace x3270ifGuiTest
 
             if (!loggedOn)
             {
-                if (!logon(worker, username))
+                if (!LogOn(worker, username))
                 {
                     return;
                 }
@@ -750,19 +739,19 @@ namespace x3270ifGuiTest
             if (!result.Success)
             {
                 worker.ReportProgress(0, new WorkerStatusError(result.Result[0]));
-                abortSession(worker);
+                AbortSession(worker);
                 return;
             }
             var ready = " " + username + " Ready;";
-            nextScreen(worker);
-            if (!waitForString(worker, 1, 1, "SET APL OFF") ||
-                (wasLoggedOn && !waitForString(worker, 2, 1, ready)) ||
-                (!wasLoggedOn && (!waitForString(worker, 2, 1, "DMS") ||
-                                  !waitForString(worker, 3, 1, ready) ||
-                                  !waitForString(worker, 4, 1, ready))))
+            NextScreen(worker);
+            if (!WaitForString(worker, 1, 1, "SET APL OFF") ||
+                (wasLoggedOn && !WaitForString(worker, 2, 1, ready)) ||
+                (!wasLoggedOn && (!WaitForString(worker, 2, 1, "DMS") ||
+                                  !WaitForString(worker, 3, 1, ready) ||
+                                  !WaitForString(worker, 4, 1, ready))))
             {
                 worker.ReportProgress(0, new WorkerStatusError(worker, "Setup failed"));
-                abortSession(worker);
+                AbortSession(worker);
                 return;
             }
 
@@ -805,7 +794,7 @@ namespace x3270ifGuiTest
             if (!result.Success)
             {
                 worker.ReportProgress(0, new WorkerStatusError("Transfer failed: " + result.Result[0]));
-                abortSession(worker);
+                AbortSession(worker);
                 return;
             }
 
@@ -828,7 +817,7 @@ namespace x3270ifGuiTest
             {
                 case queryAction.StartQuery:
                     // Run the query.
-                    doStartQuery(worker);
+                    DoStartQuery(worker);
                     if (session != null && session.Running)
                     {
                         timer.Enabled = true;
@@ -836,7 +825,7 @@ namespace x3270ifGuiTest
                     break;
                 case queryAction.StartTransfer:
                     // Run the file transfer.
-                    doStartTransfer(worker);
+                    DoStartTransfer(worker);
                     if (session != null && session.Running)
                     {
                         timer.Enabled = true;
@@ -844,7 +833,7 @@ namespace x3270ifGuiTest
                     break;
                 case queryAction.Timeout:
                     // Step the teardown.
-                    if (downgradeSession(worker, andClose: true))
+                    if (DowngradeSession(worker, andClose: true))
                     {
                         timer.Enabled = true;
                     }
@@ -852,7 +841,7 @@ namespace x3270ifGuiTest
                 case queryAction.Stop:
                 case queryAction.Quit:
                     // Stop the ws3270 session.
-                    while (downgradeSession(worker, andClose: true))
+                    while (DowngradeSession(worker, andClose: true))
                     {
                     }
                     if (action == queryAction.Quit)
