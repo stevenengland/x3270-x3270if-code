@@ -33,6 +33,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Threading;
+using System.Linq;
 
 namespace UnitTests
 {
@@ -493,7 +494,20 @@ namespace UnitTests
         [Test]
         public void TestSessionNullBackEnd()
         {
-            Assert.Throws<ArgumentNullException>(() => { var session = new MockTaskSession(new MockTaskConfig(), true); });
+            Assert.Throws<ArgumentNullException>(() => { var session = new MockTaskSession(new MockTaskConfig(), forceChaos: true); });
+        }
+
+        // Make process arguments too long.
+        [Test]
+        public void TestArgsTooLong()
+        {
+            var config = new ProcessConfig
+            {
+                ProcessName = "MockWs3270.exe",
+                ExtraOptions = String.Join(",", Enumerable.Range(1, 16350).Select(i => "x"))
+            };
+            var session = new ProcessSession(config);
+            Assert.Throws<InvalidOperationException>(() => session.Start());
         }
     }
 }
