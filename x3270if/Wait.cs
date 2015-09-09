@@ -47,6 +47,7 @@ namespace x3270if
         Wait3270Mode,
         /// <summary>
         /// Wait for the host to change the screen.
+        /// <para>See the caution under <see cref="Session.Wait"/> for restrictions.</para>
         /// </summary>
         Output,
         /// <summary>
@@ -75,6 +76,18 @@ namespace x3270if
         /// <returns>Success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <remarks>Note that in all cases, if the specified condition has already been met, <see cref="Wait"/> will return
+        /// immediately.
+        /// See the documentation under each value of <see cref="WaitMode"/> for details on the conditions for waiting.
+        /// <note type="caution">
+        /// The <see cref="WaitMode.Output"/> flavor of <see cref="Wait"/> is integrated with the calls that
+        /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic"/>
+        /// before a <see cref="Wait"/> for <see cref="WaitMode.Output"/> will actually wait for anything. If you
+        /// <see cref="Wait"/> for <see cref="WaitMode.Output"/> immediately after a previous <see cref="Wait"/> for
+        /// <see cref="WaitMode.Output"/>, without any intervening call to <see cref="ReadBuffer"/>, <see cref="Ascii()"/>
+        /// or <see cref="Ebcdic"/>, <see cref="Wait"/> will return immediately.
+        /// </note>
+        /// </remarks>
         public async Task<IoResult> WaitAsync(WaitMode waitMode, int? timeoutSecs = null)
         {
             string command = "Wait(";
@@ -101,6 +114,18 @@ namespace x3270if
         /// <returns>Success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <remarks>Note that in all cases, if the specified condition has already been met, <see cref="Wait"/> will return
+        /// immediately.
+        /// See the documentation under each value of <see cref="WaitMode"/> for details on the conditions for waiting.
+        /// <note type="caution">
+        /// The <see cref="WaitMode.Output"/> flavor of <see cref="Wait"/> is integrated with the calls that
+        /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic"/>
+        /// before a <see cref="Wait"/> for <see cref="WaitMode.Output"/> will actually wait for anything. If you
+        /// <see cref="Wait"/> for <see cref="WaitMode.Output"/> immediately after a previous <see cref="Wait"/> for
+        /// <see cref="WaitMode.Output"/>, without any intervening call to <see cref="ReadBuffer"/>, <see cref="Ascii()"/>
+        /// or <see cref="Ebcdic"/>, <see cref="Wait"/> will return immediately.
+        /// </note>
+        /// </remarks>
         public IoResult Wait(WaitMode waitMode, int? timeoutSecs = null)
         {
             try
