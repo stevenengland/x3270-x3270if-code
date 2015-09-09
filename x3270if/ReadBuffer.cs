@@ -50,7 +50,7 @@ namespace x3270if
         /// <summary>
         /// IO result from ReadBuffer and ReadBufferAsync.
         /// An ordinary IoResult, plus the type of ReadBuffer operation that was requested,
-        /// and the coordinate <see cref="x3270if.Config.Origin"/>, so DisplayBuffer operations can use the same mode as the
+        /// and the coordinate <see cref="x3270if.Config.Origin"/>, so DisplayBuffer operations can use the same origin as the
         /// Session that the ReadBufferIoResult was derived from.
         /// </summary>
         public class ReadBufferIoResult : IoResult
@@ -73,7 +73,7 @@ namespace x3270if
             }
 
             /// <summary>
-            /// Constructor, given a plan IoResult, plus type and origin.
+            /// Constructor, given a plain IoResult, plus type and origin.
             /// </summary>
             /// <param name="r">Plain IoResult.</param>
             /// <param name="type">ASCII or EBCDIC mode.</param>
