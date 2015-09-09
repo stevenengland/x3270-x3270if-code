@@ -155,9 +155,17 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(() => new ProcessOptionWithValue("bob", "ab\nc"));
             Assert.Throws<ArgumentException>(() => new ProcessOptionWithValue("bob", "ab\"c"));
 
-            // Ugliness.
-            var complex = new ProcessOptionXrm("foo", @"C:\a\b");
+            // Non-xrm arguments are (unnecessarily) surrounded by double quotes, but backslashes are not quoted.
+            var complex = new ProcessOptionWithValue("foo", @"C:\a\b");
+            Assert.AreEqual("-foo \"C:\\a\\b\"", complex.Quote());
+
+            // -xrm arguments get backslashes quoted.
+            complex = new ProcessOptionXrm("foo", @"C:\a\b");
             Assert.AreEqual("-xrm \"ws3270.foo: C:\\\\a\\\\b\"", complex.Quote());
+
+            // -xrm also allows certain control characters, and translates them to C escapes.
+            complex = new ProcessOptionXrm("foo", "a\nb");
+            Assert.AreEqual("-xrm \"ws3270.foo: a\\nb\"", complex.Quote());
         }
 
         /// <summary>

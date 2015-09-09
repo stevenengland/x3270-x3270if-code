@@ -1409,8 +1409,6 @@ namespace x3270if
             return Ascii(Origin, Origin, Rows, Columns);
         }
 
-
-
         /// <summary>
         /// Find the coordinates of the Field Attribute for a given screen position.
         /// </summary>
@@ -1533,10 +1531,10 @@ namespace x3270if
         /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="length">Length of region.</param>
         /// <param name="regex">Regular expression to match against. (See <see cref="System.Text.RegularExpressions"/>.)</param>
-        /// <returns>True if <paramref name="regex"/> matches the region of the DisplayBuffer.</returns>
+        /// <returns>True if <paramref name="regex"/> matches the specified region of the DisplayBuffer.</returns>
         public bool AsciiMatches(int row, int column, int length, string regex)
         {
-            return Regex.Matches(Ascii(row, column, length), regex).Count != 0;
+            return Regex.IsMatch(Ascii(row, column, length), regex);
         }
         #endregion
     }

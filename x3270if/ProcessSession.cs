@@ -105,7 +105,10 @@ namespace x3270if
         public class ProcessOptionWithValue : ProcessOption
         {
             private string optionValue;
-            private string OptionValue
+            /// <summary>
+            /// Option value.
+            /// </summary>
+            protected string OptionValue
             {
                 get
                 {
@@ -137,12 +140,49 @@ namespace x3270if
             }
 
             /// <summary>
+            /// Set the optionValue, allowing certain control codes through.
+            /// </summary>
+            /// <param name="value"></param>
+            private void SetValueWithControl(string value)
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                if (value.ToCharArray().Any(c => c == '"' || (Char.IsControl(c) && !"\r\n\b\f\t".Contains(c))))
+                {
+                    throw new ArgumentException("value");
+                }
+                optionValue = value;
+            }
+
+            /// <summary>
+            /// Constructor, allowing certain C control characters in the value.
+            /// </summary>
+            /// <param name="option">Option name. Must not begin with '-'.</param>
+            /// <param name="value">Option value.</param>
+            /// <param name="allowCControl">If true, allow certain C control characters in <paramref name="value"/>.</param>
+            protected ProcessOptionWithValue(string option, string value, bool allowCControl = true)
+            {
+                OptionName = option;
+                if (allowCControl)
+                {
+                    SetValueWithControl(value);
+                }
+                else
+                {
+                    OptionValue = value;
+                }
+            }
+
+            /// <summary>
             /// Expand an option into a properly-quoted string to pass on the command line.
             /// </summary>
             /// <returns>Quoted string.</returns>
             public override string Quote()
             {
-                return String.Format("-{0} {1}", OptionName, Session.QuoteString(OptionValue));
+                // Note: Command-line options do not generally need quoted backslashes.
+                return String.Format("-{0} {1}", OptionName, Session.QuoteString(OptionValue, quoteBackslashes: false));
             }
         }
 
@@ -157,8 +197,18 @@ namespace x3270if
             /// <param name="resource">Resource name. Do not include "ws3270." in the name.</param>
             /// <param name="value">Resource value.</param>
             public ProcessOptionXrm(string resource, string value)
-                : base("xrm", String.Format("ws3270.{0}: {1}", resource, value))
+                : base("xrm", String.Format("ws3270.{0}: {1}", resource, value), allowCControl: true)
             {
+            }
+
+            /// <summary>
+            /// Expand an option into a properly-quoted string to pass on the command line.
+            /// </summary>
+            /// <returns>Quoted string.</returns>
+            public override string Quote()
+            {
+                // Note: -xrm options *do* need quoted backslashes.
+                return String.Format("-{0} {1}", OptionName, Session.QuoteString(OptionValue, quoteBackslashes: true));
             }
         }
     }
@@ -368,6 +418,8 @@ namespace x3270if
                 {
                     throw new InvalidOperationException("Arguments too long");
                 }
+
+                Util.Log("ProcessSession Start: ProcessName '{0}', arguments '{1}'", ProcessConfig.ProcessName, info.Arguments);
 
                 // Try starting it.
                 try

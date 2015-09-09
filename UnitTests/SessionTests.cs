@@ -505,7 +505,7 @@ namespace UnitTests
             var config = new ProcessConfig
             {
                 ProcessName = "MockWs3270.exe",
-                ExtraOptions = Enumerable.Range(1, 11000).Select(x => new ProcessOptionWithoutValue("-x"))
+                ExtraOptions = Enumerable.Range(1, 11000).Select(x => new ProcessOptionWithoutValue("x"))
             };
             var session = new ProcessSession(config);
             Assert.Throws<InvalidOperationException>(() => session.Start());

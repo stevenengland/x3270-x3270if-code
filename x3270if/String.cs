@@ -86,25 +86,31 @@ namespace x3270if
                 translatedText = outString.ToString();
             }
 
-            // Translate newline, carriage return, backspace, formfeed and tab.
-            if (translatedText.Contains('\r') ||
-                translatedText.Contains('\n') ||
-                translatedText.Contains('\b') ||
-                translatedText.Contains('\f') ||
-                translatedText.Contains('\t'))
+            // Translate newline, carriage return, backspace, formfeed and tab to C escapes.
+            var len = translatedText.Length;
+            translatedText = string.Join("", translatedText.ToCharArray().Select(c =>
             {
-                translatedText = translatedText
-                    .Replace("\r", @"\r")
-                    .Replace("\n", @"\n")
-                    .Replace("\b", @"\b")
-                    .Replace("\f", @"\f")
-                    .Replace("\t", @"\t");
-
-                // They require double quotes, if there aren't any yet.
-                if (!translatedText.StartsWith("\""))
+                switch (c)
                 {
-                    translatedText = "\"" + translatedText + "\"";
+                    case '\r':
+                        return @"\r";
+                    case '\n':
+                        return @"\n";
+                    case '\b':
+                        return @"\b";
+                    case '\f':
+                        return @"\f";
+                    case '\t':
+                        return @"\t";
+                    default:
+                        return c.ToString();
                 }
+            }));
+            // If anything was expanded, it needs double quotes.
+            // Actually, it may not -- I need finer control over this method.
+            if (translatedText.Length != len && !translatedText.StartsWith("\""))
+            {
+                translatedText = "\"" + translatedText + "\"";
             }
 
             // Any other control characters are verboten.
