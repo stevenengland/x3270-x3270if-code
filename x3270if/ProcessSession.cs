@@ -59,13 +59,13 @@ namespace x3270if
                     {
                         throw new ArgumentNullException("name");
                     }
-                    if (String.IsNullOrWhiteSpace(value) ||
-                        value.Substring(0, 1) == "-" ||
-                        value.ToCharArray().Any(c => c == '"' || c == '\\' || Char.IsWhiteSpace(c) || Char.IsControl(c)))
+                    var plainValue = value.StartsWith("-") ? value.Substring(1) : value;
+                    if (String.IsNullOrWhiteSpace(plainValue) ||
+                        plainValue.ToCharArray().Any(c => c == '"' || c == '\\' || Char.IsWhiteSpace(c) || Char.IsControl(c)))
                     {
                         throw new ArgumentException("name");
                     }
-                    optionName = value;
+                    optionName = plainValue;
                 }
             }
 
@@ -84,11 +84,12 @@ namespace x3270if
             /// <summary>
             /// Constructor.
             /// </summary>
-            /// <param name="optionName">Option name. Must not begin with '-'.</param>
+            /// <param name="optionName">Option name. A leading '-' will be added if needed.</param>
             public ProcessOptionWithoutValue(string optionName)
             {
                 OptionName = optionName;
             }
+
             /// <summary>
             /// Expand an option into a properly-quoted string to pass on the command line.
             /// </summary>
@@ -120,7 +121,10 @@ namespace x3270if
                     {
                         throw new ArgumentNullException("value");
                     }
-                    if (value.ToCharArray().Any(c => c == '"' || Char.IsControl(c)))
+                    if (value.ToCharArray().Any(c =>
+                        c == '"' ||
+                        (Char.IsControl(c) &&
+                         (!AllowCControl || !"\r\n\b\f\t".Contains(c)))))
                     {
                         throw new ArgumentException("value");
                     }
@@ -131,48 +135,12 @@ namespace x3270if
             /// <summary>
             /// Constructor.
             /// </summary>
-            /// <param name="option">Option name. Must not begin with '-'.</param>
+            /// <param name="option">Option name. A leading '-' will be added if needed.</param>
             /// <param name="value">Option value.</param>
             public ProcessOptionWithValue(string option, string value)
             {
                 OptionName = option;
                 OptionValue = value;
-            }
-
-            /// <summary>
-            /// Set the optionValue, allowing certain control codes through.
-            /// </summary>
-            /// <param name="value"></param>
-            private void SetValueWithControl(string value)
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException("value");
-                }
-                if (value.ToCharArray().Any(c => c == '"' || (Char.IsControl(c) && !"\r\n\b\f\t".Contains(c))))
-                {
-                    throw new ArgumentException("value");
-                }
-                optionValue = value;
-            }
-
-            /// <summary>
-            /// Constructor, allowing certain C control characters in the value.
-            /// </summary>
-            /// <param name="option">Option name. Must not begin with '-'.</param>
-            /// <param name="value">Option value.</param>
-            /// <param name="allowCControl">If true, allow certain C control characters in <paramref name="value"/>.</param>
-            protected ProcessOptionWithValue(string option, string value, bool allowCControl = true)
-            {
-                OptionName = option;
-                if (allowCControl)
-                {
-                    SetValueWithControl(value);
-                }
-                else
-                {
-                    OptionValue = value;
-                }
             }
 
             /// <summary>
@@ -184,6 +152,15 @@ namespace x3270if
                 // Note: Command-line options do not generally need quoted backslashes.
                 return String.Format("-{0} {1}", OptionName, Session.QuoteString(OptionValue, quoteBackslashes: false));
             }
+
+            /// <summary>
+            /// Flag indicating whether values can contain control characters. By default, it's false.
+            /// The Xrm subclass overrides this property with one that returns true.
+            /// </summary>
+            protected virtual bool AllowCControl
+            {
+                get { return false; }
+            }
         }
 
         /// <summary>
@@ -191,13 +168,19 @@ namespace x3270if
         /// </summary>
         public class ProcessOptionXrm : ProcessOptionWithValue
         {
+            private const string ws3270Dot = "ws3270.";
+            private static string AddWs3270(string resource)
+            {
+                return resource.StartsWith(ws3270Dot) || resource.StartsWith("*") ? resource : ws3270Dot + resource;
+            }
+
             /// <summary>
             /// Constructor.
             /// </summary>
             /// <param name="resource">Resource name. Do not include "ws3270." in the name.</param>
             /// <param name="value">Resource value.</param>
             public ProcessOptionXrm(string resource, string value)
-                : base("xrm", String.Format("ws3270.{0}: {1}", resource, value), allowCControl: true)
+                : base("xrm", String.Format("{0}: {1}", AddWs3270(resource), value))
             {
             }
 
@@ -209,6 +192,14 @@ namespace x3270if
             {
                 // Note: -xrm options *do* need quoted backslashes.
                 return String.Format("-{0} {1}", OptionName, Session.QuoteString(OptionValue, quoteBackslashes: true));
+            }
+
+            /// <summary>
+            /// Flag indicating whether values can contain control characters. For Xrm, it's true.
+            /// </summary>
+            protected override bool AllowCControl
+            {
+                get { return true; }
             }
         }
     }
@@ -369,7 +360,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Start a new emulator process, async version.
+        /// Start a new emulator process. Asynchronous version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Arguments are too long.</exception>

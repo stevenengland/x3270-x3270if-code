@@ -92,20 +92,16 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.Connect("bob"); },
-                "Connect(bob)");
-
-            session.VerifyCommand(
-                () => { return session.Connect("bob", "27", new string[] { "lu1", "lu2" }, ConnectFlags.NoLogin); },
+            session.VerifyCommand(() => session.Connect("bob"), "Connect(bob)");
+            session.VerifyCommand(() => session.Connect("bob", "27", new string[] { "lu1", "lu2" }, ConnectFlags.NoLogin),
                 "Connect(\"C:lu1,lu2@bob:27\")");
 
-            Assert.Throws<ArgumentException>(() => { var result = session.Connect(""); });
+            Assert.Throws<ArgumentException>(() => session.Connect(""));
 
             // Force an exception.
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Connect("foo"); });
+            Assert.Throws<X3270ifCommandException>(() => session.Connect("foo"));
 
             session.Close();
         }
@@ -116,14 +112,12 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.Disconnect(); },
-                 "Disconnect()");
+            session.VerifyCommand(() => session.Disconnect(), "Disconnect()");
 
             // Force an exception.
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Disconnect(); });
+            Assert.Throws<X3270ifCommandException>(() => session.Disconnect());
 
             session.Close();
         }
@@ -137,22 +131,14 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.String("Fred"); },
-                "String(Fred)");
-
-            session.VerifyCommand(
-                () => { return session.String("a\\b"); },
-                "String(\"a\\\\b\")");
-
-            session.VerifyCommand(
-                () => { return session.String("a\\b", quoteBackslashes: false); },
-                "String(\"a\\b\")");
+            session.VerifyCommand(() => session.String("Fred"), "String(Fred)");
+            session.VerifyCommand(() => session.String("a\\b"), "String(\"a\\\\b\")");
+            session.VerifyCommand(() => session.String("a\\b", quoteBackslashes: false), "String(\"a\\b\")");
 
             // Force an exception.
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.String("foo"); });
+            Assert.Throws<X3270ifCommandException>(() => session.String("foo"));
 
             session.Close();
         }
@@ -166,30 +152,28 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.StringAt(1, 0, "Fred"); },
-                "MoveCursor(1,0) String(Fred)");
+            session.VerifyCommand(() => session.StringAt(1, 0, "Fred"), "MoveCursor(1,0) String(Fred)");
 
             session.VerifyCommand(
-                () => { return session.StringAt(new []
+                () => session.StringAt(new []
                 {
                     new StringAtBlock { Row = 1, Column = 0, Text = "Fred" },
                     new StringAtBlock { Row = 2, Column = 4, Text = "Smith" }
-                } ); },
+                } ),
                 "MoveCursor(1,0) String(Fred) MoveCursor(2,4) String(Smith)");
 
             session.VerifyCommand(
-                () => { return session.StringAt(1, 0, "Fred", eraseEof: true); },
+                () => session.StringAt(1, 0, "Fred", eraseEof: true),
                 "MoveCursor(1,0) EraseEOF() String(Fred)");
 
             // Exercise row and column checking.
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.StringAt(-1, 0, "foo"); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.StringAt(0, -1, "foo"); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.StringAt(-1, 0, "foo"));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.StringAt(0, -1, "foo"));
             
             // Force exceptions.
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.StringAt(1, 0, "foo"); });
+            Assert.Throws<X3270ifCommandException>(() => session.StringAt(1, 0, "foo"));
             Assert.Throws<X3270ifCommandException>(() =>
             {
                 var result = session.StringAt(new[]
@@ -211,18 +195,13 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.Wait(WaitMode.Wait3270Mode); },
-                "Wait(3270Mode)");
-
-            session.VerifyCommand(
-                () => { return session.Wait(WaitMode.Output, 10); },
-                "Wait(10,Output)");
+            session.VerifyCommand(() => session.Wait(WaitMode.Wait3270Mode), "Wait(3270Mode)");
+            session.VerifyCommand(() => session.Wait(WaitMode.Output, 10), "Wait(10,Output)");
 
             // Force an exception.
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Wait(WaitMode.Unlock); });
+            Assert.Throws<X3270ifCommandException>(() => session.Wait(WaitMode.Unlock));
 
             session.Close();
         }
@@ -234,34 +213,23 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.Ascii(); },
-                "Ascii()");
+            session.VerifyCommand(() => session.Ascii(), "Ascii()");
+            session.VerifyCommand(() => session.Ascii(10), "Ascii(10)");
+            session.VerifyCommand(() => session.Ascii(1, 2, 3), "Ascii(1,2,3)");
+            session.VerifyCommand(() => session.Ascii(1, 2, 3, 4), "Ascii(1,2,3,4)");
 
-            session.VerifyCommand(
-                () => { return session.Ascii(10); },
-                "Ascii(10)");
-
-            session.VerifyCommand(
-                () => { return session.Ascii(1, 2, 3); },
-                "Ascii(1,2,3)");
-
-            session.VerifyCommand(
-                () => { return session.Ascii(1, 2, 3, 4); },
-                "Ascii(1,2,3,4)");
-
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.Ascii(-1, 2, 3); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.Ascii(1, -1, 3); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.Ascii(-1, 1, 3, 4); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.Ascii(1, -1, 3, 4); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ascii(-1, 2, 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ascii(1, -1, 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ascii(-1, 1, 3, 4));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ascii(1, -1, 3, 4));
 
             // Force some exceptions.
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Ascii(); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Ascii(1); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Ascii(1, 2, 3); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Ascii(1, 2, 3, 4); });
+            Assert.Throws<X3270ifCommandException>(() => session.Ascii());
+            Assert.Throws<X3270ifCommandException>(() => session.Ascii(1));
+            Assert.Throws<X3270ifCommandException>(() => session.Ascii(1, 2, 3));
+            Assert.Throws<X3270ifCommandException>(() => session.Ascii(1, 2, 3, 4));
 
             session.Close();
         }
@@ -273,16 +241,11 @@ namespace UnitTests
             var session = new MockTaskSession(new MockTaskConfig { Origin = 1 });
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.Ascii(1, 2, 3); },
-                "Ascii(0,1,3)");
+            session.VerifyCommand(() => session.Ascii(1, 2, 3), "Ascii(0,1,3)");
+            session.VerifyCommand(() => session.Ascii(1, 2, 3, 4), "Ascii(0,1,3,4)");
 
-            session.VerifyCommand(
-                () => { return session.Ascii(1, 2, 3, 4); },
-                "Ascii(0,1,3,4)");
-
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.Ascii(0, 2, 3); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.Ascii(1, 0, 3); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ascii(0, 2, 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ascii(1, 0, 3));
 
             session.Close();
         }
@@ -296,22 +259,14 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.ReadBuffer(); },
-                "ReadBuffer(Ascii)");
-
-            session.VerifyCommand(
-                () => { return session.ReadBuffer(Session.ReadBufferType.Ascii); },
-                "ReadBuffer(Ascii)");
-
-            session.VerifyCommand(
-                () => { return session.ReadBuffer(Session.ReadBufferType.Ebcdic); },
-                "ReadBuffer(Ebcdic)");
+            session.VerifyCommand(() => session.ReadBuffer(), "ReadBuffer(Ascii)");
+            session.VerifyCommand(() => session.ReadBuffer(Session.ReadBufferType.Ascii), "ReadBuffer(Ascii)");
+            session.VerifyCommand(() => session.ReadBuffer(Session.ReadBufferType.Ebcdic), "ReadBuffer(Ebcdic)");
 
             // Force an exception.
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.ReadBuffer(); });
+            Assert.Throws<X3270ifCommandException>(() => session.ReadBuffer());
 
             session.Close();
         }
@@ -325,16 +280,14 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.Query(QueryType.BindPluName); },
-                "Query(BindPluName)");
+            session.VerifyCommand(() => session.Query(QueryType.BindPluName), "Query(BindPluName)");
 
             Assert.AreEqual(session.Query(QueryType.Cursor).Result[0], "0 0");
 
             // Force an exception.
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Query(QueryType.Formatted); });
+            Assert.Throws<X3270ifCommandException>(() => session.Query(QueryType.Formatted));
 
             session.Close();
 

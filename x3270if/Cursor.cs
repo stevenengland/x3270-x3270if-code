@@ -31,7 +31,7 @@ namespace x3270if
     public partial class Session
     {
         /// <summary>
-        /// Move cursor up, async version.
+        /// Move cursor up. Asynchronous version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
@@ -42,7 +42,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Move cursor down, async version.
+        /// Move cursor down. Asynchronous version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
@@ -53,7 +53,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Move cursor left, async version.
+        /// Move cursor left. Asynchronous version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
@@ -64,7 +64,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Move cursor right, async version.
+        /// Move cursor right. Asynchronous version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
@@ -75,7 +75,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Move cursor to a particular row and column, async version.
+        /// Move cursor to a particular row and column. Asynchronous version.
         /// </summary>
         /// <param name="row">Desired row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="column">Desired column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
@@ -98,7 +98,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Move the cursor to the next field, async version.
+        /// Move the cursor to the next field. Asynchronous version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
@@ -109,7 +109,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Move the cursor to the previous field, async version.
+        /// Move the cursor to the previous field. Asynchronous version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>

@@ -184,7 +184,7 @@ namespace UnitTests
             Assert.AreEqual("failed", result.Result[0]);
 
             // Test a double start.
-            Assert.Throws<InvalidOperationException>(() => { startResult = session.Start(); });
+            Assert.Throws<InvalidOperationException>(() => session.Start());
 
             // Test the I/O timeout.
             Assert.AreEqual(true, startResult.Success);
@@ -202,7 +202,7 @@ namespace UnitTests
             session.Close();
 
             // Test the exception for I/O on a closed session.
-            Assert.Throws<InvalidOperationException>(() => { var r = session.Io("Xxx"); });
+            Assert.Throws<InvalidOperationException>(() => session.Io("Xxx"));
         }
 
         /// <summary>
@@ -241,7 +241,7 @@ namespace UnitTests
             // Set exception mode for any failure, including Start.
             session.ExceptionMode = true;
             // Boom.
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Start(); });
+            Assert.Throws<X3270ifCommandException>(() => session.Start());
         }
 
 
@@ -414,7 +414,7 @@ namespace UnitTests
             var session = new MockTaskSession();
 
             // Test StatusField exception when not running.
-            Assert.Throws<InvalidOperationException>(() => { var s = session.StatusField(StatusLineField.Formatting); });
+            Assert.Throws<InvalidOperationException>(() => session.StatusField(StatusLineField.Formatting));
 
             var startResult = session.Start();
             Assert.AreEqual(true, startResult.Success);
@@ -446,9 +446,9 @@ namespace UnitTests
             Assert.AreEqual(true, startResult.Success);
 
             session.ExceptionMode = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Io("Fail"); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Io("Fail()"); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Io("Quit"); });
+            Assert.Throws<X3270ifCommandException>(() => session.Io("Fail"));
+            Assert.Throws<X3270ifCommandException>(() => session.Io("Fail()"));
+            Assert.Throws<X3270ifCommandException>(() => session.Io("Quit"));
             session.Close();
         }
 
@@ -457,7 +457,7 @@ namespace UnitTests
         public void TestPortAutoStart()
         {
             // No X3270PORT to connect to.
-            Assert.Throws<X3270ifInternalException>(() => { var session = new PortSession(); });
+            Assert.Throws<X3270ifInternalException>(() => new PortSession());
         }
 
         // Exercise Io's argument checking.
@@ -467,7 +467,7 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.Start();
 
-            Assert.Throws<ArgumentException>(() => { var result = session.Io("Foo(\0)"); });
+            Assert.Throws<ArgumentException>(() => session.Io("Foo(\0)"));
         }
 
         // Exercise broken sessions.
@@ -495,7 +495,7 @@ namespace UnitTests
         [Test]
         public void TestSessionNullBackEnd()
         {
-            Assert.Throws<ArgumentNullException>(() => { var session = new MockTaskSession(new MockTaskConfig(), forceChaos: true); });
+            Assert.Throws<ArgumentNullException>(() => new MockTaskSession(new MockTaskConfig(), forceChaos: true));
         }
 
         // Make process arguments too long.

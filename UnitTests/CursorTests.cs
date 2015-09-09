@@ -63,46 +63,26 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.Up(); },
-                "Up()");
-
-            session.VerifyCommand(
-                () => { return session.Down(); },
-                "Down()");
-
-            session.VerifyCommand(
-                () => { return session.Left(); },
-                "Left()");
-
-            session.VerifyCommand(
-                () => { return session.Right(); },
-                "Right()");
-
-            session.VerifyCommand(
-                () => { return session.MoveCursor(0, 0); },
-                "MoveCursor(0,0)");
-
-            session.VerifyCommand(
-                () => { return session.Tab(); },
-                "Tab()");
-
-            session.VerifyCommand(
-                () => { return session.BackTab(); },
-                "BackTab()");
+            session.VerifyCommand(() => session.Up(), "Up()");
+            session.VerifyCommand(() => session.Down(), "Down()");
+            session.VerifyCommand(() => session.Left(), "Left()");
+            session.VerifyCommand(() => session.Right(), "Right()");
+            session.VerifyCommand(() => session.MoveCursor(0, 0), "MoveCursor(0,0)");
+            session.VerifyCommand(() => session.Tab(), "Tab()");
+            session.VerifyCommand(() => session.BackTab(), "BackTab()");
 
             // Force some exceptions.
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.MoveCursor(-1, 0); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.MoveCursor(0, -1); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.MoveCursor(-1, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.MoveCursor(0, -1));
 
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Up(); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Down(); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Left(); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Right(); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Tab(); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.BackTab(); });
+            Assert.Throws<X3270ifCommandException>(() => session.Up());
+            Assert.Throws<X3270ifCommandException>(() => session.Down());
+            Assert.Throws<X3270ifCommandException>(() => session.Left());
+            Assert.Throws<X3270ifCommandException>(() => session.Right());
+            Assert.Throws<X3270ifCommandException>(() => session.Tab());
+            Assert.Throws<X3270ifCommandException>(() => session.BackTab());
 
             session.Close();
         }
@@ -116,13 +96,11 @@ namespace UnitTests
             var session = new MockTaskSession(new MockTaskConfig { Origin = 1 });
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.MoveCursor(1, 1); },
-                "MoveCursor(0,0)");
+            session.VerifyCommand(() => session.MoveCursor(1, 1), "MoveCursor(0,0)");
 
             // Force some exceptions.
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.MoveCursor(0, 1); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.MoveCursor(1, 0); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.MoveCursor(0, 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.MoveCursor(1, 0));
 
             session.Close();
         }

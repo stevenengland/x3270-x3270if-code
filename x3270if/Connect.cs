@@ -66,6 +66,7 @@ namespace x3270if
         /// <param name="lus">Set of LU names to try to connect to.</param>
         /// <param name="flags">Connection flags (SSL, etc.).</param>
         /// <returns>Encoded host string.</returns>
+        /// <remarks>This method is public for unit testing purposes only.</remarks>
         public string ExpandHostName(string host, string port = null, IEnumerable<string> lus = null, ConnectFlags flags = ConnectFlags.None)
         {
             string hostString = string.Empty;

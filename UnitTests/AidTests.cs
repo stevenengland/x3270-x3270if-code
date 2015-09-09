@@ -63,42 +63,25 @@ namespace UnitTests
             var session = new MockTaskSession();
             session.VerifyStart();
 
-            session.VerifyCommand(
-                () => { return session.Enter(); },
-                "Enter()");
-
-            session.VerifyCommand(
-                () => { return session.Clear(); },
-                "Clear()");
-
-            session.VerifyCommand(
-                () => { return session.PF(1); },
-                "PF(1)");
-
-            session.VerifyCommand(
-                () => { return session.PF(2); },
-                "PF(2)");
-
-            session.VerifyCommand(
-                () => { return session.PA(1); },
-                "PA(1)");
-
-            session.VerifyCommand(
-                () => { return session.PA(2); },
-                "PA(2)");
+            session.VerifyCommand(() => session.Enter(), "Enter()");
+            session.VerifyCommand(() => session.Clear(), "Clear()");
+            session.VerifyCommand(() => session.PF(1), "PF(1)");
+            session.VerifyCommand(() => session.PF(2), "PF(2)");
+            session.VerifyCommand(() => session.PA(1), "PA(1)");
+            session.VerifyCommand(() => session.PA(2), "PA(2)");
 
             // Force some exceptions.
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.PF(0); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.PF(25); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.PA(0); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var result = session.PA(4); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.PF(0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.PF(25));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.PA(0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.PA(4));
 
             session.ExceptionMode = true;
             session.AllFail = true;
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Enter(); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.Clear(); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.PF(1); });
-            Assert.Throws<X3270ifCommandException>(() => { var result = session.PA(1); });
+            Assert.Throws<X3270ifCommandException>(() => session.Enter());
+            Assert.Throws<X3270ifCommandException>(() => session.Clear());
+            Assert.Throws<X3270ifCommandException>(() => session.PF(1));
+            Assert.Throws<X3270ifCommandException>(() => session.PA(1));
 
             session.Close();
         }

@@ -31,7 +31,7 @@ namespace x3270if
     public partial class Session
     {
         /// <summary>
-        /// Send an Enter AID, async version.
+        /// Send an Enter AID. Asynchronous version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
@@ -42,7 +42,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Send a Clear AID, async version.
+        /// Send a Clear AID. Asynchronous version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
@@ -53,7 +53,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Send a PF AID, async version.
+        /// Send a PF AID. Asynchronous version.
         /// </summary>
         /// <param name="n">PF index.</param>
         /// <returns>Success/failure and failure reason.</returns>
@@ -70,7 +70,7 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Send a PA AID, async version.
+        /// Send a PA AID. Asynchronous version.
         /// </summary>
         /// <param name="n">PA index.</param>
         /// <returns>Success/failure and failure reason.</returns>

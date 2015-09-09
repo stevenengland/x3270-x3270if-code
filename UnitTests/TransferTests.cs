@@ -66,85 +66,69 @@ namespace UnitTests
 
             // Basic functionality.
             session.VerifyCommand(
-                () =>
-                {
-                    return session.Transfer(
-                        @"C:\foo.txt",
-                        "FOO TXT A",
-                        Direction.Send,
-                        Mode.Ascii,
-                        HostType.Vm,
-                        new ParameterExistAction(ExistAction.Replace));
-                },
+                () => session.Transfer(
+                    @"C:\foo.txt",
+                    "FOO TXT A",
+                    Direction.Send,
+                    Mode.Ascii,
+                    HostType.Vm,
+                    new ParameterExistAction(ExistAction.Replace)),
                 "Transfer(direction=Send,exist=Replace,host=Vm,\"hostfile=FOO TXT A\",\"localfile=C:\\\\foo.txt\",mode=Ascii)");
 
 
             // Bad parameter type.
             Assert.Throws<ArgumentException>(
-                () => { var result = session.Transfer("foo.txt", "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm, "wrong!"); });
+                () => session.Transfer("foo.txt", "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm, "wrong!"));
             Assert.Throws<ArgumentNullException>(
-                () => { var result = session.Transfer("foo.txt", "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm,
-                    new ParameterExistAction(ExistAction.Replace), null); });
+                () => session.Transfer("foo.txt", "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm,
+                    new ParameterExistAction(ExistAction.Replace), null));
 
             // Bad file names.
             Assert.Throws<ArgumentException>(
-                () => { var result = session.Transfer("", "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm); });
+                () => session.Transfer("", "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm));
             Assert.Throws<ArgumentException>(
-                () => { var result = session.Transfer(null, "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm); });
+                () => session.Transfer(null, "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm));
             Assert.Throws<ArgumentException>(
-                () => { var result = session.Transfer("foo.txt", "", Direction.Send, Mode.Ascii, HostType.Vm); });
+                () => session.Transfer("foo.txt", "", Direction.Send, Mode.Ascii, HostType.Vm));
             Assert.Throws<ArgumentException>(
-                () => { var result = session.Transfer("foo.txt", null, Direction.Send, Mode.Ascii, HostType.Vm); });
+                () => session.Transfer("foo.txt", null, Direction.Send, Mode.Ascii, HostType.Vm));
 
             // Bad AsciiRemap.
-            Assert.Throws<ArgumentException>(
-                () => { var param = new ParameterAsciiRemap(false, 252); });
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => { var param = new ParameterAsciiRemap(true, 0); });
+            Assert.Throws<ArgumentException>(() => new ParameterAsciiRemap(false, 252));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ParameterAsciiRemap(true, 0));
 
             // Bad block size.
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => { var param = new ParameterBlockSize(0); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ParameterBlockSize(0));
 
             // Bad logical record length.
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => { var param = new ParameterSendLogicalRecordLength(0); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ParameterSendLogicalRecordLength(0));
 
             // Bad TsoSendAllocations.
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => { var param = new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 0); });
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => { var param = new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 100, 0); });
-            Assert.Throws<ArgumentException>(
-                () => { var param = new ParameterTsoSendAllocation(TsoAllocationUnits.Avblock, 100, 200); });
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => { var param = new ParameterTsoSendAllocation(TsoAllocationUnits.Avblock, 100, 200, 0); });
-            Assert.Throws<ArgumentException>(
-                () => { var param = new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 100, 200, 300); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 100, 0));
+            Assert.Throws<ArgumentException>(() => new ParameterTsoSendAllocation(TsoAllocationUnits.Avblock, 100, 200));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ParameterTsoSendAllocation(TsoAllocationUnits.Avblock, 100, 200, 0));
+            Assert.Throws<ArgumentException>(() => new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 100, 200, 300));
 
             // Bad buffer size.
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => { var param = new ParameterBufferSize(0); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ParameterBufferSize(0));
 
             // All possible options.
             session.VerifyCommand(
-                () =>
-                {
-                    return session.Transfer(
-                        @"C:\foo.txt",
-                        "FOO TXT A",
-                        Direction.Send,
-                        Mode.Ascii,
-                        HostType.Tso,
-                        new ParameterAsciiCr(false),
-                        new ParameterAsciiRemap(true, 252),
-                        new ParameterExistAction(ExistAction.Replace),
-                        new ParameterSendRecordFormat(RecordFormat.Fixed),
-                        new ParameterSendLogicalRecordLength(80),
-                        new ParameterBlockSize(1024),
-                        new ParameterTsoSendAllocation(TsoAllocationUnits.Avblock, 100, 200, 300),
-                        new ParameterBufferSize(4096));
-                },
+                () => session.Transfer(
+                    @"C:\foo.txt",
+                    "FOO TXT A",
+                    Direction.Send,
+                    Mode.Ascii,
+                    HostType.Tso,
+                    new ParameterAsciiCr(false),
+                    new ParameterAsciiRemap(true, 252),
+                    new ParameterExistAction(ExistAction.Replace),
+                    new ParameterSendRecordFormat(RecordFormat.Fixed),
+                    new ParameterSendLogicalRecordLength(80),
+                    new ParameterBlockSize(1024),
+                    new ParameterTsoSendAllocation(TsoAllocationUnits.Avblock, 100, 200, 300),
+                    new ParameterBufferSize(4096)),
                 "Transfer(allocation=Avblock,avblock=300,blocksize=1024,buffersize=4096,cr=keep,direction=Send,exist=Replace,host=Tso,\"hostfile=FOO TXT A\",\"localfile=C:\\\\foo.txt\",lrecl=80,mode=Ascii,primaryspace=100,recfm=Fixed,remap=yes,secondaryspace=200,windowscodepage=252)");
 
             // Some ASCII option variations.

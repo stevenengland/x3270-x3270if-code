@@ -125,7 +125,7 @@ namespace UnitTests
             Assert.AreEqual("\"hello\\r\\n\\f\\t\\b\"", s);
 
             // Verify that other control characters are rejected.
-            Assert.Throws<ArgumentException>(() => { s = Session.QuoteString("hello\x7fthere"); });
+            Assert.Throws<ArgumentException>(() => Session.QuoteString("hello\x7fthere"));
         }
 
         /// <summary>
@@ -135,18 +135,14 @@ namespace UnitTests
         public void TestProcessOptions()
         {
             // Trivial operations.
-            var simpleWithout = new ProcessOptionWithoutValue("foo");
-            Assert.AreEqual("-foo", simpleWithout.Quote());
-            var simpleWith = new ProcessOptionWithValue("foo", "hello");
-            Assert.AreEqual("-foo hello", simpleWith.Quote());
-            var simpleXrm = new ProcessOptionXrm("foo", "bar");
-            Assert.AreEqual("-xrm \"ws3270.foo: bar\"", simpleXrm.Quote());
+            Assert.AreEqual("-foo", new ProcessOptionWithoutValue("foo").Quote());
+            Assert.AreEqual("-foo hello", new ProcessOptionWithValue("foo", "hello").Quote());
+            Assert.AreEqual("-xrm \"ws3270.foo: bar\"", new ProcessOptionXrm("foo", "bar").Quote());
 
             // Option name validation.
             Assert.Throws<ArgumentNullException>(() => new ProcessOptionWithoutValue(null));
             Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue(string.Empty));
             Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue(" "));
-            Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue("-bob"));
             Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue("ab\nc"));
             Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue("ab\"c"));
             Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue("ab c"));
@@ -154,6 +150,15 @@ namespace UnitTests
             // Option value validation.
             Assert.Throws<ArgumentException>(() => new ProcessOptionWithValue("bob", "ab\nc"));
             Assert.Throws<ArgumentException>(() => new ProcessOptionWithValue("bob", "ab\"c"));
+
+            // Leading dash is optional (and discouraged).
+            Assert.AreEqual("-foo hello", new ProcessOptionWithValue("-foo", "hello").Quote());
+
+            // "ws3270." is optional (and discouraged).
+            Assert.AreEqual("-xrm \"ws3270.foo: bar\"", new ProcessOptionXrm("ws3270.foo", "bar").Quote());
+
+            // "*." is tolerated on xrm.
+            Assert.AreEqual("-xrm \"*foo: bar\"", new ProcessOptionXrm("*foo", "bar").Quote());
 
             // Non-xrm arguments are (unnecessarily) surrounded by double quotes, but backslashes are not quoted.
             var complex = new ProcessOptionWithValue("foo", @"C:\a\b");
@@ -234,25 +239,25 @@ namespace UnitTests
             Assert.AreEqual("N:host", s);
 
             // Check the exceptions thrown on bad hostname, port, and LU.
-            Assert.Throws<ArgumentException>(() => { var ch = portEmulator.ExpandHostName("host/wrong"); });
-            Assert.Throws<ArgumentException>(() => { var ch = portEmulator.ExpandHostName("host@wrong"); });
-            Assert.Throws<ArgumentException>(() => { var ch = portEmulator.ExpandHostName("host", "port/wrong"); });
-            Assert.Throws<ArgumentException>(() => { var ch = portEmulator.ExpandHostName("host", "port:wrong"); });
-            Assert.Throws<ArgumentException>(() => { var ch = portEmulator.ExpandHostName("host", "port.wrong"); });
-            Assert.Throws<ArgumentException>(() => { var ch = portEmulator.ExpandHostName("host", "port@wrong"); });
-            Assert.Throws<ArgumentException>(() => { var ch = portEmulator.ExpandHostName("host", lus: new string[] { "lu/wrong" }); });
-            Assert.Throws<ArgumentException>(() => { var ch = portEmulator.ExpandHostName("host", lus: new string[] { "lu-okay", "lu:wrong" }); });
-            Assert.Throws<ArgumentException>(() => { var ch = portEmulator.ExpandHostName("host", lus: new string[] { "lu@wrong" }); });
-            Assert.DoesNotThrow(() => { var ch = portEmulator.ExpandHostName("123:456::1.2.3.4"); });
-            Assert.DoesNotThrow(() => { var ch = portEmulator.ExpandHostName("host-okay"); });
-            Assert.DoesNotThrow(() => { var ch = portEmulator.ExpandHostName("host_okay"); });
-            Assert.DoesNotThrow(() => { var ch = portEmulator.ExpandHostName("host", "port-okay"); });
-            Assert.DoesNotThrow(() => { var ch = portEmulator.ExpandHostName("host", "port_okay"); });
-            Assert.DoesNotThrow(() => { var ch = portEmulator.ExpandHostName("host", lus: new string[] { "lu.okay" }); });
-            Assert.DoesNotThrow(() => { var ch = portEmulator.ExpandHostName("host", lus: new string[] { "lu-okay" }); });
-            Assert.DoesNotThrow(() => { var ch = portEmulator.ExpandHostName("host", lus: new string[] { "lu_okay" }); });
-            Assert.DoesNotThrow(() => { var ch = portEmulator.ExpandHostName("года.ru"); });
-            Assert.DoesNotThrow(() => { var ch = emulator.ExpandHostName("六.cn"); });
+            Assert.Throws<ArgumentException>(() => portEmulator.ExpandHostName("host/wrong"));
+            Assert.Throws<ArgumentException>(() => portEmulator.ExpandHostName("host@wrong"));
+            Assert.Throws<ArgumentException>(() => portEmulator.ExpandHostName("host", "port/wrong"));
+            Assert.Throws<ArgumentException>(() => portEmulator.ExpandHostName("host", "port:wrong"));
+            Assert.Throws<ArgumentException>(() => portEmulator.ExpandHostName("host", "port.wrong"));
+            Assert.Throws<ArgumentException>(() => portEmulator.ExpandHostName("host", "port@wrong"));
+            Assert.Throws<ArgumentException>(() => portEmulator.ExpandHostName("host", lus: new string[] { "lu/wrong" }));
+            Assert.Throws<ArgumentException>(() => portEmulator.ExpandHostName("host", lus: new string[] { "lu-okay", "lu:wrong" }));
+            Assert.Throws<ArgumentException>(() => portEmulator.ExpandHostName("host", lus: new string[] { "lu@wrong" }));
+            Assert.DoesNotThrow(() => portEmulator.ExpandHostName("123:456::1.2.3.4"));
+            Assert.DoesNotThrow(() => portEmulator.ExpandHostName("host-okay"));
+            Assert.DoesNotThrow(() => portEmulator.ExpandHostName("host_okay"));
+            Assert.DoesNotThrow(() => portEmulator.ExpandHostName("host", "port-okay"));
+            Assert.DoesNotThrow(() => portEmulator.ExpandHostName("host", "port_okay"));
+            Assert.DoesNotThrow(() => portEmulator.ExpandHostName("host", lus: new string[] { "lu.okay" }));
+            Assert.DoesNotThrow(() => portEmulator.ExpandHostName("host", lus: new string[] { "lu-okay" }));
+            Assert.DoesNotThrow(() => portEmulator.ExpandHostName("host", lus: new string[] { "lu_okay" }));
+            Assert.DoesNotThrow(() => portEmulator.ExpandHostName("года.ru"));
+            Assert.DoesNotThrow(() => emulator.ExpandHostName("六.cn"));
         }
     }
 }

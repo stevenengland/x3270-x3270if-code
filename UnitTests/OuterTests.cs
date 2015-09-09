@@ -225,13 +225,13 @@ namespace UnitTests
                 Encoding = Encoding.UTF8
             };
             b = new DisplayBuffer(rb);
-            Assert.Throws<InvalidOperationException>(() => { var da = b.Ascii(); });
+            Assert.Throws<InvalidOperationException>(() => b.Ascii());
 
             // Verify GE, which happens only on EBCDIC dumps.
             Assert.AreEqual(CharacterSet.Apl, b.Contents(0, 15).Attrs.CharacterSet);
 
             // Verify that DumpAsciiConsole() fails for EBCDIC dumps.
-            Assert.Throws<InvalidOperationException>(() => { b.DumpAsciiConsole(); });
+            Assert.Throws<InvalidOperationException>(() => b.DumpAsciiConsole());
 
             // Exercise the Ascii and Ebcdic methods. The first also exercises zero intensity.
             Assert.AreEqual(0x40, b.Contents(0, 15).EbcdicChar);
@@ -349,20 +349,20 @@ namespace UnitTests
             Assert.AreEqual(true, b.AsciiMatches(0, 1, 6, "1.*6"));
 
             // Exceptions.
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(99); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(-1); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(100, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(-100, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(0, 100, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(0, -100, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(0, 1, 999, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(0, 1, -1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(0, 1, 1, 999); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(0, 1, 1, -1); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(-1, 1, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(999, 1, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(0, -1, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(0, 999, 1, 2); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(99));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(-1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(100, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(-100, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, 100, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, -100, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, 1, 999, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, 1, -1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, 1, 1, 999));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, 1, 1, -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(-1, 1, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(999, 1, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, -1, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, 999, 1, 2));
 
 
             rb = new Session.ReadBufferIoResult
@@ -375,9 +375,9 @@ namespace UnitTests
                 Encoding = Encoding.UTF8
             };
             b = new DisplayBuffer(rb);
-            Assert.Throws<InvalidOperationException>(() => { var s = b.Ascii(1); });
-            Assert.Throws<InvalidOperationException>(() => { var s = b.Ascii(0, 1, 2); });
-            Assert.Throws<InvalidOperationException>(() => { var s = b.Ascii(0, 1, 1, 2); });
+            Assert.Throws<InvalidOperationException>(() => b.Ascii(1));
+            Assert.Throws<InvalidOperationException>(() => b.Ascii(0, 1, 2));
+            Assert.Throws<InvalidOperationException>(() => b.Ascii(0, 1, 1, 2));
         }
 
         /// <summary>
@@ -410,18 +410,18 @@ namespace UnitTests
             Assert.AreEqual(true, b.AsciiMatches(1, 2, 6, "1.*6"));
 
             // Exceptions.
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(100, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(-100, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(1, 100, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(1, -100, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(1, 1, 999, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(1, 1, -1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(1, 1, 1, 999); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(1, 1, 1, -1); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(0, 1, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(999, 1, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(1, 0, 1, 2); });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var s = b.Ascii(1, 999, 1, 2); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(100, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(-100, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(1, 100, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(1, -100, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(1, 1, 999, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(1, 1, -1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(1, 1, 1, 999));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(1, 1, 1, -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, 1, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(999, 1, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(1, 0, 1, 2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(1, 999, 1, 2));
         }
 
         // Test the Coordinate class.
