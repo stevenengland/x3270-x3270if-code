@@ -76,16 +76,15 @@ namespace x3270if
         /// <returns>Success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <remarks>Note that in all cases, if the specified condition has already been met, <see cref="Wait"/> will return
+        /// <remarks>Note that in all cases, if the specified condition has already been met, <see cref="WaitAsync"/> will return
         /// immediately.
         /// See the documentation under each value of <see cref="WaitMode"/> for details on the conditions for waiting.
         /// <note type="caution">
-        /// The <see cref="WaitMode.Output"/> flavor of <see cref="Wait"/> is integrated with the calls that
+        /// The <see cref="WaitMode.Output"/> flavor of <see cref="WaitAsync"/> is integrated with the calls that
         /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic"/>
-        /// before a <see cref="Wait"/> for <see cref="WaitMode.Output"/> will actually wait for anything. If you
-        /// <see cref="Wait"/> for <see cref="WaitMode.Output"/> immediately after a previous <see cref="Wait"/> for
-        /// <see cref="WaitMode.Output"/>, without any intervening call to <see cref="ReadBuffer"/>, <see cref="Ascii()"/>
-        /// or <see cref="Ebcdic"/>, <see cref="Wait"/> will return immediately.
+        /// before a WaitAsync(WaitMode.Output) will actually wait for anything. If you
+        /// Wait(WaitMode.Output) immediately after a previous WaitAsync(Output), without any intervening call to ReadBuffer, Ascii
+        /// or Ebcdic, WaitAsync will return immediately.
         /// </note>
         /// </remarks>
         public async Task<IoResult> WaitAsync(WaitMode waitMode, int? timeoutSecs = null)
@@ -120,10 +119,9 @@ namespace x3270if
         /// <note type="caution">
         /// The <see cref="WaitMode.Output"/> flavor of <see cref="Wait"/> is integrated with the calls that
         /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic"/>
-        /// before a <see cref="Wait"/> for <see cref="WaitMode.Output"/> will actually wait for anything. If you
-        /// <see cref="Wait"/> for <see cref="WaitMode.Output"/> immediately after a previous <see cref="Wait"/> for
-        /// <see cref="WaitMode.Output"/>, without any intervening call to <see cref="ReadBuffer"/>, <see cref="Ascii()"/>
-        /// or <see cref="Ebcdic"/>, <see cref="Wait"/> will return immediately.
+        /// before a Wait(WaitMode.Output) will actually wait for anything. If you
+        /// Wait(WaitMode.Output) immediately after a previous Wait(WaitMode.Output) without any intervening call to ReadBuffer, Ascii()
+        /// or Ebcdic, Wait will return immediately.
         /// </note>
         /// </remarks>
         public IoResult Wait(WaitMode waitMode, int? timeoutSecs = null)
