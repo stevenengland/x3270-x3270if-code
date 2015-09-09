@@ -139,8 +139,8 @@ namespace UnitTests
 
             // Make sure the start shows the initial empty command.
             var history = session.RecentCommands;
-            Assert.AreEqual(2, history.Length);
-            Assert.AreEqual(string.Empty, history[1].Command);
+            Assert.AreEqual(1, history.Length);
+            Assert.AreEqual("Query(LocalEncoding)", history[0].Command);
 
             // Overflow the history list.
             for (int i = 0; i < Session.MaxCommands; i++)

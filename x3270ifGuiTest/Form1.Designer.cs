@@ -139,7 +139,6 @@
             this.label1.Size = new System.Drawing.Size(55, 13);
             this.label1.TabIndex = 0;
             this.label1.Text = "Hostname";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // label2
             // 
@@ -166,7 +165,6 @@
             this.secureCheckBox.TabIndex = 2;
             this.secureCheckBox.Text = "Secure";
             this.secureCheckBox.UseVisualStyleBackColor = true;
-            this.secureCheckBox.CheckedChanged += new System.EventHandler(this.secureCheckBox_CheckedChanged);
             // 
             // label3
             // 

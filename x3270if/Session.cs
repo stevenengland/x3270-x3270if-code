@@ -81,7 +81,7 @@ namespace x3270if
     }
 
     /// <summary>
-    /// Interface to the back end.
+    /// Interface to the type-specific emulator back end.
     /// </summary>
     public interface IBackEnd : IDisposable
     {
@@ -231,6 +231,7 @@ namespace x3270if
         /// </summary>
         /// <param name="config">Configuration.</param>
         /// <param name="emulatorConnection">Back end.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="emulatorConnection"/> is null.</exception>
         protected Session(Config config, IBackEnd emulatorConnection)
         {
             this.Config = config ?? new Config();

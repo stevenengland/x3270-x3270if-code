@@ -417,7 +417,8 @@ namespace x3270ifGuiTest
         {
             if (session == null)
             {
-                session = new ProcessSession(new ProcessConfig { Origin = 1, ExtraOptions = "-trace" });
+                var config = new ProcessConfig { Origin = 1, ExtraOptions = "-trace" };
+                session = new ProcessSession(config);
             }
             if (!session.Running)
             {
@@ -1142,16 +1143,6 @@ namespace x3270ifGuiTest
                 runQueryButton_Click(sender, e);
                 e.Handled = true;
             }
-        }
-
-        private void secureCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }

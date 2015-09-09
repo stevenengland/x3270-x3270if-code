@@ -576,7 +576,7 @@ namespace x3270if
             }
 
             // Join the dictionary of keywords and values together, quoting each argument as necessary.
-            var arge = argd.Select(kv => QuoteString(kv.Key + "=" + kv.Value, true));
+            var arge = argd.Select(kv => QuoteString(kv.Key + "=" + kv.Value));
             var result = await IoAsync("Transfer(" + string.Join(",", arge) + ")")
                 .ConfigureAwait(continueOnCapturedContext: false);
             return result;
@@ -594,6 +594,8 @@ namespace x3270if
         /// <returns>Success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentNullException">An element of <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="ArgumentException">An element of <paramref name="parameters"/> is of the wrong type.</exception>
         public async Task<IoResult> TransferAsync(
             string localFile,
             string hostFile,
@@ -635,6 +637,8 @@ namespace x3270if
         /// <returns>Success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentNullException">An element of <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="ArgumentException">An element of <paramref name="parameters"/> is of the wrong type.</exception>
         public IoResult Transfer(
             string localFile,
             string hostFile,
@@ -665,6 +669,8 @@ namespace x3270if
         /// <returns>Success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentNullException">An element of <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="ArgumentException">An element of <paramref name="parameters"/> is of the wrong type.</exception>
         public IoResult Transfer(
             string localFile,
             string hostFile,

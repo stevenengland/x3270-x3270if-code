@@ -79,31 +79,31 @@ namespace UnitTests
         public void TestQuoteString()
         {
             // String that goes through unscathed.
-            string s = Session.QuoteString("xxx", true);
+            string s = Session.QuoteString("xxx");
             Assert.AreEqual("xxx", s);
 
             // Strings that just need double quotes.
-            s = Session.QuoteString("hello there", true); // space
+            s = Session.QuoteString("hello there"); // space
             Assert.AreEqual("\"hello there\"", s);
-            s = Session.QuoteString("a,b", true); // comma
+            s = Session.QuoteString("a,b"); // comma
             Assert.AreEqual("\"a,b\"", s);
-            s = Session.QuoteString("a(b", true); // left paren
+            s = Session.QuoteString("a(b"); // left paren
             Assert.AreEqual("\"a(b\"", s);
-            s = Session.QuoteString("a)b", true); // right paren
+            s = Session.QuoteString("a)b"); // right paren
             Assert.AreEqual("\"a)b\"", s);
 
             // Strings that need backslashes.
-            s = Session.QuoteString("a\"b", true); // double quote
+            s = Session.QuoteString("a\"b"); // double quote
             Assert.AreEqual("\"a\\\"b\"", s);
-            s = Session.QuoteString(@"a\nb", true); // backslash
+            s = Session.QuoteString(@"a\nb"); // backslash
             Assert.AreEqual("\"a\\\\nb\"", s);
 
             // Backslashes that are left alone.
-            s = Session.QuoteString(@"a\nb", false);
+            s = Session.QuoteString(@"a\nb", quoteBackslashes: false);
             Assert.AreEqual("\"a\\nb\"", s);
 
             // More than one of something, to make sure the whole string is scanned.
-            s = Session.QuoteString("My, my (oh!) \"foo\"\\n", true);
+            s = Session.QuoteString("My, my (oh!) \"foo\"\\n");
             Assert.AreEqual("\"My, my (oh!) \\\"foo\\\"\\\\n\"", s);
 
             // Now the whole ASCII-7 character set, except the special characters, to make sure nothing else is molested.
@@ -116,15 +116,30 @@ namespace UnitTests
                     ascii7 += (char)i;
                 }
             }
-            s = Session.QuoteString(ascii7, true);
+            s = Session.QuoteString(ascii7);
             Assert.AreEqual(ascii7, s);
 
             // Verify that known control characters are expanded and quotes are added.
-            s = Session.QuoteString("hello\r\n\f\t\b", true);
+            s = Session.QuoteString("hello\r\n\f\t\b");
             Assert.AreEqual("\"hello\\r\\n\\f\\t\\b\"", s);
 
             // Verify that other control characters are rejected.
-            Assert.Throws<ArgumentException>(() => { s = Session.QuoteString("hello\x7fthere", true); });
+            Assert.Throws<ArgumentException>(() => { s = Session.QuoteString("hello\x7fthere"); });
+        }
+
+        /// <summary>
+        /// Test the Xrm function.
+        /// </summary>
+        [Test]
+        public void TestXrm()
+        {
+            Assert.AreEqual("-xrm \"ws3270.foo: bar\"", ProcessSession.XrmOption("foo", "bar"));
+            Assert.AreEqual("-xrm \"ws3270.baz: C:\\\\a\\\\b\"", ProcessSession.XrmOption("baz", @"C:\a\b"));
+            Assert.Throws<ArgumentNullException>(() => { var s = ProcessSession.XrmOption(null, "a"); });
+            Assert.Throws<ArgumentNullException>(() => { var s = ProcessSession.XrmOption("a", null); });
+            Assert.Throws<ArgumentException>(() => { var s = ProcessSession.XrmOption("a b", "foo"); });
+            Assert.Throws<ArgumentException>(() => { var s = ProcessSession.XrmOption("a\"b", "foo"); });
+            Assert.Throws<ArgumentException>(() => { var s = ProcessSession.XrmOption("ab", "foo\""); });
         }
 
         /// <summary>

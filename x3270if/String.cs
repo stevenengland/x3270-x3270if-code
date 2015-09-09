@@ -58,7 +58,7 @@ namespace x3270if
         /// <param name="text">Text to quote.</param>
         /// <param name="quoteBackslashes">If true, quote backslash characters.</param>
         /// <returns>Quoted string.</returns>
-        public static string QuoteString(string text, bool quoteBackslashes)
+        public static string QuoteString(string text, bool quoteBackslashes = true)
         {
             const string metaChars = " ,\"()\\";
             const string bsChars = "\"\\";

@@ -71,24 +71,6 @@ namespace x3270if
     partial class Session
     {
         /// <summary>
-        /// Connect to the emulator.
-        /// </summary>
-        /// <returns>Task returning success/failure and failure text.</returns>
-        private async Task<startResult> TryEmptyCommandAsync()
-        {
-            // Talk to the emulator with a null command.
-            var result = await IoAsync(string.Empty, Config.HandshakeTimeoutMsec).ConfigureAwait(continueOnCapturedContext: false);
-            if (result.Success)
-            {
-                return new startResult();
-            }
-            else
-            {
-                return new startResult(backEnd.GetErrorOutput("Initial communication failed"));
-            }
-        }
-
-        /// <summary>
         /// Start an emulator session, asynchronous version.
         /// </summary>
         /// <returns>Task returning success/failure and failure text.</returns>
@@ -114,16 +96,8 @@ namespace x3270if
             // Provisionally mark the session as running.
             Running = true;
 
-            // Try an empty command.
-            result = await TryEmptyCommandAsync().ConfigureAwait(continueOnCapturedContext: false);
-            if (!result.Success)
-            {
-                Close(); // includes clearing the Running flag and history
-                return result;
-            }
-
-            // Get the code page.
-            var ioResult = await IoAsync("Query(LocalEncoding)").ConfigureAwait(continueOnCapturedContext: false);
+            // Get the local encoding (Windows code page).
+            var ioResult = await IoAsync("Query(LocalEncoding)", Config.HandshakeTimeoutMsec).ConfigureAwait(continueOnCapturedContext: false);
             if (!ioResult.Success || ioResult.Result.Length != 1)
             {
                 Close();

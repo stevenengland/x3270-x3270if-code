@@ -95,6 +95,31 @@ namespace x3270if
         public ProcessSession(ProcessConfig config = null) : base(config, new ProcessBackEnd(config))
         {
         }
+
+        /// <summary>
+        /// Format an "-xrm" option for passing to ws3270.
+        /// </summary>
+        /// <param name="resource">Resource name.</param>
+        /// <param name="value">Resource value.</param>
+        /// <returns>Formatted string.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="resource"/> or <paramref name="value"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="resource"/> or <paramref name="value"/> contains an invalid character.</exception>
+        public static string XrmOption(string resource, string value)
+        {
+            if (resource == null)
+            {
+                throw new ArgumentNullException("resource");
+            }
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+            if (resource.Contains(" ") || resource.Contains("\"") || value.Contains("\""))
+            {
+                throw new ArgumentException("contains double quote");
+            }
+            return "-xrm " + QuoteString("ws3270." + resource + ": " + value);
+        }
     }
 
     /// <summary>
@@ -191,6 +216,7 @@ namespace x3270if
         /// Start a new emulator process, async version.
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
+        /// <exception cref="InvalidOperationException">Arguments are too long.</exception>
         public async Task<startResult> StartAsync()
         {
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
@@ -224,6 +250,15 @@ namespace x3270if
                 // It's important to put "-scriptport" first, because the Mock server looks for it and ignores everything else.
                 info.Arguments += info.Arguments.JoinNonEmpty(" ", string.Format("-scriptport {0}", port));
                 info.Arguments += info.Arguments.JoinNonEmpty(" ", arguments);
+
+                // Check for argument overflow.
+                // At some point, we could automatically put most arguments into a temporary session file, but for now,
+                // we blow up, so arguments aren't silently ignored.
+                var argsMax = (Environment.OSVersion.Version.Major >= 6 && Environment.OSVersion.Version.Minor >= 1) ? 32699 : 2080;
+                if (ProcessConfig.ProcessName.Length + 1 + info.Arguments.Length > argsMax)
+                {
+                    throw new InvalidOperationException("Arguments too long");
+                }
 
                 // Try starting it.
                 try

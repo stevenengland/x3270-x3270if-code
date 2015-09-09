@@ -66,8 +66,6 @@ namespace x3270if
         /// <param name="lus">Set of LU names to try to connect to.</param>
         /// <param name="flags">Connection flags (SSL, etc.).</param>
         /// <returns>Encoded host string.</returns>
-        /// <exception cref="InvalidOperationException">Session is not started.</exception>
-        /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public string ExpandHostName(string host, string port = null, IEnumerable<string> lus = null, ConnectFlags flags = ConnectFlags.None)
         {
             string hostString = string.Empty;
@@ -110,7 +108,7 @@ namespace x3270if
                 hostString += ":" + port;
             }
 
-            return QuoteString(hostString, true);
+            return QuoteString(hostString);
         }
 
         /// <summary>
@@ -123,8 +121,18 @@ namespace x3270if
         /// <returns>Task returning success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="host"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="host"/>, <paramref name="port"/> or <paramref name="lu"/> contain invalid characters.</exception>
         public async Task<IoResult> ConnectAsync(string host, string port = null, IEnumerable<string> lu = null, ConnectFlags flags = ConnectFlags.None)
         {
+            if (host == null)
+            {
+                throw new ArgumentNullException("host");
+            }
+            if (string.IsNullOrEmpty(host))
+            {
+                throw new ArgumentException("host");
+            }
             return await IoAsync("Connect(" + ExpandHostName(host, port, lu, flags) + ")").ConfigureAwait(continueOnCapturedContext: false);
         }
 
@@ -149,6 +157,8 @@ namespace x3270if
         /// <returns>Success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="host"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="host"/>, <paramref name="port"/> or <paramref name="lu"/> contain invalid characters.</exception>
         public IoResult Connect(string host, string port = null, IEnumerable<string> lu = null, ConnectFlags flags = ConnectFlags.None)
         {
             try
