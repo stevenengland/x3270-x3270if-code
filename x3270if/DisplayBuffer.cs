@@ -1520,7 +1520,7 @@ namespace x3270if
         /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="text">Text to compare.</param>
-        /// <returns>True if the DisplayBuffer at that location contains that string.</returns>
+        /// <returns>True if the DisplayBuffer at that location equals <paramref name="text"/>.</returns>
         public bool AsciiEquals(int row, int column, string text)
         {
             return Ascii(row, column, text.Length) == text;
@@ -1533,7 +1533,7 @@ namespace x3270if
         /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="length">Length of region.</param>
         /// <param name="regex">Regular expression to match against. (See <see cref="System.Text.RegularExpressions"/>.)</param>
-        /// <returns>True if the regex matches the region of the DisplayBuffer.</returns>
+        /// <returns>True if <paramref name="regex"/> matches the region of the DisplayBuffer.</returns>
         public bool AsciiMatches(int row, int column, int length, string regex)
         {
             return Regex.Matches(Ascii(row, column, length), regex).Count != 0;
