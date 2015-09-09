@@ -34,10 +34,10 @@ using System.Runtime.Serialization;
 namespace x3270if
 {
     /// <summary>
-    /// Base exception class for exception mode. Nothing should use this class directly.
+    /// Base exception class for x3270if exceptions.
     /// </summary>
     [Serializable]
-    public class X3270ifException : Exception, ISerializable
+    public abstract class X3270ifException : Exception, ISerializable
     {
         /// <summary>
         /// Basic constructor.
@@ -115,8 +115,8 @@ namespace x3270if
 
     /// <summary>
     /// An emulator session.
-    /// <para>This is an abstract class. To create a session, use a concrete class like <see cref="ProcessSession"/> or <see cref="PortSession"/>.</para>
     /// </summary>
+    /// <remarks>This is an abstract class. To create a session, use a concrete class like <see cref="ProcessSession"/> or <see cref="PortSession"/>.</remarks>
     public abstract partial class Session
     {
         /// <summary>

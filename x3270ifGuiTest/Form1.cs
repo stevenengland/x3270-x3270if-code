@@ -36,6 +36,7 @@ using System.Text.RegularExpressions;
 using System.Timers;
 using x3270if;
 using x3270if.Transfer;
+using x3270if.ProcessOptions;
 
 // GUI app to exercise the x3270if DLL.
 namespace x3270ifGuiTest
@@ -417,7 +418,7 @@ namespace x3270ifGuiTest
         {
             if (session == null)
             {
-                var config = new ProcessConfig { Origin = 1, ExtraOptions = "-trace" };
+                var config = new ProcessConfig { Origin = 1, ExtraOptions = new[] { new ProcessOptionWithoutValue("trace") } };
                 session = new ProcessSession(config);
             }
             if (!session.Running)

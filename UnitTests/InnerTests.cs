@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using x3270if;
+using x3270if.ProcessOptions;
 
 namespace UnitTests
 {
@@ -128,18 +129,35 @@ namespace UnitTests
         }
 
         /// <summary>
-        /// Test the Xrm function.
+        /// Test the ProcessOptions classes.
         /// </summary>
         [Test]
-        public void TestXrm()
+        public void TestProcessOptions()
         {
-            Assert.AreEqual("-xrm \"ws3270.foo: bar\"", ProcessSession.XrmOption("foo", "bar"));
-            Assert.AreEqual("-xrm \"ws3270.baz: C:\\\\a\\\\b\"", ProcessSession.XrmOption("baz", @"C:\a\b"));
-            Assert.Throws<ArgumentNullException>(() => { var s = ProcessSession.XrmOption(null, "a"); });
-            Assert.Throws<ArgumentNullException>(() => { var s = ProcessSession.XrmOption("a", null); });
-            Assert.Throws<ArgumentException>(() => { var s = ProcessSession.XrmOption("a b", "foo"); });
-            Assert.Throws<ArgumentException>(() => { var s = ProcessSession.XrmOption("a\"b", "foo"); });
-            Assert.Throws<ArgumentException>(() => { var s = ProcessSession.XrmOption("ab", "foo\""); });
+            // Trivial operations.
+            var simpleWithout = new ProcessOptionWithoutValue("foo");
+            Assert.AreEqual("-foo", simpleWithout.Quote());
+            var simpleWith = new ProcessOptionWithValue("foo", "hello");
+            Assert.AreEqual("-foo hello", simpleWith.Quote());
+            var simpleXrm = new ProcessOptionXrm("foo", "bar");
+            Assert.AreEqual("-xrm \"ws3270.foo: bar\"", simpleXrm.Quote());
+
+            // Option name validation.
+            Assert.Throws<ArgumentNullException>(() => new ProcessOptionWithoutValue(null));
+            Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue(string.Empty));
+            Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue(" "));
+            Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue("-bob"));
+            Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue("ab\nc"));
+            Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue("ab\"c"));
+            Assert.Throws<ArgumentException>(() => new ProcessOptionWithoutValue("ab c"));
+
+            // Option value validation.
+            Assert.Throws<ArgumentException>(() => new ProcessOptionWithValue("bob", "ab\nc"));
+            Assert.Throws<ArgumentException>(() => new ProcessOptionWithValue("bob", "ab\"c"));
+
+            // Ugliness.
+            var complex = new ProcessOptionXrm("foo", @"C:\a\b");
+            Assert.AreEqual("-xrm \"ws3270.foo: C:\\\\a\\\\b\"", complex.Quote());
         }
 
         /// <summary>

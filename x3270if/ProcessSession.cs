@@ -30,9 +30,139 @@ using System.Net.Sockets;
 using System.Diagnostics;
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
+using System.Linq;
+using System.Collections.Generic;
+using x3270if.ProcessOptions;
 
 namespace x3270if
 {
+    namespace ProcessOptions
+    {
+        /// <summary>
+        /// Abstract class for defining additional ws3270 process options.
+        /// </summary>
+        public abstract class ProcessOption
+        {
+            private string optionName;
+            /// <summary>
+            /// The option name.
+            /// </summary>
+            protected string OptionName
+            {
+                get
+                {
+                    return optionName;
+                }
+                set
+                {
+                    if (value == null)
+                    {
+                        throw new ArgumentNullException("name");
+                    }
+                    if (String.IsNullOrWhiteSpace(value) ||
+                        value.Substring(0, 1) == "-" ||
+                        value.ToCharArray().Any(c => c == '"' || c == '\\' || Char.IsWhiteSpace(c) || Char.IsControl(c)))
+                    {
+                        throw new ArgumentException("name");
+                    }
+                    optionName = value;
+                }
+            }
+
+            /// <summary>
+            /// Expand an option into a properly-quoted string to pass on the command line.
+            /// </summary>
+            /// <returns>Quoted string.</returns>
+            public abstract string Quote();
+        }
+
+        /// <summary>
+        /// Extra command-line option without a paramter.
+        /// </summary>
+        public class ProcessOptionWithoutValue : ProcessOption
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="optionName">Option name. Must not begin with '-'.</param>
+            public ProcessOptionWithoutValue(string optionName)
+            {
+                OptionName = optionName;
+            }
+            /// <summary>
+            /// Expand an option into a properly-quoted string to pass on the command line.
+            /// </summary>
+            /// <returns>Quoted string.</returns>
+            public override string Quote()
+            {
+                return "-" + OptionName;
+            }
+        }
+
+        /// <summary>
+        /// Extra command-line option with a parameter.
+        /// </summary>
+        public class ProcessOptionWithValue : ProcessOption
+        {
+            private string optionValue;
+            private string OptionValue
+            {
+                get
+                {
+                    return optionValue;
+                }
+                set
+                {
+                    if (value == null)
+                    {
+                        throw new ArgumentNullException("value");
+                    }
+                    if (value.ToCharArray().Any(c => c == '"' || Char.IsControl(c)))
+                    {
+                        throw new ArgumentException("value");
+                    }
+                    optionValue = value;
+                }
+            }
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="option">Option name. Must not begin with '-'.</param>
+            /// <param name="value">Option value.</param>
+            public ProcessOptionWithValue(string option, string value)
+            {
+                OptionName = option;
+                OptionValue = value;
+            }
+
+            /// <summary>
+            /// Expand an option into a properly-quoted string to pass on the command line.
+            /// </summary>
+            /// <returns>Quoted string.</returns>
+            public override string Quote()
+            {
+                return String.Format("-{0} {1}", OptionName, Session.QuoteString(OptionValue));
+            }
+        }
+
+        /// <summary>
+        /// Extra command-line "-xrm" option.
+        /// </summary>
+        public class ProcessOptionXrm : ProcessOptionWithValue
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="resource">Resource name. Do not include "ws3270." in the name.</param>
+            /// <param name="value">Resource value.</param>
+            public ProcessOptionXrm(string resource, string value)
+                : base("xrm", String.Format("ws3270.{0}: {1}", resource, value))
+            {
+            }
+        }
+    }
+
     /// <summary>
     /// The startup class for a process-based session.
     /// A common start-up object, plus the process name.
@@ -47,11 +177,12 @@ namespace x3270if
         /// <summary>
         /// Extra options added to the emulator process command line.
         /// </summary>
-        public string ExtraOptions;
+        public IEnumerable<ProcessOption> ExtraOptions;
 
         /// <summary>
         /// First options. Used to force the mock emulator to fall over by not making
         /// -scriptport the first option.
+        /// <para>This option is present for unit testing, not for general use.</para>
         /// </summary>
         public string TestFirstOptions;
 
@@ -94,31 +225,6 @@ namespace x3270if
         /// <param name="config">Configuration.</param>
         public ProcessSession(ProcessConfig config = null) : base(config, new ProcessBackEnd(config))
         {
-        }
-
-        /// <summary>
-        /// Format an "-xrm" option for passing to ws3270.
-        /// </summary>
-        /// <param name="resource">Resource name.</param>
-        /// <param name="value">Resource value.</param>
-        /// <returns>Formatted string.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="resource"/> or <paramref name="value"/> is null.</exception>
-        /// <exception cref="ArgumentException"><paramref name="resource"/> or <paramref name="value"/> contains an invalid character.</exception>
-        public static string XrmOption(string resource, string value)
-        {
-            if (resource == null)
-            {
-                throw new ArgumentNullException("resource");
-            }
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
-            if (resource.Contains(" ") || resource.Contains("\"") || value.Contains("\""))
-            {
-                throw new ArgumentException("contains double quote");
-            }
-            return "-xrm " + QuoteString("ws3270." + resource + ": " + value);
         }
     }
 
@@ -232,7 +338,10 @@ namespace x3270if
                 var arguments = string.Format("-utf8 -model {0} -scriptportonce", ProcessConfig.Model);
 
                 // Add arbitrary extra options.
-                arguments += arguments.JoinNonEmpty(" ", ProcessConfig.ExtraOptions);
+                if (ProcessConfig.ExtraOptions != null)
+                {
+                    arguments += " " + String.Join(" ", ProcessConfig.ExtraOptions.Select(o => o.Quote()));
+                }
 
                 // Build up the parameters for ws3270.
                 var info = new ProcessStartInfo(ProcessConfig.ProcessName);
@@ -242,7 +351,7 @@ namespace x3270if
                 info.RedirectStandardOutput = true;
                 info.Arguments = string.Empty;
 
-                // Put special debug options first, intended to throw off the "-scriptport"-first logic below.
+                // Put special unit test options first, intended to throw off the "-scriptport"-first logic below.
                 if (ProcessConfig.TestFirstOptions != null)
                 {
                     info.Arguments = ProcessConfig.TestFirstOptions;
@@ -280,7 +389,7 @@ namespace x3270if
                 {
                     var emulatorErrorMessage = GetErrorOutput(result.FailReason);
                     ZapProcess();
-                    return new startResult(result.FailReason);
+                    return new startResult(emulatorErrorMessage);
                 }
                 else
                 {

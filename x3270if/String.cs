@@ -32,7 +32,7 @@ using System.Threading.Tasks;
 namespace x3270if
 {
     /// <summary>
-    /// Coordinates and text passed in a list to StringAt.
+    /// Coordinates and text passed in a list to <see cref="M:x3270if.Session.StringAtAsync(System.Collections.Generic.IEnumerable{x3270if.StringAtBlock},System.Boolean,System.Boolean)"/>.
     /// </summary>
     public class StringAtBlock
     {

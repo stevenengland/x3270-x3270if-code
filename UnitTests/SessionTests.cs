@@ -34,6 +34,7 @@ using System.Net.Sockets;
 using System.IO;
 using System.Threading;
 using System.Linq;
+using x3270if.ProcessOptions;
 
 namespace UnitTests
 {
@@ -504,7 +505,7 @@ namespace UnitTests
             var config = new ProcessConfig
             {
                 ProcessName = "MockWs3270.exe",
-                ExtraOptions = String.Join(",", Enumerable.Range(1, 16350).Select(i => "x"))
+                ExtraOptions = Enumerable.Range(1, 11000).Select(x => new ProcessOptionWithoutValue("-x"))
             };
             var session = new ProcessSession(config);
             Assert.Throws<InvalidOperationException>(() => session.Start());
