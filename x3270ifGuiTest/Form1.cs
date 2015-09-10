@@ -220,7 +220,7 @@ namespace x3270ifGuiTest
                 return true;
             }
 
-            if (session.Running && session.StatusField(StatusLineField.Connection)[0] == 'C')
+            if (session.HostConnected)
             {
                 session.Disconnect();
                 worker.ReportProgress(0, new WorkerStatusConnected(false));
@@ -231,7 +231,7 @@ namespace x3270ifGuiTest
                 worker.ReportProgress(0, new WorkerStatusConnected(false));
             }
 
-            if (andClose && session.Running)
+            if (andClose && session.EmulatorRunning)
             {
                 session.Close();
                 worker.ReportProgress(0, new WorkerStatusRunning(false));
@@ -421,7 +421,7 @@ namespace x3270ifGuiTest
                 var config = new ProcessConfig { Origin = 1, ExtraOptions = new[] { new ProcessOptionWithoutValue("trace") } };
                 session = new ProcessSession(config);
             }
-            if (!session.Running)
+            if (!session.EmulatorRunning)
             {
                 var startResult = session.Start();
                 if (!startResult.Success)
@@ -873,7 +873,7 @@ namespace x3270ifGuiTest
                 case queryAction.StartQuery:
                     // Run the query.
                     DoStartQuery(worker);
-                    if (session != null && session.Running)
+                    if (session != null && session.EmulatorRunning)
                     {
                         timer.Enabled = true;
                     }
@@ -881,7 +881,7 @@ namespace x3270ifGuiTest
                 case queryAction.StartTransfer:
                     // Run the file transfer.
                     DoStartTransfer(worker);
-                    if (session != null && session.Running)
+                    if (session != null && session.EmulatorRunning)
                     {
                         timer.Enabled = true;
                     }
@@ -944,7 +944,7 @@ namespace x3270ifGuiTest
                 case WorkerStatusIndication.Error:
                     stateLabel.Text = "Error: " + ((WorkerStatusError)status).Text;
                     stateLabel.ForeColor = Color.Red;
-                    if (session != null && !session.Running)
+                    if (session != null && !session.EmulatorRunning)
                     {
                         notRunning();
                     }

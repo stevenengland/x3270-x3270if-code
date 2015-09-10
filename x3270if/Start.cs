@@ -81,7 +81,7 @@ namespace x3270if
         /// orphaned server processes.</para></note></remarks>
         public async Task<startResult> StartAsync()
         {
-            if (Running)
+            if (EmulatorRunning)
             {
                 throw new InvalidOperationException("Already running");
             }
@@ -94,7 +94,7 @@ namespace x3270if
             }
 
             // Provisionally mark the session as running.
-            Running = true;
+            EmulatorRunning = true;
 
             // Get the local encoding (Windows code page).
             var ioResult = await IoAsync("Query(LocalEncoding)", Config.HandshakeTimeoutMsec).ConfigureAwait(continueOnCapturedContext: false);
@@ -156,7 +156,7 @@ namespace x3270if
             backEnd.Close();
 
             // Reset the state.
-            Running = false;
+            EmulatorRunning = false;
             ExceptionMode = false;
 
             // Wipe out history, if we're asked to.

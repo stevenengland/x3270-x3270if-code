@@ -197,7 +197,7 @@ namespace UnitTests
             Assert.AreEqual(true, startResult.Success);
             result = session.Io("Quit");
             Assert.AreEqual(false, result.Success);
-            Assert.AreEqual(false, session.Running);
+            Assert.AreEqual(false, session.EmulatorRunning);
             Assert.AreEqual(false, session.LastCommand.Success);
             session.Close();
 
@@ -479,7 +479,7 @@ namespace UnitTests
 
             var result = session.Io("Quit");
             Assert.AreEqual(false, result.Success);
-            Assert.AreEqual(false, session.Running);
+            Assert.AreEqual(false, session.EmulatorRunning);
 
             session.Close();
             session.Start();
@@ -488,7 +488,7 @@ namespace UnitTests
             Thread.Sleep(500);
             result = session.Io("Anything");
             Assert.AreEqual(false, result.Success);
-            Assert.AreEqual(false, session.Running);
+            Assert.AreEqual(false, session.EmulatorRunning);
         }
 
         // Blow up the Session base class.

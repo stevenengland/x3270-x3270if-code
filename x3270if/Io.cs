@@ -191,7 +191,7 @@ namespace x3270if
         {
             string[] reply = null;
 
-            if (!Running)
+            if (!EmulatorRunning)
             {
                 throw new InvalidOperationException("Not running");
             }

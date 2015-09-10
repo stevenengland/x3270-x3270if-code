@@ -120,9 +120,9 @@ namespace x3270if
     public abstract partial class Session
     {
         /// <summary>
-        /// True if the instance is running (started).
+        /// True if the emulator instance is running (started).
         /// </summary>
-        public bool Running
+        public bool EmulatorRunning
         {
             get;
             private set;
@@ -251,11 +251,22 @@ namespace x3270if
         /// <returns>Field value.</returns>
         public string StatusField(StatusLineField index)
         {
-            if (!Running)
+            if (!EmulatorRunning)
             {
                 throw new InvalidOperationException("Not running");
             }
             return StatusLine.Split(' ')[(int)index];
+        }
+
+        /// <summary>
+        /// Convenience function to tell if the host was connected when the last command was run.
+        /// </summary>
+        public bool HostConnected
+        {
+            get
+            {
+                return EmulatorRunning && StatusField(StatusLineField.Connection)[0] == 'C';
+            }
         }
     }
 }
