@@ -28,7 +28,7 @@ using System;
 namespace x3270if
 {
     /// <summary>
-    /// When to artificially fail screen modifying commands.
+    /// When to artificially fail screen-modifying commands.
     /// </summary>
     public enum ModifyFailType
     {
@@ -132,8 +132,9 @@ namespace x3270if
 
         /// <summary>
         /// When to artificially fail screen modification operations.
+        /// Failures in this case are generated in the library, not by the emulator.
         /// </summary>
-        public ModifyFailType ModifyFail;
+        public ModifyFailType ModifyFail { get; set; }
     }
 
     /// <summary>
