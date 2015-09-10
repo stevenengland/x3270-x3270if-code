@@ -562,5 +562,42 @@ namespace UnitTests
             Assert.AreEqual(22, b2.FieldLength(new Coordinates(b2, 0, 0)));
             Assert.AreEqual(22, b2.FieldLength(0, 0));
         }
+
+        // Exercise the AsciiField method of a DisplayBuffer with DBCS text.
+        [Test]
+        public void TestDisplayBufferAsciiFieldDbcs()
+        {
+            var rb = new Session.ReadBufferIoResult
+            {
+                Success = true,
+                Result = new string[] {
+                    "SF(c0=e0) 30 31 0e e6b581 - e585ad - e79599 - 0f SF(c0=e0) 0e e58898 - e7a1ab - e69fb3 - e99986 - e581bb - e8928c - e798a4 - 0f 47 48",
+                    "SF(c0=e0) 61 62 63 64 65 66 SF(c0=e0) 67 68 69 6a 6b 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+                },
+                Command = "ReadBuffer(Ascii)",
+                StatusLine = "U F U C(host.mycompany.com) I 2 2 30 0 1 0x0 -",
+                ReadBufferType = Session.ReadBufferType.Ascii,
+                Encoding = Encoding.UTF8
+            };
+            var b = new DisplayBuffer(rb);
+
+            // Verify that the field length is 7 characters, not 10 buffer positions.
+            Assert.AreEqual(7, b.FieldLength(0, 1));
+
+            // Verify that we get the right 7 characters.
+            Assert.AreEqual("01 流六留 ", b.AsciiField());
+
+            // Verify that AsciiEquals does the right thing with DBCS. This also exercises 3-arg Ascii().
+            Assert.AreEqual(true, b.AsciiEquals(0, 1, "01 流六留 "));
+
+            // Verify that Ascii with a rectangle will scan extra buffer positions to fulfill the request.
+            var rectangle = b.Ascii(0, 4, 2, 2);
+            Assert.AreEqual("流六", rectangle[0]);
+            Assert.AreEqual("de", rectangle[1]);
+
+            // Verify that a rectangle will not wrap.
+            rectangle = b.Ascii(0, 25, 1, 5);
+            Assert.AreEqual(4, rectangle[0].Length);
+        }
     }
 }

@@ -1293,6 +1293,13 @@ namespace x3270if
         /// </summary>
         /// <param name="length">Length of field to return. Can wrap rows.</param>
         /// <returns>Text.</returns>
+        /// <remarks>
+        /// <note type="note">
+        /// For DBCS text, this method may return data from more buffer positions than <paramref name="length"/>.
+        /// It will attempt to return <paramref name="length"/> characters, skipping over the right-hand sides of DBCS characters
+        /// as necessary.
+        /// </note>
+        /// </remarks>
         public string Ascii(int length)
         {
             return Ascii(CursorRow, CursorColumn, length);
@@ -1305,6 +1312,13 @@ namespace x3270if
         /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="length">Length of field.</param>
         /// <returns>Text.</returns>
+        /// <remarks>
+        /// <note type="note">
+        /// For DBCS text, this method may return data from more buffer positions than <paramref name="length"/>.
+        /// It will attempt to return <paramref name="length"/> characters, skipping over the right-hand sides of DBCS characters
+        /// as necessary.
+        /// </note>
+        /// </remarks>
         public String Ascii(int row, int column, int length)
         {
             if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
@@ -1333,17 +1347,25 @@ namespace x3270if
             var sb = new StringBuilder();
             var curRow = row;
             var curColumn = column;
-            for (var lengthLeft = length; lengthLeft > 0; lengthLeft--)
+            var lengthLeft = length;
+            while (lengthLeft > 0)
             {
                 var r = TranslatePosition(ContentsArray[curRow, curColumn]);
                 if (r.HasValue)
                 {
                     sb.Append((char)r);
+                    lengthLeft--;
                 }
+                // Otherwise do not decrement lengthLeft.
                 if (++curColumn >= Columns)
                 {
                     curRow++;
                     curColumn = 0;
+                }
+                if (curRow == row && curColumn == column)
+                {
+                    // Wrapped without getting enough characters.
+                    break;
                 }
             }
             return sb.ToString();
@@ -1357,6 +1379,13 @@ namespace x3270if
         /// <param name="rows">Number of rows.</param>
         /// <param name="columns">Number of columns.</param>
         /// <returns>Array of strings, one entry per row.</returns>
+        /// <remarks>
+        /// <note type="note">
+        /// For DBCS text, this method may return data from more buffer positions than <paramref name="columns"/>.
+        /// It will attempt to return <paramref name="columns"/> characters, skipping over the right-hand sides of DBCS characters
+        /// as necessary. It will not wrap across rows to do this.
+        /// </note>
+        /// </remarks>
         public string[] Ascii(int row, int column, int rows, int columns)
         {
             if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
@@ -1386,13 +1415,20 @@ namespace x3270if
             for (var r = row; r < row + rows; r++)
             {
                 StringBuilder sb = new StringBuilder();
+                int columnsLeft = columns;
+                int c = column;
 
-                for (var c = column; c < column + columns; c++)
+                while (columnsLeft > 0)
                 {
                     var rc = TranslatePosition(ContentsArray[r, c]);
                     if (rc.HasValue)
                     {
                         sb.Append((char)rc);
+                        columnsLeft--;
+                    }
+                    if (++c >= Columns)
+                    {
+                        break;
                     }
                 }
                 ret[r - row] = sb.ToString();
@@ -1436,7 +1472,15 @@ namespace x3270if
         /// </summary>
         /// <param name="c">Coordinates.</param>
         /// <returns>Field length. The length does not include the field attribute itself, so it can be zero.</returns>
-        /// <remarks>If the screen is unformatted, returns the size of the entire screen.</remarks>
+        /// <remarks>
+        /// <note type="note">
+        /// If the screen is unformatted, returns the size of the entire screen.
+        /// </note>
+        /// <note type="note">
+        /// For DBCS text, returns the number of characters in the field, not the number of buffer positions in
+        /// the field.
+        /// </note>
+        /// </remarks>
         public int FieldLength(Coordinates c)
         {
             // Work backwards until we find the field attribute, or wrap.
@@ -1445,7 +1489,10 @@ namespace x3270if
             var d = c.Clone();
             while (Contents(d).Type != PositionType.FieldAttribute)
             {
-                count++;
+                if (TranslatePosition(Contents(d)).HasValue)
+                {
+                    count++;
+                }
                 if (--d == c)
                 {
                     // Wrapped back to the start. Unformatted screen.
@@ -1457,7 +1504,10 @@ namespace x3270if
             d = c.Clone();
             while (Contents(++d).Type != PositionType.FieldAttribute)
             {
-                count++;
+                if (TranslatePosition(Contents(d)).HasValue)
+                {
+                    count++;
+                }
             }
             return count;
         }
@@ -1469,7 +1519,15 @@ namespace x3270if
         /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <param name="column">Column using the session's <see cref="x3270if.Config.Origin"/>.</param>
         /// <returns>Field length. The length does not include the field attribute itself, so it can be zero.</returns>
-        /// <remarks>If the screen is unformatted, returns the size of the entire screen.</remarks>
+        /// <remarks>
+        /// <note type="note">
+        /// If the screen is unformatted, returns the size of the entire screen.
+        /// </note>
+        /// <note type="note">
+        /// For DBCS text, returns the number of characters in the field, not the number of buffer positions in
+        /// the field.
+        /// </note>
+        /// </remarks>
         public int FieldLength(int row, int column)
         {
             return FieldLength(new Coordinates(this, row, column));
