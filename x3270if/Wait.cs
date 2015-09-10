@@ -76,12 +76,14 @@ namespace x3270if
         /// <returns>Success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <remarks>Note that in all cases, if the specified condition has already been met, <see cref="WaitAsync"/> will return
-        /// immediately.
+        /// <remarks>
+        /// <note type="note">
+        /// If the specified condition has already been met, <see cref="WaitAsync"/> will return immediately.
         /// See the documentation under each value of <see cref="WaitMode"/> for details on the conditions for waiting.
+        /// </note>
         /// <note type="caution">
         /// The <see cref="WaitMode.Output"/> flavor of <see cref="WaitAsync"/> is integrated with the calls that
-        /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic"/>
+        /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic()"/>
         /// before a WaitAsync(WaitMode.Output) will actually wait for anything. If you
         /// Wait(WaitMode.Output) immediately after a previous WaitAsync(Output), without any intervening call to ReadBuffer, Ascii
         /// or Ebcdic, WaitAsync will return immediately.
@@ -113,12 +115,14 @@ namespace x3270if
         /// <returns>Success/failure and failure text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <remarks>Note that in all cases, if the specified condition has already been met, <see cref="Wait"/> will return
-        /// immediately.
+        /// <remarks>
+        /// <note type="note">
+        /// If the specified condition has already been met, <see cref="WaitAsync"/> will return immediately.
         /// See the documentation under each value of <see cref="WaitMode"/> for details on the conditions for waiting.
+        /// </note>
         /// <note type="caution">
         /// The <see cref="WaitMode.Output"/> flavor of <see cref="Wait"/> is integrated with the calls that
-        /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic"/>
+        /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic()"/>
         /// before a Wait(WaitMode.Output) will actually wait for anything. If you
         /// Wait(WaitMode.Output) immediately after a previous Wait(WaitMode.Output) without any intervening call to ReadBuffer, Ascii()
         /// or Ebcdic, Wait will return immediately.

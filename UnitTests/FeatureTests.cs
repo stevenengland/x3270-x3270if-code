@@ -250,6 +250,77 @@ namespace UnitTests
             session.Close();
         }
 
+        [Test]
+        public void TestEbcdic()
+        {
+            var session = new MockTaskSession();
+            session.VerifyStart();
+
+            session.VerifyCommand(() => session.Ebcdic(), "Ebcdic()");
+            session.VerifyCommand(() => session.Ebcdic(10), "Ebcdic(10)");
+            session.VerifyCommand(() => session.Ebcdic(1, 2, 3), "Ebcdic(1,2,3)");
+            session.VerifyCommand(() => session.Ebcdic(1, 2, 3, 4), "Ebcdic(1,2,3,4)");
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ebcdic(-1, 2, 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ebcdic(1, -1, 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ebcdic(-1, 1, 3, 4));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ebcdic(1, -1, 3, 4));
+
+            // Force some exceptions.
+            session.ExceptionMode = true;
+            session.AllFail = true;
+            Assert.Throws<X3270ifCommandException>(() => session.Ebcdic());
+            Assert.Throws<X3270ifCommandException>(() => session.Ebcdic(1));
+            Assert.Throws<X3270ifCommandException>(() => session.Ebcdic(1, 2, 3));
+            Assert.Throws<X3270ifCommandException>(() => session.Ebcdic(1, 2, 3, 4));
+
+            session.Close();
+        }
+
+        // Exercise the session Ebcdic method with a 1-origin session.
+        [Test]
+        public void TestEbcdic1()
+        {
+            var session = new MockTaskSession(new MockTaskConfig { Origin = 1 });
+            session.VerifyStart();
+
+            session.VerifyCommand(() => session.Ebcdic(1, 2, 3), "Ebcdic(0,1,3)");
+            session.VerifyCommand(() => session.Ebcdic(1, 2, 3, 4), "Ebcdic(0,1,3,4)");
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ebcdic(0, 2, 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => session.Ebcdic(1, 0, 3));
+
+            session.Close();
+        }
+
+        private void AssertByteVectorEqual(byte[,] b1, int row, byte[] b2)
+        {
+            Assert.AreEqual(b2.Length, b1.GetLength(1));
+            for (var i = 0; i < b2.Length; i++)
+            {
+                Assert.AreEqual(b2[i], b1[row, i]);
+            }
+        }
+
+        /// <summary>
+        /// Exercise the EbcdicIoResult ToByteArray method.
+        /// </summary>
+        [Test]
+        public void TestEbcdicIoResult()
+        {
+            // Test basic parsing.
+            var eio = new EbcdicIoResult(new IoResult { Success = true, Result = new[] { "00 01 ff", "02 03 bb"}});
+            var byteArray = eio.ToByteArray();
+            Assert.AreEqual(2, byteArray.GetLength(0));
+            Assert.AreEqual(3, byteArray.GetLength(1));
+            AssertByteVectorEqual(byteArray, 0, new byte[] { 0x0, 0x1, 0xff });
+            AssertByteVectorEqual(byteArray, 1, new byte[] { 0x2, 0x3, 0xbb });
+
+            // Test the parsing exception.
+            eio = new EbcdicIoResult(new IoResult { Success = true, Result = new[] { "00 01 ff", "02 pow! bb" } });
+            Assert.Throws<InvalidOperationException>(() => eio.ToByteArray());
+        }
+
         /// <summary>
         /// Exercise the session ReadBuffer method.
         /// </summary>

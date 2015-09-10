@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Aid.cs" />
+    <Compile Include="Ebcdic.cs" />
     <Compile Include="Cursor.cs" />
     <Compile Include="Ascii.cs" />
     <Compile Include="Connect.cs" />
