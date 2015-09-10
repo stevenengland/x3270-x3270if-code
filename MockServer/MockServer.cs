@@ -56,6 +56,9 @@ namespace Mock
         // The last command is stored here.
         public string LastCommandProcessed;
 
+        // Set to make the session appear connected or not.
+        public bool Connected = true;
+
         /// <summary>
         /// Write a prompt to the stream.
         /// </summary>
@@ -63,7 +66,9 @@ namespace Mock
         /// <param name="success">True if success, false if failure.</param>
         private void Prompt(StreamWriter streamWriter, bool success)
         {
-            streamWriter.WriteLine("U F U U I 2 24 80 0 0 0x0 -");
+            streamWriter.WriteLine("U F U {0} {1} 2 24 80 0 0 0x0 -",
+                Connected ? "C(fakehost.com)" : "N",
+                Connected ? "I" : "N");
             streamWriter.WriteLine(success ? "ok": "error");
             streamWriter.Flush();
         }

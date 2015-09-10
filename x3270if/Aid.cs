@@ -38,7 +38,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> EnterAsync()
         {
-            return await IoAsync("Enter()").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("Enter()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> ClearAsync()
         {
-            return await IoAsync("Clear()").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("Clear()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace x3270if
             {
                 throw new ArgumentOutOfRangeException("n");
             }
-            return await IoAsync("PF(" + n.ToString() + ")").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("PF(" + n.ToString() + ")", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace x3270if
             {
                 throw new ArgumentOutOfRangeException("n");
             }
-            return await IoAsync("PA(" + n.ToString() + ")").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("PA(" + n.ToString() + ")", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>

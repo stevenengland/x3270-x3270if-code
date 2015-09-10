@@ -428,11 +428,31 @@ namespace UnitTests
 
             session.Close();
 
-            // Test origin-based StatusField with 1-origin
+            // Test origin-based StatusField with 1-origin.
             session = new MockTaskSession(new MockTaskConfig { Origin = 1 });
             session.Start();
             Assert.AreEqual("1", session.StatusField(StatusLineField.CursorRow));
             Assert.AreEqual("1", session.StatusField(StatusLineField.CursorColumn));
+
+            // Exercise HostConnected (based on the status line).
+            Assert.AreEqual(true, session.HostConnected);
+            // Change that.
+            session.Connected = false;
+            // (Have to run a dummy command to get a new prompt and change state.)
+            session.Io("Query()");
+            Assert.AreEqual(false, session.HostConnected);
+            // Now screen-modifying commands will fail.
+            Assert.AreEqual(false, session.Enter().Success);
+            // Now exception mode will fire, too.
+            session.ExceptionMode = true;
+            Assert.Throws<X3270ifCommandException>(() => session.Enter());
+            // Try requiring 3270 mode instead.
+            session.Config.ModifyFail = ModifyFailType.Require3270;
+            Assert.Throws<X3270ifCommandException>(() => session.Enter());
+            // And that normally, it's fine.
+            session.Connected = true;
+            session.Connect("bob");
+            Assert.DoesNotThrow(() => session.Enter());
 
             session.Close();
         }

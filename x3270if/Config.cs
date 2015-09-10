@@ -28,6 +28,25 @@ using System;
 namespace x3270if
 {
     /// <summary>
+    /// When to artificially fail screen modifying commands.
+    /// </summary>
+    public enum ModifyFailType
+    {
+        /// <summary>
+        /// When the host is not connected (the default).
+        /// </summary>
+        RequireConnection,
+        /// <summary>
+        /// When the host is not in 3270 mode.
+        /// </summary>
+        Require3270,
+        /// <summary>
+        /// Never.
+        /// </summary>
+        Never
+    }
+
+    /// <summary>
     /// x3270if session configuration.
     /// </summary>
     public class Config
@@ -110,6 +129,11 @@ namespace x3270if
                 connectRetryMsec = value;
             }
         }
+
+        /// <summary>
+        /// When to artificially fail screen modification operations.
+        /// </summary>
+        public ModifyFailType ModifyFail;
     }
 
     /// <summary>

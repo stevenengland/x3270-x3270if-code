@@ -132,7 +132,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult>StringAsync(string text, bool quoteBackslashes = true)
         {
-            return await IoAsync("String(" + QuoteString(text, quoteBackslashes) + ")").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("String(" + QuoteString(text, quoteBackslashes) + ")", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace x3270if
                     eraseEof ? "EraseEOF() " : string.Empty,
                     QuoteString(b.Text, quoteBackslashes)));
             }
-            return await IoAsync(command).ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync(command, isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>

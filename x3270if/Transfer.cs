@@ -577,7 +577,7 @@ namespace x3270if
 
             // Join the dictionary of keywords and values together, quoting each argument as necessary.
             var arge = argd.Select(kv => QuoteString(kv.Key + "=" + kv.Value));
-            var result = await IoAsync("Transfer(" + string.Join(",", arge) + ")")
+            var result = await IoAsync("Transfer(" + string.Join(",", arge) + ")", isModify: true)
                 .ConfigureAwait(continueOnCapturedContext: false);
             return result;
         }

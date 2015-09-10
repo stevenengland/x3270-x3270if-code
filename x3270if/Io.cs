@@ -152,6 +152,34 @@ namespace x3270if
     public partial class Session
     {
         /// <summary>
+        /// Check for a force-modify failure.
+        /// </summary>
+        /// <returns>Bad IoResult if a modify command should fail.</returns>
+        private IoResult ForceModifyFailure()
+        {
+            switch (Config.ModifyFail)
+            {
+                case ModifyFailType.Never:
+                    break;
+                case ModifyFailType.RequireConnection:
+                    if (!HostConnected)
+                    {
+                        return new IoResult { Success = false, Result = new[] { "Not connected" } };
+                    }
+                    break;
+                case ModifyFailType.Require3270:
+                    if (StatusField(StatusLineField.Mode)[0] != 'I')
+                    {
+                        return new IoResult { Success = false, Result = new[] { "Not in 3270 mode" } };
+                    }
+                    break;
+            }
+
+            // Nothing to fail.
+            return new IoResult { Success = true };
+        }
+
+        /// <summary>
         /// Processing states for the emulator while a command is in progress.
         /// </summary>
         enum IoStates
@@ -183,17 +211,32 @@ namespace x3270if
         /// Must be formatted correctly for the emulator. This method does no translation.</param>
         /// <param name="timeoutMsec">Optional timeout. The emulator session will be stopped if the timeout expires, so this
         /// is a dead-man timer, not to be used casually.</param>
+        /// <param name="isModify">True if command modifies the host</param>
         /// <returns>I/O result.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         /// <exception cref="ArgumentException"><paramref name="command"/> contains control characters.</exception>
-        public async Task<IoResult> IoAsync(string command, int? timeoutMsec = null)
+        public async Task<IoResult> IoAsync(string command, int? timeoutMsec = null, bool isModify = false)
         {
             string[] reply = null;
 
             if (!EmulatorRunning)
             {
                 throw new InvalidOperationException("Not running");
+            }
+            
+            // If this is a screen-modifying command, see if a forced failure is in order.
+            if (isModify)
+            {
+                var result = ForceModifyFailure();
+                if (!result.Success)
+                {
+                    if (ExceptionMode)
+                    {
+                        throw new X3270ifCommandException(result.Result[0]);
+                    }
+                    return result;
+                }
             }
 
             // Control characters are verboten.

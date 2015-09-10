@@ -38,7 +38,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> UpAsync()
         {
-            return await IoAsync("Up()").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("Up()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> DownAsync()
         {
-            return await IoAsync("Down()").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("Down()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> LeftAsync()
         {
-            return await IoAsync("Left()").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("Left()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> RightAsync()
         {
-            return await IoAsync("Right()").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("Right()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace x3270if
                 throw new ArgumentOutOfRangeException("column");
             }
             return await IoAsync(
-                string.Format("MoveCursor({0},{1})", row - Config.Origin, column - Config.Origin))
+                string.Format("MoveCursor({0},{1})", row - Config.Origin, column - Config.Origin), isModify: true)
                 .ConfigureAwait(continueOnCapturedContext: false);
         }
 
@@ -105,7 +105,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> TabAsync()
         {
-            return await IoAsync("Tab()").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("Tab()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> BackTabAsync()
         {
-            return await IoAsync("BackTab()").ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync("BackTab()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>

@@ -92,6 +92,10 @@ namespace UnitTests
             set { mockBackEnd.CodePageFail = value; }
         }
 
+        public bool Connected
+        {
+            set { mockBackEnd.Connected = value; }
+        }
 
         // Dispose methods.
         /// <summary>
@@ -198,6 +202,18 @@ namespace UnitTests
                 if (MockServer != null)
                 {
                     MockServer.CodePageFail = value;
+                }
+            }
+        }
+
+        // Connection state.
+        public bool Connected
+        {
+            set
+            {
+                if (MockServer != null)
+                {
+                    MockServer.Connected = value;
                 }
             }
         }

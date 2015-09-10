@@ -102,7 +102,7 @@ namespace x3270if
             }
             command += modeName + ")";
 
-            return await IoAsync(command).ConfigureAwait(continueOnCapturedContext: false);
+            return await IoAsync(command, isModify: waitMode == WaitMode.Output).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
