@@ -45,14 +45,8 @@ namespace UnitTests
     /// <summary>
     /// Task-based mock back-end
     /// </summary>
-    public class MockTaskSession : Session, IDisposable
+    public class MockTaskSession : Session
     {
-        // Has Dispose already been called? 
-        private bool disposed = false;
-
-        // SafeHandle instance for Dispose.
-        private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-
         // The back end
         private MockBackEnd mockBackEnd;
 
@@ -95,36 +89,6 @@ namespace UnitTests
         public bool Connected
         {
             set { mockBackEnd.Connected = value; }
-        }
-
-        // Dispose methods.
-        /// <summary>
-        /// Public Dispose method.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Private Dispose method.
-        /// </summary>
-        /// <param name="disposing">true if called from public Dispose.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                handle.Dispose();
-                // Free other managed objects.
-                Close();
-            }
-            disposed = true;
         }
     }
 

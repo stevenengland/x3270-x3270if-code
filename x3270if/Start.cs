@@ -168,6 +168,45 @@ namespace x3270if
                 }
             }
         }
+
+        /// <summary>
+        /// Disposed flag.
+        /// </summary>
+        /// 
+        protected bool disposed;
+        /// <summary>
+        /// SafeHandle instance for Dispose.
+        /// </summary>
+        protected SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+
+        /// <summary>
+        /// Dispose method.
+        /// </summary>
+        public virtual void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Internal Dispose method.
+        /// </summary>
+        /// <param name="disposing">True if being called from the public Dispose method.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                handle.Dispose();
+                // Free other managed objects.
+                Close();
+            }
+            disposed = true;
+        }
     }
 
     /// <summary>

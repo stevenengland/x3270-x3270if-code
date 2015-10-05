@@ -117,7 +117,7 @@ namespace x3270if
     /// An emulator session.
     /// </summary>
     /// <remarks>This is an abstract class. To create a session, use a concrete class like <see cref="ProcessSession"/> or <see cref="PortSession"/>.</remarks>
-    public abstract partial class Session
+    public abstract partial class Session : IDisposable
     {
         /// <summary>
         /// True if the emulator instance is running (started).
