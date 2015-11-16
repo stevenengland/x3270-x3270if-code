@@ -23,15 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-using System.Net;
-using System.Net.Sockets;
-using Microsoft.Win32.SafeHandles;
-using System.Runtime.InteropServices;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Runtime.InteropServices;
+    using System.Threading.Tasks;
+
+    using Microsoft.Win32.SafeHandles;
+
     /// <summary>
     /// The startup class for a port-based session.
     /// A common start-up object, plus the TCP port.
@@ -39,13 +40,30 @@ namespace x3270if
     public class PortConfig : Config
     {
         /// <summary>
-        /// TCP port to connect to.
+        /// Backing field for <see cref="AutoStart"/>.
         /// </summary>
-        public int Port;
+        private bool autoStart = true;
+
         /// <summary>
-        /// Automatically start the session when constructing an instance.
+        /// Gets or sets the TCP port to connect to.
         /// </summary>
-        public bool AutoStart = true;
+        public int Port { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to automatically start the session when constructing an instance.
+        /// </summary>
+        public bool AutoStart
+        {
+            get
+            {
+                return this.autoStart;
+            }
+
+            set
+            {
+                this.autoStart = value;
+            }
+        }
     }
 
     /// <summary>
@@ -54,9 +72,10 @@ namespace x3270if
     public class PortSession : Session
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="PortSession"/> class.
         /// Constructor, given a configuration.
         /// </summary>
-        /// <param name="config">Configuration.</param>
+        /// <param name="config">The configuration to use.</param>
         public PortSession(PortConfig config = null) : base(config, new PortBackEnd(config))
         {
             // Because they are usually used in child scripts, port sessions are auto-start
@@ -77,105 +96,94 @@ namespace x3270if
     /// </summary>
     public class PortBackEnd : IBackEnd
     {
-        // Has Dispose already been called? 
+        /// <summary>
+        /// Has Dispose already been called?
+        /// </summary>
         private bool disposed = false;
 
-        // SafeHandle instance for Dispose.
+        /// <summary>
+        /// SafeHandle instance for Dispose.
+        /// </summary>
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
 
-        // TCP client (socket)
-        private TcpClient Client = null;
-
-        // Configuration parameters.
-        private PortConfig PortConfig;
+        /// <summary>
+        /// TCP client (socket)
+        /// </summary>
+        private TcpClient client = null;
 
         /// <summary>
+        /// Configuration parameters.
+        /// </summary>
+        private PortConfig portConfig;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PortBackEnd"/> class.
         /// Constructor, given a configuration.
         /// </summary>
-        /// <param name="config">Configuration.</param>
+        /// <param name="config">The configuration to use.</param>
         public PortBackEnd(PortConfig config)
         {
-            PortConfig = config ?? new PortConfig();
+            this.portConfig = config ?? new PortConfig();
         }
 
-        // Dispose methods.
         /// <summary>
         /// Public Dispose method.
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Private Dispose method.
-        /// </summary>
-        /// <param name="disposing">true if called from public Dispose.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                handle.Dispose();
-                // Free other managed objects.
-                Close();
-            }
-            disposed = true;
         }
 
         /// <summary>
         /// Connect to an existing emulator process
         /// </summary>
         /// <returns>Success indication and error message.</returns>
-        public async Task<startResult> StartAsync()
+        public async Task<StartResult> StartAsync()
         {
             int port;
 
-            if (PortConfig.Port != 0)
+            if (this.portConfig.Port != 0)
             {
-                port = PortConfig.Port;
+                port = this.portConfig.Port;
             }
             else
             {
-                var portString = Environment.GetEnvironmentVariable(Util.x3270Port);
+                var portString = Environment.GetEnvironmentVariable(Util.X3270Port);
                 if (portString == null)
                 {
-                    return new startResult(Util.x3270Port + " not found in the environment");
+                    return new StartResult(Util.X3270Port + " not found in the environment");
                 }
 
                 // Parse it.
-                UInt16 port16;
-                if (!UInt16.TryParse(portString, out port16))
+                ushort port16;
+                if (!ushort.TryParse(portString, out port16))
                 {
-                    return new startResult("Invalid " + Util.x3270Port + " in the environment");
+                    return new StartResult("Invalid " + Util.X3270Port + " in the environment");
                 }
+
                 port = port16;
             }
 
-            var result = await SessionUtil.TryConnect(port, PortConfig.ConnectRetryMsec).ConfigureAwait(continueOnCapturedContext: false);
+            var result = await SessionUtil.TryConnect(port, this.portConfig.ConnectRetryMsec).ConfigureAwait(continueOnCapturedContext: false);
             if (result.Success)
             {
-                Client = result.Client;
-                return new startResult();
+                this.client = result.Client;
+                return new StartResult();
             }
             else
-	        {
-                return new startResult(result.FailReason);
-	        }
+            {
+                return new StartResult(result.FailReason);
+            }
         }
 
         /// <summary>
         /// Get the TCP client for a session.
         /// </summary>
-        /// <returns>TcpClient object.</returns>
+        /// <returns>New object.</returns>
         public TcpClient GetClient()
         {
-            return Client;
+            return this.client;
         }
         
         /// <summary>
@@ -194,11 +202,33 @@ namespace x3270if
         /// </summary>
         public void Close()
         {
-            if (Client != null)
+            if (this.client != null)
             {
-                Client.Close();
-                Client = null;
+                this.client.Close();
+                this.client = null;
             }
+        }
+
+        /// <summary>
+        /// Private Dispose method.
+        /// </summary>
+        /// <param name="disposing">true if called from public Dispose.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                this.handle.Dispose();
+
+                // Free other managed objects.
+                this.Close();
+            }
+
+            this.disposed = true;
         }
     }
 }

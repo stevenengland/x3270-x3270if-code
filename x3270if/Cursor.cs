@@ -23,11 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// Session class.
+    /// </summary>
     public partial class Session
     {
         /// <summary>
@@ -38,7 +41,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> UpAsync()
         {
-            return await IoAsync("Up()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Up()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -49,7 +52,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> DownAsync()
         {
-            return await IoAsync("Down()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Down()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -60,7 +63,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> LeftAsync()
         {
-            return await IoAsync("Left()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Left()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -71,29 +74,31 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> RightAsync()
         {
-            return await IoAsync("Right()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Right()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
         /// Move cursor to a particular row and column. Asynchronous version.
         /// </summary>
-        /// <param name="row">Desired row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Desired column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Desired row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Desired column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> MoveCursorAsync(int row, int column)
         {
-            if (row < Config.Origin)
+            if (row < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("row");
             }
-            if (column < Config.Origin)
+
+            if (column < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("column");
             }
-            return await IoAsync(
-                string.Format("MoveCursor({0},{1})", row - Config.Origin, column - Config.Origin), isModify: true)
+
+            return await this.IoAsync(
+                string.Format("MoveCursor({0},{1})", row - this.Config.Origin, column - this.Config.Origin), isModify: true)
                 .ConfigureAwait(continueOnCapturedContext: false);
         }
 
@@ -105,7 +110,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> TabAsync()
         {
-            return await IoAsync("Tab()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Tab()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -116,7 +121,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> BackTabAsync()
         {
-            return await IoAsync("BackTab()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("BackTab()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -129,7 +134,7 @@ namespace x3270if
         {
             try
             {
-                return UpAsync().Result;
+                return this.UpAsync().Result;
             }
             catch (AggregateException e)
             {
@@ -147,7 +152,7 @@ namespace x3270if
         {
             try
             {
-                return DownAsync().Result;
+                return this.DownAsync().Result;
             }
             catch (AggregateException e)
             {
@@ -165,7 +170,7 @@ namespace x3270if
         {
             try
             {
-                return LeftAsync().Result;
+                return this.LeftAsync().Result;
             }
             catch (AggregateException e)
             {
@@ -183,7 +188,7 @@ namespace x3270if
         {
             try
             {
-                return RightAsync().Result;
+                return this.RightAsync().Result;
             }
             catch (AggregateException e)
             {
@@ -194,8 +199,8 @@ namespace x3270if
         /// <summary>
         /// Move cursor to a specific location.
         /// </summary>
-        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
         /// <returns>Success/failure, failure reason.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
@@ -203,7 +208,7 @@ namespace x3270if
         {
             try
             {
-                return MoveCursorAsync(row, column).Result;
+                return this.MoveCursorAsync(row, column).Result;
             }
             catch (AggregateException e)
             {
@@ -221,7 +226,7 @@ namespace x3270if
         {
             try
             {
-                return TabAsync().Result;
+                return this.TabAsync().Result;
             }
             catch (AggregateException e)
             {
@@ -239,7 +244,7 @@ namespace x3270if
         {
             try
             {
-                return BackTabAsync().Result;
+                return this.BackTabAsync().Result;
             }
             catch (AggregateException e)
             {

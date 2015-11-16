@@ -23,18 +23,26 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Mock;
-
 namespace MockWs3270
 {
-    class MockWs3270
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    using Mock;
+
+    /// <summary>
+    /// Mock ws3270 process.
+    /// </summary>
+    public static class MockWs3270
     {
-        static void Main(string[] args)
+        /// <summary>
+        /// Process main method.
+        /// </summary>
+        /// <param name="args">Command line arguments</param>
+        public static void Main(string[] args)
         {
             int port = 0;
 
@@ -46,6 +54,7 @@ namespace MockWs3270
                 Console.Error.WriteLine("Missing -scriptport option");
                 Environment.Exit(1);
             }
+
             if (port < 1 || port > 0xffff)
             {
                 Console.Error.WriteLine("Invalid port '{0}'", args[1]);

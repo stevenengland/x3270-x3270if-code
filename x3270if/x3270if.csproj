@@ -7,7 +7,7 @@
     <ProjectGuid>{168F4FBE-6947-42E2-A2CA-D8F816CEAFF7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>x3270if</RootNamespace>
+    <RootNamespace>X3270if</RootNamespace>
     <AssemblyName>x3270if</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Aid.cs" />
+    <Compile Include="Attributes.cs" />
     <Compile Include="Ebcdic.cs" />
     <Compile Include="Cursor.cs" />
     <Compile Include="Ascii.cs" />
@@ -48,13 +49,17 @@
     <Compile Include="Io.cs" />
     <Compile Include="PortSession.cs" />
     <Compile Include="DisplayBuffer.cs" />
+    <Compile Include="ProcessOptions.cs" />
+    <Compile Include="TransferParams.cs" />
     <Compile Include="Transfer.cs" />
     <Compile Include="ReadBuffer.cs" />
     <Compile Include="ProcessSession.cs" />
     <Compile Include="Start.cs" />
     <Compile Include="String.cs" />
     <Compile Include="Util.cs" />
-    <Compile Include="Query.cs" />
+    <Compile Include="Query.cs">
+      <ExcludeFromStyleCop>False</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="Wait.cs" />
     <Compile Include="Session.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

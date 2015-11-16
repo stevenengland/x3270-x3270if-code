@@ -23,31 +23,38 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using x3270if;
-using System.Net.Sockets;
-using System.Net;
-using System.Threading;
-using Mock;
-
 namespace UnitTests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using NUnit.Framework;
+
+    using X3270if;
+
     /// <summary>
-    /// Tests for basic emulation features (documented ws3270/wc3270 actions).
+    /// Tests for basic emulation features (documented ws3270 actions).
     /// Cursor movement actions.
     /// </summary>
     [TestFixture]
     public class CursorTests
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CursorTests"/> class.
+        /// </summary>
         public CursorTests()
         {
         }
 
+        /// <summary>
+        /// Test fixture set-up.
+        /// </summary>
         [TestFixtureSetUp]
         public void Setup()
         {

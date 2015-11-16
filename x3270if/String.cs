@@ -23,33 +23,38 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Coordinates and text passed in a list to <see cref="M:x3270if.Session.StringAtAsync(System.Collections.Generic.IEnumerable{x3270if.StringAtBlock},System.Boolean,System.Boolean)"/>.
     /// </summary>
     public class StringAtBlock
     {
         /// <summary>
-        /// Row.
+        /// Gets or sets the row.
         /// </summary>
-        public int Row;
+        public int Row { get; set; }
+
         /// <summary>
-        /// Column.
+        /// Gets or sets the column.
         /// </summary>
-        public int Column;
+        public int Column { get; set; }
+
         /// <summary>
-        /// String to add.
+        /// Gets or sets the string to add.
         /// </summary>
-        public string Text;
+        public string Text { get; set; }
     }
 
+    /// <summary>
+    /// Session class.
+    /// </summary>
     public partial class Session
     {
         /// <summary>
@@ -60,12 +65,12 @@ namespace x3270if
         /// <returns>Quoted string.</returns>
         public static string QuoteString(string text, bool quoteBackslashes = true)
         {
-            const string metaChars = " ,\"()\\";
-            const string bsChars = "\"\\";
+            const string MetaChars = " ,\"()\\";
+            const string BackslashChars = "\"\\";
 
             // Do quoting.
             var translatedText = text;
-            if (metaChars.Any(c => text.Contains(c)))
+            if (MetaChars.Any(c => text.Contains(c)))
             {
                 // The string contains something that requires some sort of quoting.
                 // At minimum, we put double quotes around everything.
@@ -75,20 +80,24 @@ namespace x3270if
                 {
                     // Put a backslash ahead of anything in bsChars.
                     // We only quote backslashes if we are asked to.
-                    if (bsChars.Contains(c) &&
+                    if (BackslashChars.Contains(c) &&
                         (c != '\\' || quoteBackslashes))
                     {
                         outString.Append("\\");
                     }
+
                     outString.Append(c);
                 }
+
                 outString.Append('"');
                 translatedText = outString.ToString();
             }
 
             // Translate newline, carriage return, backspace, formfeed and tab to C escapes.
             var len = translatedText.Length;
-            translatedText = string.Join("", translatedText.ToCharArray().Select(c =>
+            translatedText = string.Join(
+                string.Empty,
+                translatedText.ToCharArray().Select(c =>
             {
                 switch (c)
                 {
@@ -106,6 +115,7 @@ namespace x3270if
                         return c.ToString();
                 }
             }));
+
             // If anything was expanded, it needs double quotes.
             // Actually, it may not -- I need finer control over this method.
             if (translatedText.Length != len && !translatedText.StartsWith("\""))
@@ -130,16 +140,16 @@ namespace x3270if
         /// <returns>Success indication.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        public async Task<IoResult>StringAsync(string text, bool quoteBackslashes = true)
+        public async Task<IoResult> StringAsync(string text, bool quoteBackslashes = true)
         {
-            return await IoAsync("String(" + QuoteString(text, quoteBackslashes) + ")", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("String(" + QuoteString(text, quoteBackslashes) + ")", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
         /// Input text to the emulator at a specified position. Asynchronous version.
         /// </summary>
-        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
         /// <param name="text">Text to send. It will be quoted as necessary.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
         /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
@@ -148,8 +158,8 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> StringAtAsync(int row, int column, string text, bool quoteBackslashes = true, bool eraseEof = false)
         {
-            var strings = new [] { new StringAtBlock { Row = row, Column = column, Text = text } };
-            return await StringAtAsync(strings, quoteBackslashes, eraseEof).ConfigureAwait(continueOnCapturedContext: false);
+            var strings = new[] { new StringAtBlock { Row = row, Column = column, Text = text } };
+            return await this.StringAtAsync(strings, quoteBackslashes, eraseEof).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -167,22 +177,26 @@ namespace x3270if
 
             foreach (var b in strings)
             {
-                if (b.Row < Config.Origin)
+                if (b.Row < this.Config.Origin)
                 {
                     throw new ArgumentOutOfRangeException("Row");
                 }
-                if (b.Column < Config.Origin)
+
+                if (b.Column < this.Config.Origin)
                 {
                     throw new ArgumentOutOfRangeException("Column");
                 }
-                command += command.JoinNonEmpty(" ", string.Format(
+
+                var action = string.Format(
                     "MoveCursor({0},{1}) {2}String({3})",
-                    b.Row - Config.Origin,
-                    b.Column - Config.Origin,
+                    b.Row - this.Config.Origin,
+                    b.Column - this.Config.Origin,
                     eraseEof ? "EraseEOF() " : string.Empty,
-                    QuoteString(b.Text, quoteBackslashes)));
+                    QuoteString(b.Text, quoteBackslashes));
+                command += command.JoinNonEmpty(" ", action);
             }
-            return await IoAsync(command, isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+
+            return await this.IoAsync(command, isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -197,7 +211,7 @@ namespace x3270if
         {
             try
             {
-                return StringAsync(text, quoteBackslashes).Result;
+                return this.StringAsync(text, quoteBackslashes).Result;
             }
             catch (AggregateException e)
             {
@@ -208,8 +222,8 @@ namespace x3270if
         /// <summary>
         /// Input text to the emulator at a particular location.
         /// </summary>
-        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
         /// <param name="text">Text to send. It will be quoted as necessary.</param>
         /// <param name="quoteBackslashes">If true, quote '\' characters.</param>
         /// <param name="eraseEof">If true, do EraseEOF before each string.</param>
@@ -220,7 +234,7 @@ namespace x3270if
         {
             try
             {
-                return StringAtAsync(row, column, text, quoteBackslashes, eraseEof).Result;
+                return this.StringAtAsync(row, column, text, quoteBackslashes, eraseEof).Result;
             }
             catch (AggregateException e)
             {
@@ -241,7 +255,7 @@ namespace x3270if
         {
             try
             {
-                return StringAtAsync(strings, quoteBackslashes, eraseEof).Result;
+                return this.StringAtAsync(strings, quoteBackslashes, eraseEof).Result;
             }
             catch (AggregateException e)
             {

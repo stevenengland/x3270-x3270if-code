@@ -23,17 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-using x3270if;
-using System.Net;
-using System.Net.Sockets;
-using Mock;
-using Microsoft.Win32.SafeHandles;
-using System.Runtime.InteropServices;
-
 namespace UnitTests
 {
+    using System;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Runtime.InteropServices;
+    using System.Threading.Tasks;
+
+    using Microsoft.Win32.SafeHandles;
+
+    using Mock;
+
+    using X3270if;
+
     /// <summary>
     /// Startup class for task-based mock back-end
     /// </summary>
@@ -47,48 +50,78 @@ namespace UnitTests
     /// </summary>
     public class MockTaskSession : Session
     {
-        // The back end
+        /// <summary>
+        /// The back end.
+        /// </summary>
         private MockBackEnd mockBackEnd;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MockTaskSession"/> class.
+        /// </summary>
+        /// <param name="config">The configuration.</param>
         public MockTaskSession(MockTaskConfig config = null) : base(config, new MockBackEnd(config))
         {
             // Remember the back end.
-            mockBackEnd = (MockBackEnd)base.backEnd;
+            this.mockBackEnd = (MockBackEnd)BackEnd;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MockTaskSession"/> class.
+        /// Forces the base constructor to crash.
+        /// </summary>
+        /// <param name="config">The configuration.</param>
+        /// <param name="forceChaos">Flag indicating that a crash should be forced</param>
         public MockTaskSession(MockTaskConfig config, bool forceChaos) : base(config, null)
         {
             // Base constructor should have blown up at this point.
         }
 
+        /// <summary>
+        /// Gets the last command processed.
+        /// </summary>
         public string LastCommandProcessed
         {
-            get { return mockBackEnd.LastCommandProcessed; }
+            get { return this.mockBackEnd.LastCommandProcessed; }
         }
 
+        /// <summary>
+        /// Sets a value indicating whether all commands should fail.
+        /// </summary>
         public bool AllFail
         {
-            set { mockBackEnd.AllFail = value; }
+            set { this.mockBackEnd.AllFail = value; }
         }
 
+        /// <summary>
+        /// Sets a value in milliseconds that the next command should hang for.
+        /// </summary>
         public int HangMsec
         {
-            set { mockBackEnd.HangMsec = value; }
+            set { this.mockBackEnd.HangMsec = value; }
         }
 
+        /// <summary>
+        /// Sets the server code page.
+        /// </summary>
         public string CodePage
         {
-            set { mockBackEnd.CodePage = value; }
+            set { this.mockBackEnd.CodePage = value; }
         }
 
+        /// <summary>
+        /// Sets a value indicating whether the server should fail a code page query.
+        /// </summary>
         public bool CodePageFail
         {
-            set { mockBackEnd.CodePageFail = value; }
+            set { this.mockBackEnd.CodePageFail = value; }
         }
 
+        /// <summary>
+        /// Sets a value indicating whether the server is connected.
+        /// </summary>
         public bool Connected
         {
-            set { mockBackEnd.Connected = value; }
+            set { this.mockBackEnd.Connected = value; }
         }
     }
 
@@ -98,101 +131,133 @@ namespace UnitTests
     /// </summary>
     public class MockBackEnd : IBackEnd
     {
-        // Has Dispose already been called? 
+        /// <summary>
+        /// Has Dispose already been called?
+        /// </summary>
         private bool disposed = false;
 
-        // SafeHandle instance for Dispose.
+        /// <summary>
+        /// SafeHandle instance for Dispose.
+        /// </summary>
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
 
-        // Configuration.
-        private MockTaskConfig Config;
+        /// <summary>
+        /// The configuration.
+        /// </summary>
+        private MockTaskConfig config;
 
-        // The mock server object.
-        Server MockServer = null;
+        /// <summary>
+        /// The mock server object.
+        /// </summary>
+        private Server mockServer = null;
 
-        // TCP connection to the mock session.
-        private TcpClient Client = null;
+        /// <summary>
+        /// TCP connection to the mock session.
+        /// </summary>
+        private TcpClient client = null;
 
-        // Last command received by the server.
+        /// <summary>
+        /// The server task.
+        /// </summary>
+        private Task server = null;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MockBackEnd"/> class.
+        /// Constructor, which ensures there is a Server object.
+        /// </summary>
+        /// <param name="config">The configuration</param>
+        public MockBackEnd(MockTaskConfig config)
+        {
+            this.config = config ?? new MockTaskConfig();
+            this.mockServer = new Server();
+        }
+
+        /// <summary>
+        /// Gets the Last command received by the server.
+        /// </summary>
         public string LastCommandProcessed
         {
             get
             {
-                return (MockServer != null) ? MockServer.LastCommandProcessed : null;
+                return (this.mockServer != null) ? this.mockServer.LastCommandProcessed : null;
             }
         }
 
-        // Force all commands to fail.
+        /// <summary>
+        /// Sets a value indicating whether all commands should fail.
+        /// </summary>
         public bool AllFail
         {
             set
             {
-                if (MockServer != null)
+                if (this.mockServer != null)
                 {
-                    MockServer.AllFail = value;
+                    this.mockServer.AllFail = value;
                 }
             }
         }
 
-        // Force commands to hang.
+        /// <summary>
+        /// Sets a value in milliseconds to force the next command to hang.
+        /// </summary>
         public int HangMsec
         {
             set
             {
-                if (MockServer != null)
+                if (this.mockServer != null)
                 {
-                    MockServer.HangMsec = value;
+                    this.mockServer.HangMsec = value;
                 }
             }
         }
 
-        // Set the code page.
+        /// <summary>
+        /// Sets the workstation code page.
+        /// </summary>
         public string CodePage
         {
             set
             {
-                if (MockServer != null)
+                if (this.mockServer != null)
                 {
-                    MockServer.CodePage = value;
+                    this.mockServer.CodePage = value;
                 }
             }
         }
 
-        // Set the code page failure flag.
+        /// <summary>
+        /// Sets a value indicating whether the code page query should fail.
+        /// </summary>
         public bool CodePageFail
         {
             set
             {
-                if (MockServer != null)
+                if (this.mockServer != null)
                 {
-                    MockServer.CodePageFail = value;
+                    this.mockServer.CodePageFail = value;
                 }
             }
         }
 
-        // Connection state.
+        /// <summary>
+        /// Sets a value indicating whether the server is connected.
+        /// </summary>
         public bool Connected
         {
             set
             {
-                if (MockServer != null)
+                if (this.mockServer != null)
                 {
-                    MockServer.Connected = value;
+                    this.mockServer.Connected = value;
                 }
             }
         }
 
-        // Server task.
-        private Task Server = null;
-
-        // Constructor, which ensures there is a Server object.
-        public MockBackEnd(MockTaskConfig config)
-        {
-            this.Config = config ?? new MockTaskConfig();
-            MockServer = new Server();
-        }
-
-        public async Task<startResult> StartAsync()
+        /// <summary>
+        /// Asynchronous start method.
+        /// </summary>
+        /// <returns>Start result</returns>
+        public async Task<StartResult> StartAsync()
         {
             // Create a listening socket, letting the system pick an unused port.
             var listener = new Socket(SocketType.Stream, ProtocolType.Tcp);
@@ -202,20 +267,20 @@ namespace UnitTests
             // Create a listener and accept a connection.
             // The task is intenionally not awaited, so it runs asynchronously.
             // The listener stops the listening socket as soon as it accepts one connection.
-            Server = Task.Run(() => MockServer.Ws3270(listener));
+            this.server = Task.Run(() => this.mockServer.Ws3270(listener));
 
             // Create the client connection.
             var endPoint = (IPEndPoint)listener.LocalEndPoint;
-            var result = await SessionUtil.TryConnect(endPoint.Port, Config.ConnectRetryMsec).ConfigureAwait(continueOnCapturedContext: false);
+            var result = await SessionUtil.TryConnect(endPoint.Port, this.config.ConnectRetryMsec).ConfigureAwait(continueOnCapturedContext: false);
             if (result.Success)
             {
-                Client = result.Client;
-                return new startResult();
+                this.client = result.Client;
+                return new StartResult();
             }
             else
             {
-                Close();
-                return new startResult(result.FailReason);
+                this.Close();
+                return new StartResult(result.FailReason);
             }
         }
 
@@ -225,26 +290,34 @@ namespace UnitTests
         /// <returns>TCP client object.</returns>
         public TcpClient GetClient()
         {
-            return Client;
+            return this.client;
         }
 
+        /// <summary>
+        /// Get the error output from the server.
+        /// </summary>
+        /// <param name="fallbackText">Text to return if there is no error output</param>
+        /// <returns>The fallback test</returns>
         public string GetErrorOutput(string fallbackText)
         {
             return fallbackText;
         }
 
+        /// <summary>
+        /// Close the session.
+        /// </summary>
         public void Close()
         {
-            if (Client != null)
+            if (this.client != null)
             {
-                Client.Close();
-                Client = null;
+                this.client.Close();
+                this.client = null;
             }
 
             // Wait for the server to stop.
-            if (Server != null)
+            if (this.server != null)
             {
-                Server.Wait();
+                this.server.Wait();
             }
         }
 
@@ -253,7 +326,7 @@ namespace UnitTests
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -263,18 +336,20 @@ namespace UnitTests
         /// <param name="disposing">True if called from public Dispose method.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (disposed)
+            if (this.disposed)
             {
                 return;
             }
 
             if (disposing)
             {
-                handle.Dispose();
+                this.handle.Dispose();
+
                 // Free other managed objects.
-                Close();
+                this.Close();
             }
-            disposed = true;
+
+            this.disposed = true;
         }
     }
 }

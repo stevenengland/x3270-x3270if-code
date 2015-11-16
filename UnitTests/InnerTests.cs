@@ -23,26 +23,34 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using x3270if;
-using x3270if.ProcessOptions;
-
 namespace UnitTests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    using NUnit.Framework;
+
+    using X3270if;
+    using X3270if.ProcessOptions;
+
     /// <summary>
     /// Tests for functionality internal to the session and feature methods, like string quoting.
     /// </summary>
-    class InnerTests
+    public class InnerTests
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InnerTests"/> class.
+        /// </summary>
         public InnerTests()
         {
         }
 
+        /// <summary>
+        /// Test set-up.
+        /// </summary>
         [TestFixtureSetUp]
         public void Setup()
         {
@@ -108,15 +116,16 @@ namespace UnitTests
             Assert.AreEqual("\"My, my (oh!) \\\"foo\\\"\\\\n\"", s);
 
             // Now the whole ASCII-7 character set, except the special characters, to make sure nothing else is molested.
-            const string special = "\" ,()\\";
+            const string Special = "\" ,()\\";
             string ascii7 = string.Empty;
             for (int i = 33; i < 127; i++)
             {
-                if (!special.Contains((char)i))
+                if (!Special.Contains((char)i))
                 {
                     ascii7 += (char)i;
                 }
             }
+
             s = Session.QuoteString(ascii7);
             Assert.AreEqual(ascii7, s);
 
@@ -209,18 +218,18 @@ namespace UnitTests
             Assert.IsTrue(s.StartsWith("\""));
             Assert.IsTrue(s.EndsWith("\""));
             s = s.Substring(1, s.Length - 2);
-            const string luHostPort = "lu1,lu2@[1::2]:port";
-            Assert.IsTrue(s.EndsWith(luHostPort));
-            var flags = s.Substring(0, s.Length - luHostPort.Length);
+            const string LogicalUnitHostPort = "lu1,lu2@[1::2]:port";
+            Assert.IsTrue(s.EndsWith(LogicalUnitHostPort));
+            var flags = s.Substring(0, s.Length - LogicalUnitHostPort.Length);
             Assert.AreEqual(4, flags.Length);
             Assert.IsTrue(flags.Contains("L:"));
             Assert.IsTrue(flags.Contains("N:"));
 
             // Try all of the connect flags.
             s = emulator.ExpandHostName("host", null, null, ConnectFlags.All);
-            const string luHostPort2 = "host";
-            Assert.IsTrue(s.EndsWith(luHostPort2));
-            flags = s.Substring(0, s.Length - luHostPort2.Length);
+            const string LogicalUnitHostPort2 = "host";
+            Assert.IsTrue(s.EndsWith(LogicalUnitHostPort2));
+            flags = s.Substring(0, s.Length - LogicalUnitHostPort2.Length);
             Assert.AreEqual(12, flags.Length);
             Assert.IsTrue(flags.Contains("C:"));
             Assert.IsTrue(flags.Contains("L:"));

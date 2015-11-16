@@ -23,40 +23,23 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// Session class.
+    /// </summary>
     public partial class Session
     {
         /// <summary>
-        /// Check a name (host, port or LU) for the presence of metacharacters that could confuse the hostname parser.
+        /// The set of host name modifier flags.
         /// </summary>
-        /// <param name="name">Name to check.</param>
-        /// <param name="extraChars">Additional illegal characters.</param>
-        private void CheckName(string name, string extraChars = null)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new ArgumentException("Empty name");
-            }
-
-            var invalidNameChars = "[]@/";
-            if (extraChars != null)
-            {
-                invalidNameChars += extraChars;
-            }
-            if (name.Any(c => invalidNameChars.Contains(c)))
-            {
-                throw new ArgumentException(string.Format("name '{0}' contains invalid character(s)", name));
-            }
-        }
-
-        private const string flagsTranslate = "CLNPSB";
+        private const string FlagsTranslate = "CLNPSB";
 
         /// <summary>
         /// Expand a hostname and parameters into a host string that ws3270 understands.
@@ -72,12 +55,12 @@ namespace x3270if
             string hostString = string.Empty;
 
             // Map the symbolic flags onto options.
-            ConnectFlags thisConnectFlags = (flags != ConnectFlags.None) ? flags : Config.DefaultConnectFlags;
-            for (int i = 0; i < flagsTranslate.Length; i++)
+            ConnectFlags thisConnectFlags = (flags != ConnectFlags.None) ? flags : this.Config.DefaultConnectFlags;
+            for (int i = 0; i < FlagsTranslate.Length; i++)
             {
                 if ((thisConnectFlags & (ConnectFlags)(1 << i)) != 0)
                 {
-                    hostString += flagsTranslate.Substring(i, 1) + ":";
+                    hostString += FlagsTranslate.Substring(i, 1) + ":";
                 }
             }
 
@@ -86,13 +69,14 @@ namespace x3270if
             {
                 foreach (string lu in lus)
                 {
-                    CheckName(lu, ":");
+                    this.CheckName(lu, ":");
                 }
-                hostString += System.String.Join(",", lus) + "@";
+
+                hostString += string.Join(",", lus) + "@";
             }
 
             // Now the host name.
-            CheckName(host);
+            this.CheckName(host);
             if (host.Contains(':'))
             {
                 hostString += "[" + host + "]";
@@ -105,7 +89,7 @@ namespace x3270if
             // Add the port.
             if (!string.IsNullOrEmpty(port))
             {
-                CheckName(port, ":.");
+                this.CheckName(port, ":.");
                 hostString += ":" + port;
             }
 
@@ -115,7 +99,7 @@ namespace x3270if
         /// <summary>
         /// Connect to a host. Asynchronous version.
         /// </summary>
-        /// <param name="host">Hostname.</param>
+        /// <param name="host">Host name.</param>
         /// <param name="port">Optional TCP port number or service name.</param>
         /// <param name="lu">Optional set of LU names to try to connect to.</param>
         /// <param name="flags">Connection flags (SSL, etc.).</param>
@@ -130,11 +114,13 @@ namespace x3270if
             {
                 throw new ArgumentNullException("host");
             }
+
             if (string.IsNullOrEmpty(host))
             {
                 throw new ArgumentException("host");
             }
-            return await IoAsync("Connect(" + ExpandHostName(host, port, lu, flags) + ")").ConfigureAwait(continueOnCapturedContext: false);
+
+            return await this.IoAsync("Connect(" + this.ExpandHostName(host, port, lu, flags) + ")").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -145,13 +131,13 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> DisconnectAsync()
         {
-            return await IoAsync("Disconnect()").ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Disconnect()").ConfigureAwait(continueOnCapturedContext: false);
         }
         
         /// <summary>
         /// Connect to a host.
         /// </summary>
-        /// <param name="host">Hostname.</param>
+        /// <param name="host">Host name.</param>
         /// <param name="port">Optional TCP port number or service name.</param>
         /// <param name="lu">Optional set of LU names to try to connect to.</param>
         /// <param name="flags">Connection flags (SSL, etc.).</param>
@@ -164,7 +150,7 @@ namespace x3270if
         {
             try
             {
-                return ConnectAsync(host, port, lu, flags).Result;
+                return this.ConnectAsync(host, port, lu, flags).Result;
             }
             catch (AggregateException e)
             {
@@ -182,11 +168,35 @@ namespace x3270if
         {
             try
             {
-                return DisconnectAsync().Result;
+                return this.DisconnectAsync().Result;
             }
             catch (AggregateException e)
             {
                 throw e.InnerException;
+            }
+        }
+
+        /// <summary>
+        /// Check a name (host, port or LU) for the presence of meta-characters that could confuse the hostname parser.
+        /// </summary>
+        /// <param name="name">Name to check.</param>
+        /// <param name="extraChars">Additional illegal characters.</param>
+        private void CheckName(string name, string extraChars = null)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("Empty name");
+            }
+
+            var invalidNameChars = "[]@/";
+            if (extraChars != null)
+            {
+                invalidNameChars += extraChars;
+            }
+
+            if (name.Any(c => invalidNameChars.Contains(c)))
+            {
+                throw new ArgumentException(string.Format("name '{0}' contains invalid character(s)", name));
             }
         }
     }

@@ -23,32 +23,41 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using x3270if;
-using x3270if.Transfer;
-using System.Net.Sockets;
-using System.Net;
-using System.Threading;
-using Mock;
-
 namespace UnitTests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using Mock;
+
+    using NUnit.Framework;
+
+    using X3270if;
+    using X3270if.Transfer;
+
     /// <summary>
-    /// Tests for basic emulation features (documented ws3270/wc3270 actions).
+    /// Tests for basic emulation features (documented ws3270 actions).
     /// Transfer action.
     /// </summary>
     [TestFixture]
     public class TransferTests
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransferTests"/> class.
+        /// </summary>
         public TransferTests()
         {
         }
 
+        /// <summary>
+        /// Test set-up.
+        /// </summary>
         [TestFixtureSetUp]
         public void Setup()
         {
@@ -75,21 +84,26 @@ namespace UnitTests
                     new ParameterExistAction(ExistAction.Replace)),
                 "Transfer(direction=Send,exist=Replace,host=Vm,\"hostfile=FOO TXT A\",\"localfile=C:\\\\foo.txt\",mode=Ascii)");
 
-
             // Bad parameter type.
             Assert.Throws<ArgumentException>(
                 () => session.Transfer("foo.txt", "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm, "wrong!"));
             Assert.Throws<ArgumentNullException>(
-                () => session.Transfer("foo.txt", "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm,
-                    new ParameterExistAction(ExistAction.Replace), null));
+                () => session.Transfer(
+                    "foo.txt",
+                    "foo txt a",
+                    Direction.Send,
+                    Mode.Ascii,
+                    HostType.Vm,
+                    new ParameterExistAction(ExistAction.Replace),
+                    null));
 
             // Bad file names.
             Assert.Throws<ArgumentException>(
-                () => session.Transfer("", "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm));
+                () => session.Transfer(string.Empty, "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm));
             Assert.Throws<ArgumentException>(
                 () => session.Transfer(null, "foo txt a", Direction.Send, Mode.Ascii, HostType.Vm));
             Assert.Throws<ArgumentException>(
-                () => session.Transfer("foo.txt", "", Direction.Send, Mode.Ascii, HostType.Vm));
+                () => session.Transfer("foo.txt", string.Empty, Direction.Send, Mode.Ascii, HostType.Vm));
             Assert.Throws<ArgumentException>(
                 () => session.Transfer("foo.txt", null, Direction.Send, Mode.Ascii, HostType.Vm));
 
@@ -156,7 +170,8 @@ namespace UnitTests
                         Direction.Send,
                         Mode.Ascii,
                         HostType.Tso,
-                        new List<Parameter> {
+                        new List<Parameter>
+                        {
                             new ParameterAsciiCr(true),
                             new ParameterAsciiRemap(false)
                         });
@@ -167,18 +182,25 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Receive, Mode.Binary, HostType.Tso,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Receive,
+                        Mode.Binary,
+                        HostType.Tso,
                         new ParameterAsciiCr(true));
                 });
-
 
             // Same thing, using the IEnumerable API.
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Receive, Mode.Binary, HostType.Tso,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Receive,
+                        Mode.Binary,
+                        HostType.Tso,
                         new List<Parameter> { new ParameterAsciiCr(true) });
                 });
 
@@ -186,18 +208,25 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Receive, Mode.Binary, HostType.Tso,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Receive,
+                        Mode.Binary,
+                        HostType.Tso,
                         new ParameterAsciiRemap(true));
                 });
-
 
             // Lrecl without send.
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Receive, Mode.Binary, HostType.Tso,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Receive,
+                        Mode.Binary,
+                        HostType.Tso,
                         new ParameterSendLogicalRecordLength(80));
                 });
 
@@ -205,8 +234,12 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Send, Mode.Binary, HostType.Cics,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Send,
+                        Mode.Binary,
+                        HostType.Cics,
                         new ParameterSendLogicalRecordLength(80));
                 });
 
@@ -214,8 +247,12 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Receive, Mode.Binary, HostType.Tso,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Receive,
+                        Mode.Binary,
+                        HostType.Tso,
                         new ParameterSendRecordFormat(RecordFormat.Fixed));
                 });
 
@@ -223,8 +260,12 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Send, Mode.Binary, HostType.Cics,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Send,
+                        Mode.Binary,
+                        HostType.Cics,
                         new ParameterSendRecordFormat(RecordFormat.Fixed));
                 });
 
@@ -232,8 +273,12 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Receive, Mode.Binary, HostType.Tso,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Receive,
+                        Mode.Binary,
+                        HostType.Tso,
                         new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 100));
                 });
 
@@ -241,8 +286,12 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Send, Mode.Binary, HostType.Vm,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Send,
+                        Mode.Binary,
+                        HostType.Vm,
                         new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 100));
                 });
 
@@ -250,42 +299,65 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Send, Mode.Binary, HostType.Tso,
-                        new ParameterExistAction(ExistAction.Append), new ParameterSendRecordFormat(RecordFormat.Fixed));
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Send,
+                        Mode.Binary,
+                        HostType.Tso,
+                        new ParameterExistAction(ExistAction.Append),
+                        new ParameterSendRecordFormat(RecordFormat.Fixed));
                 });
 
             // Append with lrecl.
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Send, Mode.Binary, HostType.Tso,
-                        new ParameterExistAction(ExistAction.Append), new ParameterSendLogicalRecordLength(80));
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Send,
+                        Mode.Binary,
+                        HostType.Tso,
+                        new ParameterExistAction(ExistAction.Append),
+                        new ParameterSendLogicalRecordLength(80));
                 });
 
             // Append with TSO allocation.
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Send, Mode.Binary, HostType.Tso,
-                        new ParameterExistAction(ExistAction.Append), new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 100));
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Send,
+                        Mode.Binary,
+                        HostType.Tso,
+                        new ParameterExistAction(ExistAction.Append),
+                        new ParameterTsoSendAllocation(TsoAllocationUnits.Cylinders, 100));
                 });
 
             // Blocksize without TSO.
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Send, Mode.Binary, HostType.Cics,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Send,
+                        Mode.Binary,
+                        HostType.Cics,
                         new ParameterBlockSize(1024));
                 });
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    var result = session.Transfer("foo.txt", "FOO.TXT",
-                        Direction.Send, Mode.Binary, HostType.Vm,
+                    var result = session.Transfer(
+                        "foo.txt",
+                        "FOO.TXT",
+                        Direction.Send,
+                        Mode.Binary,
+                        HostType.Vm,
                         new ParameterBlockSize(1024));
                 });
 

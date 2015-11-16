@@ -23,62 +23,75 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Variants of the Query method.
     /// </summary>
     public enum QueryType
-	{
+    {
         /// <summary>
         /// The LU name reported by the BIND-DATA from the host.
         /// </summary>
         BindPluName,
+
         /// <summary>
-        /// The state of the connection ("tn3270"|"tn3270e" "nvt"|"3270"|"sscp-lu").
+        /// The state of the connection (<c>"tn3270"|"tn3270e" "nvt"|"3270"|"sscp-lu")</c>.
         /// </summary>
         ConnectionState,
+
         /// <summary>
-        /// The cursor position (row column). These will be translated to the session's <see cref="x3270if.Config.Origin"/>.
+        /// The cursor position (row column). These will be translated to the session's <see cref="X3270if.Config.Origin"/>.
         /// </summary>
         Cursor,
+
         /// <summary>
         /// Screen formatting status ("formatted"|"unformatted").
         /// </summary>
         Formatted,
+
         /// <summary>
         /// Host information ("host" hostname port|"process" pathname).
         /// </summary>
         Host,
+
         /// <summary>
         /// Local encoding (Windows code page or "utf-8").
         /// </summary>
         LocalEncoding,
+
         /// <summary>
         /// LU name negotiated by TN3270E.
         /// </summary>
         LuName,
+
         /// <summary>
         /// Full model name, e.g., IBM-3278-4-E.
         /// </summary>
         Model,
+
         /// <summary>
         /// Current screen size (rows columns).
         /// </summary>
         ScreenCurSize,
+
         /// <summary>
         /// Maximum screen size (rows columns).
         /// </summary>
         ScreenMaxSize,
+
         /// <summary>
         /// SSL state ("not secure" | "secure" "host-verified"|"host-unverified").
         /// </summary>
         Ssl
-	};
-
+    }
+    
+    /// <summary>
+    /// Session class.
+    /// </summary>
     public partial class Session
     {
         /// <summary>
@@ -90,7 +103,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> QueryAsync(QueryType queryType)
         {
-            var result = await IoAsync("Query(" + queryType.ToString() + ")").ConfigureAwait(continueOnCapturedContext: false);
+            var result = await this.IoAsync("Query(" + queryType.ToString() + ")").ConfigureAwait(continueOnCapturedContext: false);
             if (queryType == QueryType.Cursor && result.Success)
             {
                 // Translate the cursor coordinates.
@@ -98,8 +111,9 @@ namespace x3270if
                 // but because we clone the result here, the history will have a reference to the original value.
                 var rowCol = result.Result[0].Split(' ');
                 result = new IoResult(result);
-                result.Result = new[] { string.Format("{0} {1}", int.Parse(rowCol[0]) + Config.Origin, int.Parse(rowCol[1]) + Config.Origin) };
+                result.Result = new[] { string.Format("{0} {1}", int.Parse(rowCol[0]) + this.Config.Origin, int.Parse(rowCol[1]) + this.Config.Origin) };
             }
+
             return result;
         }
 
@@ -114,7 +128,7 @@ namespace x3270if
         {
             try
             {
-                return QueryAsync(queryType).Result;
+                return this.QueryAsync(queryType).Result;
             }
             catch (AggregateException e)
             {

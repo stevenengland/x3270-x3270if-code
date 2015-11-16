@@ -23,11 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// Session class.
+    /// </summary>
     public partial class Session
     {
         /// <summary>
@@ -38,7 +41,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> EnterAsync()
         {
-            return await IoAsync("Enter()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Enter()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -49,7 +52,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> ClearAsync()
         {
-            return await IoAsync("Clear()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Clear()", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -66,7 +69,8 @@ namespace x3270if
             {
                 throw new ArgumentOutOfRangeException("n");
             }
-            return await IoAsync("PF(" + n.ToString() + ")", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+
+            return await this.IoAsync("PF(" + n.ToString() + ")", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -83,7 +87,8 @@ namespace x3270if
             {
                 throw new ArgumentOutOfRangeException("n");
             }
-            return await IoAsync("PA(" + n.ToString() + ")", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
+
+            return await this.IoAsync("PA(" + n.ToString() + ")", isModify: true).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -96,7 +101,7 @@ namespace x3270if
         {
             try
             {
-                return EnterAsync().Result;
+                return this.EnterAsync().Result;
             }
             catch (AggregateException e)
             {
@@ -114,7 +119,7 @@ namespace x3270if
         {
             try
             {
-                return ClearAsync().Result;
+                return this.ClearAsync().Result;
             }
             catch (AggregateException e)
             {
@@ -134,7 +139,7 @@ namespace x3270if
         {
             try
             {
-                return PFAsync(n).Result;
+                return this.PFAsync(n).Result;
             }
             catch (AggregateException e)
             {
@@ -154,13 +159,12 @@ namespace x3270if
         {
             try
             {
-                return PAAsync(n).Result;
+                return this.PAAsync(n).Result;
             }
             catch (AggregateException e)
             {
                 throw e.InnerException;
             }
         }
-
     }
 }

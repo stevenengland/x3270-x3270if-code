@@ -23,31 +23,40 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-using System.Diagnostics;
-using NUnit.Framework;
-using x3270if;
-using Mock;
-using System.Net;
-using System.Net.Sockets;
-using System.IO;
-using System.Threading;
-using System.Linq;
-using x3270if.ProcessOptions;
-
 namespace UnitTests
 {
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using Mock;
+
+    using NUnit.Framework;
+
+    using X3270if;
+    using X3270if.ProcessOptions;
+
     /// <summary>
     /// Tests for configuring, starting and stopping sessions.
     /// </summary>
     [TestFixture]
-    class SessionTests
+    public class SessionTests
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SessionTests"/> class.
+        /// </summary>
         public SessionTests()
         {
         }
 
+        /// <summary>
+        /// Test set-up.
+        /// </summary>
         [TestFixtureSetUp]
         public void Setup()
         {
@@ -71,6 +80,7 @@ namespace UnitTests
                 try
                 {
                     Console.SetOut(new StreamWriter(Stream.Null));
+
                     // Say hello.
                     Util.Log("Hello");
                 }
@@ -108,14 +118,12 @@ namespace UnitTests
             Assert.AreEqual(2, startup2.Model);
 
             // Verfify that a bogus Origin is bad.
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                { var config = new ProcessConfig { Origin = 2 }; });
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                { var config = new ProcessConfig { Origin = -1 }; });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var config = new ProcessConfig { Origin = 2 }; });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var config = new ProcessConfig { Origin = -1 }; });
         }
 
         /// <summary>
-        /// Test the various flavors of history on an unstarted session.
+        /// Test the various flavors of history on an un-started session.
         /// </summary>
         [Test]
         public void TestEmptyHistory()
@@ -149,6 +157,7 @@ namespace UnitTests
             {
                 Assert.AreEqual(true, session.Io("Lines 1").Success);
             }
+
             history = session.RecentCommands;
             Assert.AreEqual("Lines 1", history[0].Command);
             Assert.AreEqual("Line 1", history[0].Result[0]);
@@ -236,14 +245,16 @@ namespace UnitTests
                 HandshakeTimeoutMsec = 50
             };
             var session = new MockTaskSession(startup);
+
             // Set the response hang time to twice that.
             session.HangMsec = 100;
+
             // Set exception mode for any failure, including Start.
             session.ExceptionMode = true;
+
             // Boom.
             Assert.Throws<X3270ifCommandException>(() => session.Start());
         }
-
 
         /// <summary>
         /// Test a hung start (no response to the empty initial command) for the Task
@@ -305,7 +316,7 @@ namespace UnitTests
             Assert.AreEqual(false, startResult.Success);
 
             // Try junk variable.
-            Environment.SetEnvironmentVariable(Util.x3270Port, "junk");
+            Environment.SetEnvironmentVariable(Util.X3270Port, "junk");
             startResult = session.Start();
             Assert.AreEqual(false, startResult.Success);
 
@@ -322,7 +333,7 @@ namespace UnitTests
             using (var noListenSocket = new Socket(SocketType.Stream, ProtocolType.Tcp))
             {
                 noListenSocket.Bind(new IPEndPoint(IPAddress.Any, 0));
-                Environment.SetEnvironmentVariable(Util.x3270Port, ((IPEndPoint)noListenSocket.LocalEndPoint).Port.ToString());
+                Environment.SetEnvironmentVariable(Util.X3270Port, ((IPEndPoint)noListenSocket.LocalEndPoint).Port.ToString());
                 session = new PortSession(config);
                 startResult = session.Start();
                 Assert.AreEqual(false, startResult.Success);
@@ -339,7 +350,7 @@ namespace UnitTests
             Assert.IsTrue(stopwatch.ElapsedMilliseconds >= 3000);
 
             // Verify that we can't set a ConnectRetryMsec < 0.
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var config2 = new PortConfig { ConnectRetryMsec = -3 }; } );
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var config2 = new PortConfig { ConnectRetryMsec = -3 }; });
 
             // Create a mock server thread by hand, so we can connect to it manually.
             using (var listener = new Socket(SocketType.Stream, ProtocolType.Tcp))
@@ -347,7 +358,7 @@ namespace UnitTests
                 listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 listener.Listen(1);
                 var mockServer = new Server();
-                var Server = Task.Run(() => mockServer.Ws3270(listener));
+                var server = Task.Run(() => mockServer.Ws3270(listener));
 
                 // Now connect to it, which should be successful.
                 // We also put the port in the config, to exercise that path.
@@ -357,14 +368,14 @@ namespace UnitTests
 
                 // All done, close the client side and wait for the mock server to complete.
                 session.Close();
-                Server.Wait();
+                server.Wait();
             }
         }
 
         /// <summary>
         /// Explicit test for the PortBackEnd.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times"), Test]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "That's what we're testing"), Test]
         public void TestPortBackEnd()
         {
             var backEnd = new PortBackEnd(null);
@@ -396,7 +407,7 @@ namespace UnitTests
         /// <summary>
         /// Explicit test for the process back end.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times"), Test]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "That's what we're testing"), Test]
         public void TestProcessBackEnd()
         {
             var backEnd = new ProcessBackEnd(null);
@@ -436,19 +447,25 @@ namespace UnitTests
 
             // Exercise HostConnected (based on the status line).
             Assert.AreEqual(true, session.HostConnected);
+
             // Change that.
             session.Connected = false;
+
             // (Have to run a dummy command to get a new prompt and change state.)
             session.Io("Query()");
             Assert.AreEqual(false, session.HostConnected);
+
             // Now screen-modifying commands will fail.
             Assert.AreEqual(false, session.Enter().Success);
+
             // Now exception mode will fire, too.
             session.ExceptionMode = true;
             Assert.Throws<X3270ifCommandException>(() => session.Enter());
+
             // Try requiring 3270 mode instead.
             session.Config.ModifyFail = ModifyFailType.Require3270;
             Assert.Throws<X3270ifCommandException>(() => session.Enter());
+
             // And that normally, it's fine.
             session.Connected = true;
             session.Connect("bob");
@@ -457,7 +474,9 @@ namespace UnitTests
             session.Close();
         }
 
-        // Exercise session exception mode.
+        /// <summary>
+        /// Exercise session exception mode.
+        /// </summary>
         [Test]
         public void TestExceptionMode()
         {
@@ -472,7 +491,9 @@ namespace UnitTests
             session.Close();
         }
 
-        // Exercise auto-start Port sessions.
+        /// <summary>
+        /// Exercise auto-start Port sessions.
+        /// </summary>
         [Test]
         public void TestPortAutoStart()
         {
@@ -480,7 +501,9 @@ namespace UnitTests
             Assert.Throws<X3270ifInternalException>(() => new PortSession());
         }
 
-        // Exercise Io's argument checking.
+        /// <summary>
+        /// Exercise argument checking in the <c>Io</c> methods.
+        /// </summary>
         [Test]
         public void TestIoArgs()
         {
@@ -490,7 +513,9 @@ namespace UnitTests
             Assert.Throws<ArgumentException>(() => session.Io("Foo(\0)"));
         }
 
-        // Exercise broken sessions.
+        /// <summary>
+        /// Exercise broken sessions.
+        /// </summary>
         [Test]
         public void TestBrokenSession()
         {
@@ -511,14 +536,18 @@ namespace UnitTests
             Assert.AreEqual(false, session.EmulatorRunning);
         }
 
-        // Blow up the Session base class.
+        /// <summary>
+        /// Blow up the Session base class.
+        /// </summary>
         [Test]
         public void TestSessionNullBackEnd()
         {
             Assert.Throws<ArgumentNullException>(() => new MockTaskSession(new MockTaskConfig(), forceChaos: true));
         }
 
-        // Make process arguments too long.
+        /// <summary>
+        /// Make process arguments too long.
+        /// </summary>
         [Test]
         public void TestArgsTooLong()
         {

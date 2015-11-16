@@ -1,15 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using x3270if;
-
-namespace TrvialConsoleApp
+﻿namespace TrvialConsoleApp
 {
-    class TrivialConsoleApp
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    using X3270if;
+
+    /// <summary>
+    /// Trivial console app.
+    /// </summary>
+    public static class TrivialConsoleApp
     {
-        static void Main(string[] args)
+        /// <summary>
+        /// Main method.
+        /// </summary>
+        /// <param name="args">Command line arguments.</param>
+        public static void Main(string[] args)
         {
             if (args.Length != 1)
             {
@@ -49,7 +57,8 @@ namespace TrvialConsoleApp
                 session.Close();
                 Environment.Exit(1);
             }
-            Console.Write(String.Join("\n", ioResult.Result));
+
+            Console.Write(string.Join("\n", ioResult.Result));
 
             session.Close();
         }

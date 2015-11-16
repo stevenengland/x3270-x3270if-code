@@ -23,23 +23,32 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using x3270if;
-using System.Net.Sockets;
-using System.Net;
-using System.Threading;
-using Mock;
-
 namespace UnitTests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using Mock;
+
+    using NUnit.Framework;
+
+    using X3270if;
+
+    /// <summary>
+    /// Test extensions to the Session class.
+    /// </summary>
     public static class SessionExtensions
     {
-        // Delegate for VerifyMockCommand.
+        /// <summary>
+        /// Delegate for VerifyMockCommand.
+        /// </summary>
+        /// <returns>I/O result</returns>
         public delegate IoResult VerifyDelegate();
 
         /// <summary>
@@ -68,15 +77,21 @@ namespace UnitTests
     }
 
     /// <summary>
-    /// Tests for basic emulation features (documented ws3270/wc3270 actions).
+    /// Tests for basic emulation features (documented ws3270 actions).
     /// </summary>
     [TestFixture]
     public class FeatureTests
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FeatureTests"/> class.
+        /// </summary>
         public FeatureTests()
         {
         }
 
+        /// <summary>
+        /// Test fixture set-up.
+        /// </summary>
         [TestFixtureSetUp]
         public void Setup()
         {
@@ -93,10 +108,16 @@ namespace UnitTests
             session.VerifyStart();
 
             session.VerifyCommand(() => session.Connect("bob"), "Connect(bob)");
-            session.VerifyCommand(() => session.Connect("bob", "27", new string[] { "lu1", "lu2" }, ConnectFlags.NoLogin),
-                "Connect(\"C:lu1,lu2@bob:27\")");
+            var logicalUnitList = new[] { "lu1", "lu2" };
+            SessionExtensions.VerifyDelegate del =
+                () => session.Connect(
+                    "bob",
+                    "27",
+                    logicalUnitList,
+                    ConnectFlags.NoLogin);
+            session.VerifyCommand(del, "Connect(\"C:lu1,lu2@bob:27\")");
 
-            Assert.Throws<ArgumentException>(() => session.Connect(""));
+            Assert.Throws<ArgumentException>(() => session.Connect(string.Empty));
 
             // Force an exception.
             session.ExceptionMode = true;
@@ -106,6 +127,9 @@ namespace UnitTests
             session.Close();
         }
 
+        /// <summary>
+        /// Test the Disconnect method.
+        /// </summary>
         [Test]
         public void TestDisconnect()
         {
@@ -155,11 +179,11 @@ namespace UnitTests
             session.VerifyCommand(() => session.StringAt(1, 0, "Fred"), "MoveCursor(1,0) String(Fred)");
 
             session.VerifyCommand(
-                () => session.StringAt(new []
+                () => session.StringAt(new[]
                 {
                     new StringAtBlock { Row = 1, Column = 0, Text = "Fred" },
                     new StringAtBlock { Row = 2, Column = 4, Text = "Smith" }
-                } ),
+                }),
                 "MoveCursor(1,0) String(Fred) MoveCursor(2,4) String(Smith)");
 
             session.VerifyCommand(
@@ -206,7 +230,9 @@ namespace UnitTests
             session.Close();
         }
 
-        // Exercise the session Ascii method.
+        /// <summary>
+        /// Exercise the session <see cref="Ascii"/> method.
+        /// </summary>
         [Test]
         public void TestAscii()
         {
@@ -234,7 +260,9 @@ namespace UnitTests
             session.Close();
         }
 
-        // Exercise the session Ascii method with a 1-origin session.
+        /// <summary>
+        /// Exercise the session <see cref="Ascii"/> method with a 1-origin session.
+        /// </summary>
         [Test]
         public void TestAscii1()
         {
@@ -250,6 +278,9 @@ namespace UnitTests
             session.Close();
         }
 
+        /// <summary>
+        /// Exercise the session <see cref="Ebcdic"/> method.
+        /// </summary>
         [Test]
         public void TestEbcdic()
         {
@@ -277,7 +308,9 @@ namespace UnitTests
             session.Close();
         }
 
-        // Exercise the session Ebcdic method with a 1-origin session.
+        /// <summary>
+        /// Exercise the session <see cref="Ebcdic"/> method with a 1-origin session.
+        /// </summary>
         [Test]
         public void TestEbcdic1()
         {
@@ -293,28 +326,19 @@ namespace UnitTests
             session.Close();
         }
 
-        private void AssertByteVectorEqual(byte[,] b1, int row, byte[] b2)
-        {
-            Assert.AreEqual(b2.Length, b1.GetLength(1));
-            for (var i = 0; i < b2.Length; i++)
-            {
-                Assert.AreEqual(b2[i], b1[row, i]);
-            }
-        }
-
         /// <summary>
-        /// Exercise the EbcdicIoResult ToByteArray method.
+        /// Exercise the <see cref="EbcdicIoResult"/> <see cref="ToByteArray"/> method.
         /// </summary>
         [Test]
         public void TestEbcdicIoResult()
         {
             // Test basic parsing.
-            var eio = new EbcdicIoResult(new IoResult { Success = true, Result = new[] { "00 01 ff", "02 03 bb"}});
+            var eio = new EbcdicIoResult(new IoResult { Success = true, Result = new[] { "00 01 ff", "02 03 bb" } });
             var byteArray = eio.ToByteArray();
             Assert.AreEqual(2, byteArray.GetLength(0));
             Assert.AreEqual(3, byteArray.GetLength(1));
-            AssertByteVectorEqual(byteArray, 0, new byte[] { 0x0, 0x1, 0xff });
-            AssertByteVectorEqual(byteArray, 1, new byte[] { 0x2, 0x3, 0xbb });
+            this.AssertByteVectorEqual(byteArray, 0, new byte[] { 0x0, 0x1, 0xff });
+            this.AssertByteVectorEqual(byteArray, 1, new byte[] { 0x2, 0x3, 0xbb });
 
             // Test the parsing exception.
             eio = new EbcdicIoResult(new IoResult { Success = true, Result = new[] { "00 01 ff", "02 pow! bb" } });
@@ -371,6 +395,21 @@ namespace UnitTests
             Assert.AreEqual(session.RecentCommands[0].Result[0], "0 0");
 
             session.Close();
+        }
+
+        /// <summary>
+        /// Verify that two byte vectors are equal.
+        /// </summary>
+        /// <param name="b1">Byte array to test.</param>
+        /// <param name="row">Row in <paramref name="b1"/> to test</param>
+        /// <param name="b2">Array to compare to.</param>
+        private void AssertByteVectorEqual(byte[,] b1, int row, byte[] b2)
+        {
+            Assert.AreEqual(b2.Length, b1.GetLength(1));
+            for (var i = 0; i < b2.Length; i++)
+            {
+                Assert.AreEqual(b2[i], b1[row, i]);
+            }
         }
     }
 }

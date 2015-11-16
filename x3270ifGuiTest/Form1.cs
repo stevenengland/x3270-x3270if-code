@@ -23,54 +23,123 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Text.RegularExpressions;
-using System.Timers;
-using x3270if;
-using x3270if.Transfer;
-using x3270if.ProcessOptions;
-
 // GUI app to exercise the x3270if DLL.
 namespace x3270ifGuiTest
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Data;
+    using System.Drawing;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Windows.Forms;
+    using System.Text.RegularExpressions;
+    using System.Timers;
+    using X3270if;
+    using X3270if.Transfer;
+    using X3270if.ProcessOptions;
+
+    /// <summary>
+    /// GUI test for X3270if.
+    /// </summary>
     public partial class x3270ifGuiTest : Form
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="x3270ifGuiTest"/> class.
+        /// </summary>
         public x3270ifGuiTest()
         {
             InitializeComponent();
         }
 
-        // Actions for the background worker process
+        /// <summary>
+        /// Actions for the background worker process
+        /// </summary>
         private enum queryAction
         {
+            /// <summary>
+            /// Start running the query.
+            /// </summary>
             StartQuery,
+
+            /// <summary>
+            /// Start a file transfer.
+            /// </summary>
             StartTransfer,
+
+            /// <summary>
+            /// Time out the session.
+            /// </summary>
             Timeout,
+
+            /// <summary>
+            /// Stop the session.
+            /// </summary>
             Stop,
+
+            /// <summary>
+            /// Stop the app.
+            /// </summary>
             Quit
         }
 
         #region Worker status messages
+        /// <summary>
+        /// Worker status indications.
+        /// </summary>
         enum WorkerStatusIndication
         {
-            Idle,       // initial state
-            Waiting,    // waiting for host output
-            Found,      // got host output
-            Error,      // error occurred
-            Complete,   // query complete
-            Running,    // x3270if running or stopped
-            Connected,  // connected to host
-            LoggedOn,   // logged on to host
-            Processing, // processing request
-            Screen      // updated screen image
+            /// <summary>
+            /// Initial state.
+            /// </summary>
+            Idle,
+
+            /// <summary>
+            /// Waiting for host output.
+            /// </summary>
+            Waiting,
+
+            /// <summary>
+            /// Got host output.
+            /// </summary>
+            Found,
+
+            /// <summary>
+            /// An error occurred.
+            /// </summary>
+            Error,
+
+            /// <summary>
+            /// Query is complete.
+            /// </summary>
+            Complete,
+
+            /// <summary>
+            /// ws3270 running or stopped
+            /// </summary>
+            Running,
+
+            /// <summary>
+            /// Connected to host.
+            /// </summary>
+            Connected,
+
+            /// <summary>
+            /// Logged on to host.
+            /// </summary>
+            LoggedOn,
+
+            /// <summary>
+            /// Processing request.
+            /// </summary>
+            Processing,
+
+            /// <summary>
+            /// Updated screen image.
+            /// </summary>
+            Screen
         }
 
         class WorkerStatus
@@ -264,9 +333,9 @@ namespace x3270ifGuiTest
         /// <param name="d">Predicate.</param>
         /// <param name="secs">Seconds to wait.</param>
         /// <returns>True if predicate succeeds.</returns>
-        private bool RescanUntil(BackgroundWorker worker, Func<Boolean> d, int secs = 10)
+        private bool RescanUntil(BackgroundWorker worker, Func<bool> d, int secs = 10)
         {
-            return RescanUntil(worker, new List<Func<Boolean>> { d }, secs) >= 0;
+            return RescanUntil(worker, new List<Func<bool>> { d }, secs) >= 0;
         }
 
         /// <summary>
@@ -278,7 +347,7 @@ namespace x3270ifGuiTest
         /// <param name="d">Set of predicates.</param>
         /// <param name="secs">Seconds to wait.</param>
         /// <returns>True if predicate succeeds.</returns>
-        private int RescanUntil(BackgroundWorker worker, IEnumerable<Func<Boolean>> d, int secs = 10)
+        private int RescanUntil(BackgroundWorker worker, IEnumerable<Func<bool>> d, int secs = 10)
         {
             if (worker.CancellationPending)
             {
@@ -537,7 +606,7 @@ namespace x3270ifGuiTest
             }
 
             var username = usernameTextBox.Text.ToUpper();
-            List<string> lines = new List<String>();
+            var lines = new List<string>();
 
             // Do the rest of the work catching command errors (socket or emulator process failures).
             try
@@ -566,8 +635,8 @@ namespace x3270ifGuiTest
                 query = query.ToUpper();
                 session.String(query + "\n");
 
-                // This will (artificially) trigger an X3270ifCommandException.
-                //session.Io("woof");
+                //// This will (artificially) trigger an X3270ifCommandException.
+                // session.Io("woof");
 
                 // Look for:
                 //  query echoed on line 1
@@ -654,7 +723,7 @@ namespace x3270ifGuiTest
         /// </summary>
         /// <param name="groupBox">Box to search; must contain <see cref="RadioButton"/>s.</param>
         /// <returns>Nullable Enum value.</returns>
-        private Nullable<T> checkedTag<T>(GroupBox groupBox) where T : struct, IConvertible
+        private T? checkedTag<T>(GroupBox groupBox) where T : struct, IConvertible
         {
             foreach (var control in groupBox.Controls)
             {
@@ -1028,8 +1097,8 @@ namespace x3270ifGuiTest
         #region GUI thread event handlers
         private void x3270ifGuiTest_Load(object sender, EventArgs e)
         {
-            stateLabel.Text = "";
-            resultLabel.Text = "";
+            stateLabel.Text = string.Empty;
+            resultLabel.Text = string.Empty;
 
             // Set up the idle timer.
             timer.Elapsed += timer_Elapsed;

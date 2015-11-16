@@ -23,16 +23,26 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Common utility functions.
     /// </summary>
     public static class Util
     {
+        /// <summary>
+        /// The name of the port environment variable.
+        /// </summary>
+        public const string X3270Port = "X3270PORT";
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to send debug output to the console.
+        /// </summary>
+        public static bool ConsoleDebug { get; set; }
+
         /// <summary>
         /// Return a string by building up a result with a separator. An incremental form of <see cref="string.Join(string,string[])"/>.
         /// </summary>
@@ -58,19 +68,16 @@ namespace x3270if
                 // Nothing on the right. Return nothing.
                 return string.Empty;
             }
+
             if (string.IsNullOrEmpty(left))
             {
                 // Something on the right, nothing on the left. Return the right.
                 return right;
             }
+
             // Something on both the left and right. Return the separator plus the right.
             return separator + right;
         }
-
-        /// <summary>
-        /// If true, send debug output to the console.
-        /// </summary>
-        public static bool ConsoleDebug;
 
         /// <summary>
         /// Conditionally write debug output to the console.
@@ -83,14 +90,17 @@ namespace x3270if
             {
                 var text = string.Format(format, args);
                 var now = DateTime.Now;
-                Console.WriteLine("{0}{1:D2}{2:D2}:{3:D2}{4:D2}{5:D2}.{6:D4} {7}",
-                    now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second, now.Millisecond, text);
+                Console.WriteLine(
+                    "{0}{1:D2}{2:D2}:{3:D2}{4:D2}{5:D2}.{6:D4} {7}",
+                    now.Year,
+                    now.Month,
+                    now.Day,
+                    now.Hour,
+                    now.Minute,
+                    now.Second,
+                    now.Millisecond,
+                    text);
             }
         }
-
-        /// <summary>
-        /// The name of the port environment variable.
-        /// </summary>
-        public const string x3270Port = "X3270PORT";
     }
 }

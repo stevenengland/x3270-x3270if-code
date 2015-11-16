@@ -23,50 +23,40 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using x3270if;
-using x3270if.Attributes;
-using System.IO;
-
 namespace UnitTests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    using NUnit.Framework;
+
+    using X3270if;
+    using X3270if.Attributes;
+
     /// <summary>
     /// Tests for accessory methods (methods that help process the output of basic features).
     /// </summary>
     [TestFixture]
     public class OuterTests
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OuterTests"/> class.
+        /// </summary>
         public OuterTests()
         {
         }
 
+        /// <summary>
+        /// Test set-up.
+        /// </summary>
         [TestFixtureSetUp]
         public void Setup()
         {
             Util.ConsoleDebug = false;
-        }
-
-        /// <summary>
-        /// Call DumpAsciiConsole, redirecting the console to NUL: unless ConsoleDebug is set.
-        /// </summary>
-        /// <param name="b">Display buffer.</param>
-        private static void WrappedDumpAsciiBuffer(DisplayBuffer b)
-        {
-            var oldOut = Console.Out;
-            if (!Util.ConsoleDebug)
-            {
-                Console.SetOut(new StreamWriter(Stream.Null));
-            }
-            b.DumpAsciiConsole();
-            if (!Util.ConsoleDebug)
-            {
-                Console.SetOut(oldOut);
-            }
         }
 
         /// <summary>
@@ -79,7 +69,8 @@ namespace UnitTests
             var rb = new Session.ReadBufferIoResult
             {
                 Success = true,
-                Result = new string[] {
+                Result = new string[]
+                {
                     "SF(c0=e8) 41 4c 4c 20 20 20 20 20 20 43 48 41 52 53 20 20 20 20 41 31 20 20 46 20 38 30 20 20 54 72 75 6e 63 3d 38 30 20 53 69 7a 65 3d 31 37 20 4c 69 6e 65 3d 30 20 43 6f 6c 3d 31 20 41 6c 74 3d 30 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 SF(c0=e8,42=f2)",
                     "43 41 53 45 20 55 50 50 45 52 20 52 45 53 50 45 43 54 20 20 20 20 20 54 41 42 20 6b 65 79 20 69 73 20 50 46 34 20 6f 72 20 50 46 31 36 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 SF(c0=e8,42=f2)",
                     "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 SF(c0=e0)",
@@ -167,7 +158,8 @@ namespace UnitTests
             // Check some DBCS.
             rb = new Session.ReadBufferIoResult
             {
-                Result = new string[] {
+                Result = new string[]
+                {
                     "SF(c0=e8) 4d 41 54 54 45 53 SF(c0=e0) 52 65 61 64 79 3b 20 54 3d 30 2e 30 35 2f 30 2e 30 35 20 30 31 3a 32 36 3a 33 37 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
                     "74 79 70 65 20 63 68 69 6e 65 73 65 20 66 69 6c 65 20 61 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
                     "20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
@@ -209,6 +201,7 @@ namespace UnitTests
 
             // Verify basic ASCII-7 translation and translation of SFs to blanks.
             Assert.AreEqual(" MATTES ", asAscii[0].Substring(0, 8));
+
             // Verify DBCS.
             Assert.AreEqual("流六留", asAscii[3].Substring(23, 3));
 
@@ -216,7 +209,8 @@ namespace UnitTests
             rb = new Session.ReadBufferIoResult
             {
                 Success = true,
-                Result = new string[] {
+                Result = new string[]
+                {
                     "40 40 40 40 40 SF(c0=e0,45=f1) 40 40 48 49 50 SF(c0=cc,cf=cc,45=3d) 40 40 40 GE(F0) 40",
                 },
                 Command = "ReadBuffer(Ebcdic)",
@@ -242,7 +236,8 @@ namespace UnitTests
             rb = new Session.ReadBufferIoResult
             {
                 Success = true,
-                Result = new string[] {
+                Result = new string[]
+                {
                     // First 5 positions are a wrapped field from the end of the buffer.
                     // Position 5 is an SFE, protected, blue background
                     // Position 7 has an SA changing the background to red
@@ -304,7 +299,8 @@ namespace UnitTests
             rb = new Session.ReadBufferIoResult
             {
                 Success = true,
-                Result = new string[] {
+                Result = new string[]
+                {
                     "SF(c0=e0) 42 SA(45=f0) 42 SA(45=f1) 42 SA(45=f2) 42 SA(45=f3) 42 SA(45=f4) 42 SA(45=f5) 42 SA(45=f6) 42 SA(45=f7) 42 SA(45=f8) 42 SA(45=f9) 42 SA(45=fa) 42 SA(45=fb) 42 SA(45=fc) 42 SA(45=fd) 42 SA(45=fe) 42 SA(45=ff) 42"
                 },
                 Command = "ReadBuffer(Ascii)",
@@ -320,7 +316,7 @@ namespace UnitTests
         }
 
         /// <summary>
-        /// Exercise DisplayBuffer.Ascii.
+        /// Exercise <see cref="DisplayBuffer.Ascii"/>
         /// </summary>
         [Test]
         public void TestDisplayBufferAscii()
@@ -364,7 +360,6 @@ namespace UnitTests
             Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, -1, 1, 2));
             Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(0, 999, 1, 2));
 
-
             rb = new Session.ReadBufferIoResult
             {
                 Success = true,
@@ -381,7 +376,7 @@ namespace UnitTests
         }
 
         /// <summary>
-        /// Exercise DisplayBuffer.Ascii in 1-origin mode.
+        /// Exercise <see cref="DisplayBuffer.Ascii"/> in 1-origin mode.
         /// </summary>
         [Test]
         public void TestDisplayBufferAscii1()
@@ -424,14 +419,17 @@ namespace UnitTests
             Assert.Throws<ArgumentOutOfRangeException>(() => b.Ascii(1, 999, 1, 2));
         }
 
-        // Test the Coordinate class.
+        /// <summary>
+        /// Test the Coordinate class.
+        /// </summary>
         [Test]
         public void TestDisplayBufferCoordinate()
         {
             var rb = new Session.ReadBufferIoResult
             {
                 Success = true,
-                Result = new string[] {
+                Result = new string[]
+                {
                     "SF(c0=e0) 41 42 43 44 45 46 SF(c0=e0) 47 48 49 4a 4b",
                     "SF(c0=e0) 61 62 63 64 65 66 SF(c0=e0) 67 68 69 6a 6b"
                 },
@@ -487,14 +485,17 @@ namespace UnitTests
             Assert.AreEqual(13, f.BufferAddress);
         }
 
-        // Test the Coordinate class with 1-origin.
+        /// <summary>
+        /// Test the Coordinate class with 1-origin.
+        /// </summary>
         [Test]
         public void TestDisplayBufferCoordinate1()
         {
             var rb = new Session.ReadBufferIoResult
             {
                 Success = true,
-                Result = new string[] {
+                Result = new string[]
+                {
                     "SF(c0=e0) 41 42 43 44 45 46 SF(c0=e0) 47 48 49 4a 4b",
                     "SF(c0=e0) 61 62 63 64 65 66 SF(c0=e0) 67 68 69 6a 6b"
                 },
@@ -520,14 +521,17 @@ namespace UnitTests
             Assert.AreEqual(2, e.Row);
         }
 
-        // Exercise the AsciiField method of a DisplayBuffer.
+        /// <summary>
+        /// Exercise the <see cref="AsciiField"/> method of a <see cref="DisplayBuffer"/>.
+        /// </summary>
         [Test]
         public void TestDisplayBufferAsciiField()
         {
             var rb = new Session.ReadBufferIoResult
             {
                 Success = true,
-                Result = new string[] {
+                Result = new string[]
+                {
                     "SF(c0=e0) 41 42 43 44 45 46 SF(c0=e0) 47 48 49 4a 4b",
                     "SF(c0=e0) 61 62 63 64 65 66 SF(c0=e0) 67 68 69 6a 6b"
                 },
@@ -546,7 +550,8 @@ namespace UnitTests
             rb = new Session.ReadBufferIoResult
             {
                 Success = true,
-                Result = new string[] {
+                Result = new string[]
+                {
                     "41 42 43 44 45 46 47 48 49 4a 4b",
                     "61 62 63 64 65 66 67 68 69 6a 6b"
                 },
@@ -563,14 +568,17 @@ namespace UnitTests
             Assert.AreEqual(22, b2.FieldLength(0, 0));
         }
 
-        // Exercise the AsciiField method of a DisplayBuffer with DBCS text.
+        /// <summary>
+        /// Exercise the <see cref="AsciiField"/> method of a <see cref="DisplayBuffer"/> with DBCS text.
+        /// </summary>
         [Test]
         public void TestDisplayBufferAsciiFieldDbcs()
         {
             var rb = new Session.ReadBufferIoResult
             {
                 Success = true,
-                Result = new string[] {
+                Result = new string[]
+                {
                     "SF(c0=e0) 30 31 0e e6b581 - e585ad - e79599 - 0f SF(c0=e0) 0e e58898 - e7a1ab - e69fb3 - e99986 - e581bb - e8928c - e798a4 - 0f 47 48",
                     "SF(c0=e0) 61 62 63 64 65 66 SF(c0=e0) 67 68 69 6a 6b 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
                 },
@@ -598,6 +606,25 @@ namespace UnitTests
             // Verify that a rectangle will not wrap.
             rectangle = b.Ascii(0, 25, 1, 5);
             Assert.AreEqual(4, rectangle[0].Length);
+        }
+
+        /// <summary>
+        /// Call <see cref="DumpAsciiConsole"/>, redirecting the console to NUL: unless ConsoleDebug is set.
+        /// </summary>
+        /// <param name="b">Display buffer.</param>
+        private static void WrappedDumpAsciiBuffer(DisplayBuffer b)
+        {
+            var oldOut = Console.Out;
+            if (!Util.ConsoleDebug)
+            {
+                Console.SetOut(new StreamWriter(Stream.Null));
+            }
+
+            b.DumpAsciiConsole();
+            if (!Util.ConsoleDebug)
+            {
+                Console.SetOut(oldOut);
+            }
         }
     }
 }

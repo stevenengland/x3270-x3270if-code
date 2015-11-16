@@ -17,6 +17,12 @@
             {
                 components.Dispose();
             }
+
+            if (disposing && session != null)
+            {
+                session.Close();
+            }
+
             base.Dispose(disposing);
         }
 

@@ -23,74 +23,81 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Net;
-using System.Net.Sockets;
-using System.IO;
-using System.Linq;
-using x3270if;
-
 namespace Mock
 {
+    using System;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using X3270if;
+
     /// <summary>
     /// A mock ws3270 server. Can be used as a task within a test, or as
     /// the core of a mock ws3270.exe process.
     /// </summary>
     public class Server
     {
-        // Set to true to make all commands fail.
-        public bool AllFail;
-
-        // Set to nonzero to make the next command hang.
-        public int HangMsec;
-
-        // Set to a non-UTF-8 code page (just what's returned by Query(), for now).
-        public string CodePage;
-
-        // Set to make Query(CodePage) fail.
-        public bool CodePageFail;
-
-        // The last command is stored here.
-        public string LastCommandProcessed;
-
-        // Set to make the session appear connected or not.
-        public bool Connected = true;
+        /// <summary>
+        /// Backing field for <see cref="Connected"/>.
+        /// </summary>
+        private bool connected = true;
 
         /// <summary>
-        /// Write a prompt to the stream.
+        /// Gets or sets a value indicating whether to make all commands fail.
         /// </summary>
-        /// <param name="streamWriter">StreamWriter to write to.</param>
-        /// <param name="success">True if success, false if failure.</param>
-        private void Prompt(StreamWriter streamWriter, bool success)
-        {
-            streamWriter.WriteLine("U F U {0} {1} 2 24 80 0 0 0x0 -",
-                Connected ? "C(fakehost.com)" : "N",
-                Connected ? "I" : "N");
-            streamWriter.WriteLine(success ? "ok": "error");
-            streamWriter.Flush();
-        }
+        public bool AllFail { get; set; }
 
         /// <summary>
-        /// Fail a command with some canned data.
+        /// Gets or sets the number of milliseconds to make the next command hang.
         /// </summary>
-        /// <param name="streamWriter">StreamWrite to write to.</param>
-        private void Fail(StreamWriter streamWriter)
+        public int HangMsec { get; set; }
+
+        /// <summary>
+        /// Gets or sets the workstation code page, if not UTF-8. (Just what is returned by
+        /// the Query action, for now.)
+        /// </summary>
+        public string CodePage { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to make the Query CodePage action fail.
+        /// </summary>
+        public bool CodePageFail { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last command.
+        /// </summary>
+        public string LastCommandProcessed { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the session appears to be connected.
+        /// </summary>
+        public bool Connected
         {
-            streamWriter.WriteLine("data: failed");
-            Prompt(streamWriter, false);
+            get
+            {
+                return this.connected;
+            }
+
+            set
+            {
+                this.connected = value;
+            }
         }
 
         /// <summary>
         /// Mock ws3270 server, given a listening socket.
+        /// </summary>
         /// <param name="listeningSocket">Socket to accept connection on and close.</param>
         public void Ws3270(Socket listeningSocket)
         {
             var connection = listeningSocket.Accept();
             listeningSocket.Close();
-            Ws3270Common(connection);
+            this.Ws3270Common(connection);
         }
 
         /// <summary>
@@ -104,7 +111,7 @@ namespace Mock
             listener.Start();
             var connection = listener.AcceptSocket();
             listener.Stop();
-            Ws3270Common(connection);
+            this.Ws3270Common(connection);
         }
 
         /// <summary>
@@ -115,7 +122,7 @@ namespace Mock
         ///         This command will fail.
         ///     Lines {count}
         ///         Succeeds with {count} lines of output.
-        ///     Hang {msec}
+        ///     Hang {milliseconds}
         ///         Wait 5s before responding.
         ///     Quit
         ///         Exit the server.
@@ -140,19 +147,19 @@ namespace Mock
                 while (!dead && (line = streamReader.ReadLine()) != null)
                 {
                     // Remember the last command processed.
-                    LastCommandProcessed = line;
+                    this.LastCommandProcessed = line;
 
                     // If AllFail is set, fail.
-                    if (AllFail)
+                    if (this.AllFail)
                     {
-                        Fail(streamWriter);
+                        this.Fail(streamWriter);
                         continue;
                     }
 
                     // If HangMsec is set, wait.
-                    if (HangMsec > 0)
+                    if (this.HangMsec > 0)
                     {
-                        Thread.Sleep(HangMsec);
+                        Thread.Sleep(this.HangMsec);
                     }
 
                     // Split the command and arguments into tokens.
@@ -167,38 +174,39 @@ namespace Mock
                     {
                         case "Fail":
                             // Fail on purpose.
-                            Fail(streamWriter);
+                            this.Fail(streamWriter);
                             break;
                         case "Query":
                             if (token.Length == 2 && token[1] == "LocalEncoding")
                             {
-                                if (!CodePageFail)
+                                if (!this.CodePageFail)
                                 {
                                     // Respond with our local encoding.
-                                    streamWriter.WriteLine("data: " + ((CodePage != null) ? CodePage : "UTF-8"));
-                                    Prompt(streamWriter, true);
+                                    streamWriter.WriteLine("data: " + ((this.CodePage != null) ? this.CodePage : "UTF-8"));
+                                    this.Prompt(streamWriter, true);
                                 }
                                 else
                                 {
                                     streamWriter.WriteLine("data: unknown query");
-                                    Prompt(streamWriter, false);
+                                    this.Prompt(streamWriter, false);
                                 }
                             }
                             else if (token.Length == 2 && token[1] == "Cursor")
                             {
                                 streamWriter.WriteLine("data: 0 0");
-                                Prompt(streamWriter, true);
+                                this.Prompt(streamWriter, true);
                             }
                             else if (token.Length == 2 && Enum.IsDefined(typeof(QueryType), token[1]))
                             {
                                 streamWriter.WriteLine("data: xxx");
-                                Prompt(streamWriter, true);
+                                this.Prompt(streamWriter, true);
                             }
                             else
                             {
                                 streamWriter.WriteLine("data: unknown query");
-                                Prompt(streamWriter, false);
+                                this.Prompt(streamWriter, false);
                             }
+
                             break;
                         case "Lines":
                             // Return n lines of data.
@@ -207,20 +215,23 @@ namespace Mock
                             {
                                 lineCount = 1;
                             }
+
                             for (int lineNum = 1; lineNum <= lineCount; lineNum++)
                             {
                                 streamWriter.WriteLine(string.Format("Line {0}", lineNum));
                             }
-                            Prompt(streamWriter, true);
+
+                            this.Prompt(streamWriter, true);
                             break;
                         case "ReplyWith":
                             // Echo back the remainder of the line as data, with parens removed and commas translated to spaces.
-                            streamWriter.WriteLine("data: " + String.Join(" ", token.Skip(1).ToArray()));
+                            streamWriter.WriteLine("data: " + string.Join(" ", token.Skip(1).ToArray()));
                             if (line.Length > token[0].Length)
                             {
                                 streamWriter.WriteLine("data:" + line.Substring(token[0].Length));
                             }
-                            Prompt(streamWriter, true);
+
+                            this.Prompt(streamWriter, true);
                             break;
                         case "Hang":
                             // Wait before replying.
@@ -229,8 +240,9 @@ namespace Mock
                             {
                                 sleepMsec = 5000;
                             }
+
                             Thread.Sleep(sleepMsec);
-                            Prompt(streamWriter, true);
+                            this.Prompt(streamWriter, true);
                             break;
                         case "Quit":
                             // Exit the server without replying.
@@ -238,12 +250,12 @@ namespace Mock
                             break;
                         case "ReplyQuit":
                             // Exit the server with replying.
-                            Prompt(streamWriter, true);
+                            this.Prompt(streamWriter, true);
                             dead = true;
                             break;
                         default:
                             // Everything else succeeds.
-                            Prompt(streamWriter, true);
+                            this.Prompt(streamWriter, true);
                             break;
                     }
                 }
@@ -253,6 +265,31 @@ namespace Mock
             }
 
             connection.Close();
+        }
+
+        /// <summary>
+        /// Write a prompt to the stream.
+        /// </summary>
+        /// <param name="streamWriter">StreamWriter to write to.</param>
+        /// <param name="success">True if success, false if failure.</param>
+        private void Prompt(StreamWriter streamWriter, bool success)
+        {
+            streamWriter.WriteLine(
+                "U F U {0} {1} 2 24 80 0 0 0x0 -",
+                this.Connected ? "C(fakehost.com)" : "N",
+                this.Connected ? "I" : "N");
+            streamWriter.WriteLine(success ? "ok" : "error");
+            streamWriter.Flush();
+        }
+
+        /// <summary>
+        /// Fail a command with some canned data.
+        /// </summary>
+        /// <param name="streamWriter">StreamWrite to write to.</param>
+        private void Fail(StreamWriter streamWriter)
+        {
+            streamWriter.WriteLine("data: failed");
+            this.Prompt(streamWriter, false);
         }
     }
 }

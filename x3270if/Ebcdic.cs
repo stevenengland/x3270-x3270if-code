@@ -23,58 +23,62 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Threading.Tasks;
+
     /// <summary>
-    /// Result of an Ebcdic method.
+    /// Result of an <c>Ebdcic</c> method call.
     /// </summary>
     public class EbcdicIoResult : IoResult
     {
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="EbcdicIoResult"/> class.
         /// </summary>
-        /// <param name="r">IoResult from an Ebcdic call.</param>
+        /// <param name="r">Result from an <c>Ebcdic</c> call.</param>
         public EbcdicIoResult(IoResult r)
             : base(r)
         {
         }
 
         /// <summary>
-        /// Translate the result of an Ebcdic action into a byte array.
+        /// Translate the result of an <c>Ebcdic</c> call into a byte array.
         /// </summary>
         /// <returns>Two-dimensional array of bytes.</returns>
         public byte[,] ToByteArray()
         {
-            if (!Success)
+            if (!this.Success)
             {
                 return null;
             }
+
             // The Result from the emulator is an array of space-separated hex strings: 00 0e f0 f1, etc.
-            var result = new byte[Result.GetLength(0), (Result[0].Length + 1) / 3];
-            for (int row = 0; row < Result.GetLength(0); row++)
+            var result = new byte[this.Result.GetLength(0), (this.Result[0].Length + 1) / 3];
+            for (int row = 0; row < this.Result.GetLength(0); row++)
             {
                 int column = 0;
-                foreach (var hex in Result[row].Split(' '))
+                foreach (var hex in this.Result[row].Split(' '))
                 {
                     byte b;
                     if (!byte.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out b))
                     {
                         throw new InvalidOperationException("Bad EBCDIC hex data from host");
                     }
+
                     result[row, column++] = b;
                 }
             }
+
             return result;
         }
     }
 
+    /// <summary>
+    /// Session class.
+    /// </summary>
     public partial class Session
     {
- 
-
         /// <summary>
         /// Return the entire 3270 display buffer as EBCDIC data (hexadecimal values encoded in strings). Async version.
         /// </summary>
@@ -83,7 +87,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<EbcdicIoResult> EbcdicAsync()
         {
-            return new EbcdicIoResult(await IoAsync("Ebcdic()").ConfigureAwait(continueOnCapturedContext: false));
+            return new EbcdicIoResult(await this.IoAsync("Ebcdic()").ConfigureAwait(continueOnCapturedContext: false));
         }
 
         /// <summary>
@@ -95,57 +99,61 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<EbcdicIoResult> EbcdicAsync(int length)
         {
-            return new EbcdicIoResult(await IoAsync("Ebcdic(" + length + ")").ConfigureAwait(continueOnCapturedContext: false));
+            return new EbcdicIoResult(await this.IoAsync("Ebcdic(" + length + ")").ConfigureAwait(continueOnCapturedContext: false));
         }
 
         /// <summary>
         /// Return the 3270 display buffer as EBCDIC data (hexadecimal values encoded in strings), starting at the specified coordinates. Async version.
         /// </summary>
-        /// <param name="row">Starting row, using session <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Starting column, using session <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Starting row, using session <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using session <see cref="X3270if.Config.Origin"/>.</param>
         /// <param name="length">Number of characters.</param>
         /// <returns>Success/failure, one row of text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="X3270if.Config.Origin"/>.</exception>
         public async Task<EbcdicIoResult> EbcdicAsync(int row, int column, int length)
         {
-            if (row < Config.Origin)
+            if (row < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("row");
             }
-            if (column < Config.Origin)
+
+            if (column < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("column");
             }
-            return new EbcdicIoResult(await IoAsync(
-                string.Format("Ebcdic({0},{1},{2})", row - Config.Origin, column - Config.Origin, length))
+
+            return new EbcdicIoResult(await this.IoAsync(
+                string.Format("Ebcdic({0},{1},{2})", row - this.Config.Origin, column - this.Config.Origin, length))
                 .ConfigureAwait(continueOnCapturedContext: false));
         }
 
         /// <summary>
         /// Return the 3270 display buffer as EBCDIC data (hexadecimal values encoded in strings) in an array. Async version.
         /// </summary>
-        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Starting row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
         /// <param name="rows">Number of rows.</param>
         /// <param name="columns">Number of columns.</param>
         /// <returns>Success/failure, array of text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>        
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="X3270if.Config.Origin"/>.</exception>        
         public async Task<EbcdicIoResult> EbcdicAsync(int row, int column, int rows, int columns)
         {
-            if (row < Config.Origin)
+            if (row < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("row");
             }
-            if (column < Config.Origin)
+
+            if (column < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("column");
             }
-            return new EbcdicIoResult(await IoAsync(
-                string.Format("Ebcdic({0},{1},{2},{3})", row - Config.Origin, column - Config.Origin, rows, columns))
+
+            return new EbcdicIoResult(await this.IoAsync(
+                string.Format("Ebcdic({0},{1},{2},{3})", row - this.Config.Origin, column - this.Config.Origin, rows, columns))
                 .ConfigureAwait(continueOnCapturedContext: false));
         }
 
@@ -159,7 +167,7 @@ namespace x3270if
         {
             try
             {
-                return EbcdicAsync().Result;
+                return this.EbcdicAsync().Result;
             }
             catch (AggregateException e)
             {
@@ -178,7 +186,7 @@ namespace x3270if
         {
             try
             {
-                return EbcdicAsync(length).Result;
+                return this.EbcdicAsync(length).Result;
             }
             catch (AggregateException e)
             {
@@ -189,18 +197,18 @@ namespace x3270if
         /// <summary>
         /// Return a region of the 3270 display buffer as EBCDIC data (hexadecimal values encoded in strings), starting at the specified coordinates.
         /// </summary>
-        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Starting row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
         /// <param name="length">Number of characters to return.</param>
         /// <returns>Success/failure, one row of text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>        
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="X3270if.Config.Origin"/>.</exception>        
         public EbcdicIoResult Ebcdic(int row, int column, int length)
         {
             try
             {
-                return EbcdicAsync(row, column, length).Result;
+                return this.EbcdicAsync(row, column, length).Result;
             }
             catch (AggregateException e)
             {
@@ -218,12 +226,12 @@ namespace x3270if
         /// <returns>Success/failure, array of text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="X3270if.Config.Origin"/>.</exception>
         public EbcdicIoResult Ebcdic(int row, int column, int rows, int columns)
         {
             try
             {
-                return EbcdicAsync(row, column, rows, columns).Result;
+                return this.EbcdicAsync(row, column, rows, columns).Result;
             }
             catch (AggregateException e)
             {

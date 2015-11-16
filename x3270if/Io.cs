@@ -23,68 +23,79 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Net;
-using System.Net.Sockets;
-using System.Diagnostics;
-using System.Linq;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Definitions of the fields on the status line.
     /// </summary>
     public enum StatusLineField
     {
         /// <summary>
-        /// Keyboard: (U)nlocked, (L)ocked, (E)rror lock
+        /// Keyboard: unlocked (U), locked (L), error lock (E)
         /// </summary>
         KeyboardLock,
+
         /// <summary>
-        /// Formatting: (F)ormatted, (U)nformatted
+        /// Formatting: formatted (F), unformatted (U)
         /// </summary>
         Formatting,
+
         /// <summary>
-        /// Protection status of current field: (U)nprotected, (P)rotected
+        /// Protection status of current field: unprotected (U), protected (P)
         /// </summary>
         Protection,
+
         /// <summary>
-        /// Connection status: (N)ot connected, (C)onnected, plus hostname
+        /// Connection status: not connected (N), connected (C), plus hostname
         /// </summary>
         Connection,
+
         /// <summary>
-        /// Mode: (N)ot connected, connected in NVT (C)haracter mode,
-        ///  connected in NVT (L)ine mode, 3270 negotiation (P)ending,
-        ///  connected (I)n 3270 mode.
+        /// Mode: not connected (N), connected in NVT character mode (C),
+        ///  connected in NVT line mode (L), 3270 negotiation pending (P),
+        ///  connected in 3270 mode (I).
         /// </summary>
         Mode,
+
         /// <summary>
         /// Model number (2/3/4/5)
         /// </summary>
         Model,
+
         /// <summary>
         /// Number of rows on current screen.
         /// </summary>
         Rows,
+
         /// <summary>
         /// Number of columns on current screen.
         /// </summary>
         Columns,
+
         /// <summary>
         /// Row containing cursor.
         /// </summary>
         CursorRow,
+
         /// <summary>
         /// Column containing cursor.
         /// </summary>
         CursorColumn,
+
         /// <summary>
         /// X11 window ID of main window, of 0 if not applicable
         /// </summary>
         WindowID,
+
         /// <summary>
         /// Time that last command took to execute, or -
         /// </summary>
@@ -97,37 +108,7 @@ namespace x3270if
     public class IoResult
     {
         /// <summary>
-        /// True if the operation succeeded.
-        /// </summary>
-        public bool Success;
-
-        /// <summary>
-        /// Output from the operation, one element per line.
-        /// If the operation failed, this may contain error text.
-        /// </summary>
-        public string[] Result;
-
-        /// <summary>
-        /// The command that was sent.
-        /// </summary>
-        public string Command;
-
-        /// <summary>
-        /// The status line.
-        /// </summary>
-        public string StatusLine;
-
-        /// <summary>
-        /// How long it took to execute.
-        /// </summary>
-        public TimeSpan ExecutionTime;
-
-        /// <summary>
-        /// The encoding of the result.
-        /// </summary>
-        public Encoding Encoding;
-
-        /// <summary>
+        /// Initializes a new instance of the <see cref="IoResult"/> class.
         /// Empty constructor.
         /// </summary>
         public IoResult()
@@ -135,72 +116,82 @@ namespace x3270if
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="IoResult"/> class.
         /// Cloning constructor.
         /// </summary>
         /// <param name="r">IoResult to clone.</param>
         public IoResult(IoResult r)
         {
-            Success = r.Success;
-            Result = r.Result;
-            Command = r.Command;
-            StatusLine = r.StatusLine;
-            ExecutionTime = r.ExecutionTime;
-            Encoding = r.Encoding;
+            this.Success = r.Success;
+            this.Result = r.Result;
+            this.Command = r.Command;
+            this.StatusLine = r.StatusLine;
+            this.ExecutionTime = r.ExecutionTime;
+            this.Encoding = r.Encoding;
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the operation succeeded.
+        /// </summary>
+        public bool Success { get; set; }
+
+        /// <summary>
+        /// Gets or sets the output from the operation, one element per line.
+        /// If the operation failed, this may contain error text.
+        /// </summary>
+        public string[] Result { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command that was sent.
+        /// </summary>
+        public string Command { get; set; }
+
+        /// <summary>
+        /// Gets or sets the status line.
+        /// </summary>
+        public string StatusLine { get; set; }
+
+        /// <summary>
+        /// Gets or sets how long it took to execute.
+        /// </summary>
+        public TimeSpan ExecutionTime { get; set; }
+
+        /// <summary>
+        /// Gets or sets the encoding of the result.
+        /// </summary>
+        public Encoding Encoding { get; set; }
     }
 
+    /// <summary>
+    /// Session class.
+    /// </summary>
     public partial class Session
     {
         /// <summary>
-        /// Check for a force-modify failure.
-        /// </summary>
-        /// <returns>Bad IoResult if a modify command should fail.</returns>
-        private IoResult ForceModifyFailure()
-        {
-            switch (Config.ModifyFail)
-            {
-                case ModifyFailType.Never:
-                    break;
-                case ModifyFailType.RequireConnection:
-                    if (!HostConnected)
-                    {
-                        return new IoResult { Success = false, Result = new[] { "Not connected" } };
-                    }
-                    break;
-                case ModifyFailType.Require3270:
-                    if (StatusField(StatusLineField.Mode)[0] != 'I')
-                    {
-                        return new IoResult { Success = false, Result = new[] { "Not in 3270 mode" } };
-                    }
-                    break;
-            }
-
-            // Nothing to fail.
-            return new IoResult { Success = true };
-        }
-
-        /// <summary>
         /// Processing states for the emulator while a command is in progress.
         /// </summary>
-        enum IoStates
+        private enum IoStates
         {
             /// <summary>
             /// Waiting for completion.
             /// </summary>
             Waiting,
+
             /// <summary>
             /// Got the 'ok' prompt.
             /// </summary>
             Succeeded,
+
             /// <summary>
             /// Got the 'error' prompt.
             /// </summary>
             Failed,
+
             /// <summary>
             /// Timed out or got EOF.
             /// </summary>
             Crashed
-        };
+        }
 
         /// <summary>
         /// Basic emulator I/O function, asynchronous version.
@@ -220,7 +211,7 @@ namespace x3270if
         {
             string[] reply = null;
 
-            if (!EmulatorRunning)
+            if (!this.EmulatorRunning)
             {
                 throw new InvalidOperationException("Not running");
             }
@@ -228,13 +219,14 @@ namespace x3270if
             // If this is a screen-modifying command, see if a forced failure is in order.
             if (isModify)
             {
-                var result = ForceModifyFailure();
+                var result = this.ForceModifyFailure();
                 if (!result.Success)
                 {
-                    if (ExceptionMode)
+                    if (this.ExceptionMode)
                     {
                         throw new X3270ifCommandException(result.Result[0]);
                     }
+
                     return result;
                 }
             }
@@ -248,7 +240,7 @@ namespace x3270if
             Util.Log("Io: command '{0}'", command);
 
             // Write out the command.
-            byte[] nl = Encoding.GetBytes(command + "\n");
+            byte[] nl = this.encoding.GetBytes(command + "\n");
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -260,19 +252,18 @@ namespace x3270if
 
             try
             {
-                var ns = client.GetStream();
+                var ns = this.Client.GetStream();
                 await ns.WriteAsync(nl, 0, nl.Length).ConfigureAwait(continueOnCapturedContext: false);
 
                 // Create a task to time out the read operations after <n> seconds, in case the emulator hangs or we get confused.
-
-                int thisTimeoutMsec = timeoutMsec ?? Config.DefaultTimeoutMsec;
+                int thisTimeoutMsec = timeoutMsec ?? this.Config.DefaultTimeoutMsec;
                 if (thisTimeoutMsec > 0)
                 {
                     timeoutTask = Task.Run(async delegate
                     {
                         // When the timeout expires, close the socket.
                         await Task.Delay(thisTimeoutMsec, tokenSource.Token).ConfigureAwait(continueOnCapturedContext: false);
-                        client.Close();
+                        this.Client.Close();
                     });
                 }
 
@@ -286,7 +277,8 @@ namespace x3270if
                         state = IoStates.Crashed;
                         break;
                     }
-                    accum.Append(Encoding.GetString(buf, 0, nr));
+
+                    accum.Append(this.encoding.GetString(buf, 0, nr));
                     if (accum.ToString().EndsWith("\nok\n"))
                     {
                         state = IoStates.Succeeded;
@@ -363,10 +355,10 @@ namespace x3270if
                 Array.Resize(ref reply, nlines - 3);
                 for (int i = 0; i < reply.Length; i++)
                 {
-                    const string dataPrefix = "data: ";
-                    if (reply[i].StartsWith(dataPrefix))
+                    const string DataPrefix = "data: ";
+                    if (reply[i].StartsWith(DataPrefix))
                     {
-                        reply[i] = reply[i].Substring(dataPrefix.Length);
+                        reply[i] = reply[i].Substring(DataPrefix.Length);
                     }
                 }
             }
@@ -374,9 +366,9 @@ namespace x3270if
             // In Exception Mode, throw a descriptive error if anything ever fails.
             try
             {
-                if (ExceptionMode && state != IoStates.Succeeded)
+                if (this.ExceptionMode && state != IoStates.Succeeded)
                 {
-                    var commandAndArgs = command.Split(new char[] {' ', '(', ')'}, StringSplitOptions.RemoveEmptyEntries);
+                    var commandAndArgs = command.Split(new char[] { ' ', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
                     string commandName;
                     if (commandAndArgs.Length > 0 && !string.IsNullOrEmpty(commandAndArgs[0]))
                     {
@@ -386,6 +378,7 @@ namespace x3270if
                     {
                         commandName = "(empty)";
                     }
+
                     string failureMessage = string.Format("Command {0} failed:", commandName);
                     if (state == IoStates.Failed)
                     {
@@ -398,6 +391,7 @@ namespace x3270if
                     {
                         failureMessage += " Timeout or socket EOF";
                     }
+
                     throw new X3270ifCommandException(failureMessage);
                 }
             }
@@ -407,35 +401,35 @@ namespace x3270if
                 // we test for an exception), if the server crashed.
                 if (state == IoStates.Crashed)
                 {
-                    Close(saveHistory: true);
+                    this.Close(saveHistory: true);
                 }
             }
 
             // Save the original response in history.
             var ioResult = new IoResult
             {
-                Success = (state == IoStates.Succeeded),
+                Success = state == IoStates.Succeeded,
                 Result = reply,
                 Command = command,
                 StatusLine = statusLine,
                 ExecutionTime = stopwatch.Elapsed,
-                Encoding = this.Encoding
+                Encoding = this.encoding
             };
-            SaveRecentCommand(ioResult);
-            lastStatusLine = statusLine;
+            this.SaveRecentCommand(ioResult);
+            this.lastStatusLine = statusLine;
 
-            if (Config.Origin == 0 || statusLine == null)
+            if (this.Config.Origin == 0 || statusLine == null)
             {
                 return ioResult;
             }
 
             // Edit the cursor position in the status line for Origin and return it.
             var statusFields = statusLine.Split(' ');
-            statusFields[(int)StatusLineField.CursorRow] = (int.Parse(statusFields[(int)StatusLineField.CursorRow]) + Config.Origin).ToString();
-            statusFields[(int)StatusLineField.CursorColumn] = (int.Parse(statusFields[(int)StatusLineField.CursorColumn]) + Config.Origin).ToString();
-            lastStatusLine = string.Join(" ", statusFields);
+            statusFields[(int)StatusLineField.CursorRow] = (int.Parse(statusFields[(int)StatusLineField.CursorRow]) + this.Config.Origin).ToString();
+            statusFields[(int)StatusLineField.CursorColumn] = (int.Parse(statusFields[(int)StatusLineField.CursorColumn]) + this.Config.Origin).ToString();
+            this.lastStatusLine = string.Join(" ", statusFields);
             var retIoResult = new IoResult(ioResult);
-            retIoResult.StatusLine = lastStatusLine;
+            retIoResult.StatusLine = this.lastStatusLine;
             return retIoResult;
         }
 
@@ -455,12 +449,42 @@ namespace x3270if
         {
             try
             {
-                return IoAsync(command, timeoutMsec).Result;
+                return this.IoAsync(command, timeoutMsec).Result;
             }
             catch (AggregateException e)
             {
                 throw e.InnerException;
             }
+        }
+
+        /// <summary>
+        /// Check for a force-modify failure.
+        /// </summary>
+        /// <returns>Bad IoResult if a modify command should fail.</returns>
+        private IoResult ForceModifyFailure()
+        {
+            switch (this.Config.ModifyFail)
+            {
+                case ModifyFailType.Never:
+                    break;
+                case ModifyFailType.RequireConnection:
+                    if (!this.HostConnected)
+                    {
+                        return new IoResult { Success = false, Result = new[] { "Not connected" } };
+                    }
+
+                    break;
+                case ModifyFailType.Require3270:
+                    if (this.StatusField(StatusLineField.Mode)[0] != 'I')
+                    {
+                        return new IoResult { Success = false, Result = new[] { "Not in 3270 mode" } };
+                    }
+
+                    break;
+            }
+
+            // Nothing to fail.
+            return new IoResult { Success = true };
         }
     }
 }

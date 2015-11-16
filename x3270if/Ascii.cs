@@ -23,11 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// Session class.
+    /// </summary>
     public partial class Session
     {
         /// <summary>
@@ -38,7 +41,7 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> AsciiAsync()
         {
-            return await IoAsync("Ascii()").ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Ascii()").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -50,57 +53,61 @@ namespace x3270if
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
         public async Task<IoResult> AsciiAsync(int length)
         {
-            return await IoAsync("Ascii(" + length + ")").ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync("Ascii(" + length + ")").ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
         /// Return the 3270 display buffer as text, starting at the specified coordinates. Async version.
         /// </summary>
-        /// <param name="row">Starting row, using session <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Starting column, using session <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Starting row, using session <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using session <see cref="X3270if.Config.Origin"/>.</param>
         /// <param name="length">Number of characters.</param>
         /// <returns>Success/failure, one row of text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="X3270if.Config.Origin"/>.</exception>
         public async Task<IoResult> AsciiAsync(int row, int column, int length)
         {
-            if (row < Config.Origin)
+            if (row < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("row");
             }
-            if (column < Config.Origin)
+
+            if (column < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("column");
             }
-            return await IoAsync(
-                string.Format("Ascii({0},{1},{2})", row - Config.Origin, column - Config.Origin, length))
+
+            return await this.IoAsync(
+                string.Format("Ascii({0},{1},{2})", row - this.Config.Origin, column - this.Config.Origin, length))
                 .ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
         /// Return the 3270 display buffer as text in an array. Async version.
         /// </summary>
-        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Starting row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
         /// <param name="rows">Number of rows.</param>
         /// <param name="columns">Number of columns.</param>
         /// <returns>Success/failure, array of text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>        
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="X3270if.Config.Origin"/>.</exception>        
         public async Task<IoResult> AsciiAsync(int row, int column, int rows, int columns)
         {
-            if (row < Config.Origin)
+            if (row < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("row");
             }
-            if (column < Config.Origin)
+
+            if (column < this.Config.Origin)
             {
                 throw new ArgumentOutOfRangeException("column");
             }
-            return await IoAsync(
-                string.Format("Ascii({0},{1},{2},{3})", row - Config.Origin, column - Config.Origin, rows, columns))
+
+            return await this.IoAsync(
+                string.Format("Ascii({0},{1},{2},{3})", row - this.Config.Origin, column - this.Config.Origin, rows, columns))
                 .ConfigureAwait(continueOnCapturedContext: false);
         }
 
@@ -114,7 +121,7 @@ namespace x3270if
         {
             try
             {
-                return AsciiAsync().Result;
+                return this.AsciiAsync().Result;
             }
             catch (AggregateException e)
             {
@@ -133,7 +140,7 @@ namespace x3270if
         {
             try
             {
-                return AsciiAsync(length).Result;
+                return this.AsciiAsync(length).Result;
             }
             catch (AggregateException e)
             {
@@ -144,18 +151,18 @@ namespace x3270if
         /// <summary>
         /// Return a region of the 3270 display buffer as text, starting at the specified coordinates.
         /// </summary>
-        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="row">Starting row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
         /// <param name="length">Number of characters to return.</param>
         /// <returns>Success/failure, one row of text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>        
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="X3270if.Config.Origin"/>.</exception>        
         public IoResult Ascii(int row, int column, int length)
         {
             try
             {
-                return AsciiAsync(row, column, length).Result;
+                return this.AsciiAsync(row, column, length).Result;
             }
             catch (AggregateException e)
             {
@@ -173,12 +180,12 @@ namespace x3270if
         /// <returns>Success/failure, array of text.</returns>
         /// <exception cref="InvalidOperationException">Session is not started.</exception>
         /// <exception cref="X3270ifCommandException"><see cref="ExceptionMode"/> is enabled and the command fails.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="x3270if.Config.Origin"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="row"/> or <paramref name="column"/> is less than <see cref="X3270if.Config.Origin"/>.</exception>
         public IoResult Ascii(int row, int column, int rows, int columns)
         {
             try
             {
-                return AsciiAsync(row, column, rows, columns).Result;
+                return this.AsciiAsync(row, column, rows, columns).Result;
             }
             catch (AggregateException e)
             {

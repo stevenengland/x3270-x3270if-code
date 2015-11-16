@@ -23,49 +23,58 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-
-namespace x3270if
+namespace X3270if
 {
+    using System;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Flavors of Wait().
     /// </summary>
     public enum WaitMode
-	{
+    {
         /// <summary>
         /// Wait for the host to draw a screen containing a modifiable field.
         /// </summary>
         InputField,
+
         /// <summary>
         /// Wait for the host to transition to NVT (ASCII) mode.
         /// </summary>
         NVTmode,
+
         /// <summary>
         /// Wait for the host to transition to 3270 mode.
         /// </summary>
         Wait3270Mode,
+
         /// <summary>
         /// Wait for the host to change the screen.
         /// <para>See the caution under <see cref="Session.Wait"/> for restrictions.</para>
         /// </summary>
         Output,
+
         /// <summary>
         /// Wait for the specified number of seconds.
         /// </summary>
         Seconds,
+
         /// <summary>
         /// Wait for the host to disconnect.
         /// </summary>
         Disconnect,
+
         /// <summary>
         /// Wait for the keyboard to be unlocked by the host.
         /// This is useful only when the aidWait toggle (set by default) is clear, which means that methods
         /// that send the host an AID do not automatically wait for the keyboard to be unlocked.
         /// </summary>
         Unlock
-	};
+    }
 
+    /// <summary>
+    /// Session class.
+    /// </summary>
     public partial class Session
     {
         /// <summary>
@@ -85,8 +94,8 @@ namespace x3270if
         /// The <see cref="WaitMode.Output"/> flavor of <see cref="WaitAsync"/> is integrated with the calls that
         /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic()"/>
         /// before a WaitAsync(WaitMode.Output) will actually wait for anything. If you
-        /// Wait(WaitMode.Output) immediately after a previous WaitAsync(Output), without any intervening call to ReadBuffer, Ascii
-        /// or Ebcdic, WaitAsync will return immediately.
+        /// Wait(WaitMode.Output) immediately after a previous WaitAsync(Output), without any intervening call to <see cref="ReadBuffer"/>,
+        /// <see cref="Ascii()"/> or <see cref="Ebcdic()"/>, <see cref="WaitAsync"/> will return immediately.
         /// </note>
         /// </remarks>
         public async Task<IoResult> WaitAsync(WaitMode waitMode, int? timeoutSecs = null)
@@ -97,14 +106,16 @@ namespace x3270if
             {
                 command += timeoutSecs.ToString() + ",";
             }
+
             var modeName = waitMode.ToString();
             if (modeName.StartsWith("Wait"))
             {
                 modeName = modeName.Substring(4);
             }
+
             command += modeName + ")";
 
-            return await IoAsync(command, isModify: waitMode == WaitMode.Output).ConfigureAwait(continueOnCapturedContext: false);
+            return await this.IoAsync(command, isModify: waitMode == WaitMode.Output).ConfigureAwait(continueOnCapturedContext: false);
         }
 
         /// <summary>
@@ -124,15 +135,15 @@ namespace x3270if
         /// The <see cref="WaitMode.Output"/> flavor of <see cref="Wait"/> is integrated with the calls that
         /// read data from the screen. You must call <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic()"/>
         /// before a Wait(WaitMode.Output) will actually wait for anything. If you
-        /// Wait(WaitMode.Output) immediately after a previous Wait(WaitMode.Output) without any intervening call to ReadBuffer, Ascii()
-        /// or Ebcdic, Wait will return immediately.
+        /// Wait(WaitMode.Output) immediately after a previous Wait(WaitMode.Output) without any intervening call to
+        /// <see cref="ReadBuffer"/>, <see cref="Ascii()"/> or <see cref="Ebcdic()"/>, <see cref="Wait"/> will return immediately.
         /// </note>
         /// </remarks>
         public IoResult Wait(WaitMode waitMode, int? timeoutSecs = null)
         {
             try
             {
-                return WaitAsync(waitMode, timeoutSecs).Result;
+                return this.WaitAsync(waitMode, timeoutSecs).Result;
             }
             catch (AggregateException e)
             {

@@ -23,186 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Threading.Tasks;
-using System.Net;
-using System.Net.Sockets;
-using System.Diagnostics;
-using Microsoft.Win32.SafeHandles;
-using System.Runtime.InteropServices;
-using System.Linq;
-using System.Collections.Generic;
-using x3270if.ProcessOptions;
-
-namespace x3270if
+namespace X3270if
 {
-    namespace ProcessOptions
-    {
-        /// <summary>
-        /// Abstract class for defining additional ws3270 process options.
-        /// </summary>
-        public abstract class ProcessOption
-        {
-            private string optionName;
-            /// <summary>
-            /// The option name.
-            /// </summary>
-            protected string OptionName
-            {
-                get
-                {
-                    return optionName;
-                }
-                set
-                {
-                    if (value == null)
-                    {
-                        throw new ArgumentNullException("name");
-                    }
-                    var plainValue = value.StartsWith("-") ? value.Substring(1) : value;
-                    if (String.IsNullOrWhiteSpace(plainValue) ||
-                        plainValue.ToCharArray().Any(c => c == '"' || c == '\\' || Char.IsWhiteSpace(c) || Char.IsControl(c)))
-                    {
-                        throw new ArgumentException("name");
-                    }
-                    optionName = plainValue;
-                }
-            }
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Runtime.InteropServices;
+    using System.Threading.Tasks;
 
-            /// <summary>
-            /// Expand an option into a properly-quoted string to pass on the command line.
-            /// </summary>
-            /// <returns>Quoted string.</returns>
-            public abstract string Quote();
-        }
+    using Microsoft.Win32.SafeHandles;
 
-        /// <summary>
-        /// Extra command-line option without a paramter.
-        /// </summary>
-        public class ProcessOptionWithoutValue : ProcessOption
-        {
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="optionName">Option name. A leading '-' will be added if needed.</param>
-            public ProcessOptionWithoutValue(string optionName)
-            {
-                OptionName = optionName;
-            }
-
-            /// <summary>
-            /// Expand an option into a properly-quoted string to pass on the command line.
-            /// </summary>
-            /// <returns>Quoted string.</returns>
-            public override string Quote()
-            {
-                return "-" + OptionName;
-            }
-        }
-
-        /// <summary>
-        /// Extra command-line option with a parameter.
-        /// </summary>
-        public class ProcessOptionWithValue : ProcessOption
-        {
-            private string optionValue;
-            /// <summary>
-            /// Option value.
-            /// </summary>
-            protected string OptionValue
-            {
-                get
-                {
-                    return optionValue;
-                }
-                set
-                {
-                    if (value == null)
-                    {
-                        throw new ArgumentNullException("value");
-                    }
-                    if (value.ToCharArray().Any(c =>
-                        c == '"' ||
-                        (Char.IsControl(c) &&
-                         (!AllowCControl || !"\r\n\b\f\t".Contains(c)))))
-                    {
-                        throw new ArgumentException("value");
-                    }
-                    optionValue = value;
-                }
-            }
-
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="option">Option name. A leading '-' will be added if needed.</param>
-            /// <param name="value">Option value.</param>
-            public ProcessOptionWithValue(string option, string value)
-            {
-                OptionName = option;
-                OptionValue = value;
-            }
-
-            /// <summary>
-            /// Expand an option into a properly-quoted string to pass on the command line.
-            /// </summary>
-            /// <returns>Quoted string.</returns>
-            public override string Quote()
-            {
-                // Note: Command-line options do not generally need quoted backslashes.
-                return String.Format("-{0} {1}", OptionName, Session.QuoteString(OptionValue, quoteBackslashes: false));
-            }
-
-            /// <summary>
-            /// Flag indicating whether values can contain control characters. By default, it's false.
-            /// The Xrm subclass overrides this property with one that returns true.
-            /// </summary>
-            protected virtual bool AllowCControl
-            {
-                get { return false; }
-            }
-        }
-
-        /// <summary>
-        /// Extra command-line "-xrm" option.
-        /// </summary>
-        public class ProcessOptionXrm : ProcessOptionWithValue
-        {
-            private const string ws3270Dot = "ws3270.";
-            private static string AddWs3270(string resource)
-            {
-                return resource.StartsWith(ws3270Dot) || resource.StartsWith("*") ? resource : ws3270Dot + resource;
-            }
-
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="resource">Resource name. Do not include "ws3270." in the name.</param>
-            /// <param name="value">Resource value.</param>
-            public ProcessOptionXrm(string resource, string value)
-                : base("xrm", String.Format("{0}: {1}", AddWs3270(resource), value))
-            {
-            }
-
-            /// <summary>
-            /// Expand an option into a properly-quoted string to pass on the command line.
-            /// </summary>
-            /// <returns>Quoted string.</returns>
-            public override string Quote()
-            {
-                // Note: -xrm options *do* need quoted backslashes.
-                return String.Format("-{0} {1}", OptionName, Session.QuoteString(OptionValue, quoteBackslashes: true));
-            }
-
-            /// <summary>
-            /// Flag indicating whether values can contain control characters. For Xrm, it's true.
-            /// </summary>
-            protected override bool AllowCControl
-            {
-                get { return true; }
-            }
-        }
-    }
+    using ProcessOptions;
 
     /// <summary>
     /// The startup class for a process-based session.
@@ -213,31 +47,51 @@ namespace x3270if
         /// <summary>
         /// Emulator process name, e.g., ws3270.exe.
         /// </summary>
-        public string ProcessName = "ws3270.exe";
+        private string processName = "ws3270.exe";
 
         /// <summary>
-        /// Extra options added to the emulator process command line.
+        /// Backing field for <see cref="Model"/>.
         /// </summary>
-        public IEnumerable<ProcessOption> ExtraOptions;
-
-        /// <summary>
-        /// First options. Used to force the mock emulator to fall over by not making
-        /// -scriptport the first option.
-        /// <para>This option is present for unit testing, not for general use.</para>
-        /// </summary>
-        public string TestFirstOptions;
-
         private int model = 4;
 
         /// <summary>
-        /// 3270 model number, default is 4.
+        /// Gets or sets the emulator process name.
+        /// </summary>
+        public string ProcessName
+        {
+            get
+            {
+                return this.processName;
+            }
+
+            set
+            {
+                this.processName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets extra options added to the emulator process command line.
+        /// </summary>
+        public IEnumerable<ProcessOption> ExtraOptions { get; set; }
+
+        /// <summary>
+        /// Gets or sets the first options. Used to force the mock emulator to fall over by not making
+        /// <c>-scriptport</c> the first option.
+        /// <para>This option is present for unit testing, not for general use.</para>
+        /// </summary>
+        public string TestFirstOptions { get; set; }
+
+        /// <summary>
+        /// Gets or sets the 3270 model number. The default is 4.
         /// </summary>
         public int Model
         {
             get
             {
-                return model;
+                return this.model;
             }
+
             set
             {
                 switch (value)
@@ -246,7 +100,7 @@ namespace x3270if
                     case 3:
                     case 4:
                     case 5:
-                        model = value;
+                        this.model = value;
                         break;
                     default:
                         throw new ArgumentOutOfRangeException("model");
@@ -261,9 +115,10 @@ namespace x3270if
     public class ProcessSession : Session
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="ProcessSession"/> class.
         /// Constructor, given a configuration.
         /// </summary>
-        /// <param name="config">Configuration.</param>
+        /// <param name="config">Configuration to use.</param>
         public ProcessSession(ProcessConfig config = null) : base(config, new ProcessBackEnd(config))
         {
         }
@@ -275,28 +130,39 @@ namespace x3270if
     /// </summary>
     public class ProcessBackEnd : IBackEnd
     {
-        // Has Dispose already been called? 
+        /// <summary>
+        /// Has Dispose already been called?
+        /// </summary>
         private bool disposed = false;
 
-        // Instantiate a SafeHandle instance.
+        /// <summary>
+        /// Instantiate a SafeHandle instance.
+        /// </summary>
         private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
 
-        // TCP client (socket)
-        private TcpClient Client = null;
-
-        // Configuration.
-        private ProcessConfig ProcessConfig = new ProcessConfig();
-
-        // Started emulator process.
-        private Process Process = null;
+        /// <summary>
+        /// TCP client (socket).
+        /// </summary>
+        private TcpClient client = null;
 
         /// <summary>
+        /// The configuration.
+        /// </summary>
+        private ProcessConfig processConfig = new ProcessConfig();
+
+        /// <summary>
+        /// Started emulator process.
+        /// </summary>
+        private Process process = null;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProcessBackEnd"/> class.
         /// Constructor, given a configuration.
         /// </summary>
         /// <param name="config">Process configuration.</param>
         public ProcessBackEnd(ProcessConfig config)
         {
-            this.ProcessConfig = config ?? new ProcessConfig();
+            this.processConfig = config ?? new ProcessConfig();
         }
 
         /// <summary>
@@ -304,59 +170,8 @@ namespace x3270if
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Internal Dispose method.
-        /// </summary>
-        /// <param name="disposing">True if called from public Dispose method.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                handle.Dispose();
-                // Free other managed objects.
-                Close();
-            }
-            disposed = true;
-        }
-
-        /// <summary>
-        /// Kill the emulator process.
-        /// </summary>
-        private void ZapProcess()
-        {
-            if (Process != null)
-            {
-                try
-                {
-                    Process.Kill();
-                }
-                catch
-                {
-                }
-                Process.Dispose();
-                Process = null;
-            }
-        }
-
-        /// <summary>
-        /// Clean up the TcpClient.
-        /// </summary>
-        private void ZapClient()
-        {
-            if (Client != null)
-            {
-                Client.Close();
-                Client = null;
-            }
         }
 
         /// <summary>
@@ -364,7 +179,7 @@ namespace x3270if
         /// </summary>
         /// <returns>Success/failure and failure reason.</returns>
         /// <exception cref="InvalidOperationException">Arguments are too long.</exception>
-        public async Task<startResult> StartAsync()
+        public async Task<StartResult> StartAsync()
         {
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
@@ -376,16 +191,16 @@ namespace x3270if
                 //  -utf8             UTF-8 mode
                 //  -model n          Model number
                 //  -scriptportonce   Make sure the emulator exists if the socket connection breaks
-                var arguments = string.Format("-utf8 -model {0} -scriptportonce", ProcessConfig.Model);
+                var arguments = string.Format("-utf8 -model {0} -scriptportonce", this.processConfig.Model);
 
                 // Add arbitrary extra options.
-                if (ProcessConfig.ExtraOptions != null)
+                if (this.processConfig.ExtraOptions != null)
                 {
-                    arguments += " " + String.Join(" ", ProcessConfig.ExtraOptions.Select(o => o.Quote()));
+                    arguments += " " + string.Join(" ", this.processConfig.ExtraOptions.Select(o => o.Quote()));
                 }
 
                 // Build up the parameters for ws3270.
-                var info = new ProcessStartInfo(ProcessConfig.ProcessName);
+                var info = new ProcessStartInfo(this.processConfig.ProcessName);
                 info.UseShellExecute = false;
                 info.CreateNoWindow = true;
                 info.RedirectStandardError = true;
@@ -393,10 +208,11 @@ namespace x3270if
                 info.Arguments = string.Empty;
 
                 // Put special unit test options first, intended to throw off the "-scriptport"-first logic below.
-                if (ProcessConfig.TestFirstOptions != null)
+                if (this.processConfig.TestFirstOptions != null)
                 {
-                    info.Arguments = ProcessConfig.TestFirstOptions;
+                    info.Arguments = this.processConfig.TestFirstOptions;
                 }
+
                 // It's important to put "-scriptport" first, because the Mock server looks for it and ignores everything else.
                 info.Arguments += info.Arguments.JoinNonEmpty(" ", string.Format("-scriptport {0}", port));
                 info.Arguments += info.Arguments.JoinNonEmpty(" ", arguments);
@@ -405,39 +221,39 @@ namespace x3270if
                 // At some point, we could automatically put most arguments into a temporary session file, but for now,
                 // we blow up, so arguments aren't silently ignored.
                 var argsMax = (Environment.OSVersion.Version.Major >= 6 && Environment.OSVersion.Version.Minor >= 1) ? 32699 : 2080;
-                if (ProcessConfig.ProcessName.Length + 1 + info.Arguments.Length > argsMax)
+                if (this.processConfig.ProcessName.Length + 1 + info.Arguments.Length > argsMax)
                 {
                     throw new InvalidOperationException("Arguments too long");
                 }
 
-                Util.Log("ProcessSession Start: ProcessName '{0}', arguments '{1}'", ProcessConfig.ProcessName, info.Arguments);
+                Util.Log("ProcessSession Start: ProcessName '{0}', arguments '{1}'", this.processConfig.ProcessName, info.Arguments);
 
                 // Try starting it.
                 try
                 {
-                    Process = Process.Start(info);
+                    this.process = Process.Start(info);
                 }
                 catch (System.ComponentModel.Win32Exception e)
                 {
                     // Typically Start errors are Win32 errors
-                    return new startResult(e.Message);
+                    return new StartResult(e.Message);
                 }
                 catch (Exception e)
                 {
-                    return new startResult(string.Format("Caught exception {0}", e));
+                    return new StartResult(string.Format("Caught exception {0}", e));
                 }
 
-                var result = await SessionUtil.TryConnect(port, ProcessConfig.ConnectRetryMsec).ConfigureAwait(continueOnCapturedContext: false);
+                var result = await SessionUtil.TryConnect(port, this.processConfig.ConnectRetryMsec).ConfigureAwait(continueOnCapturedContext: false);
                 if (!result.Success)
                 {
-                    var emulatorErrorMessage = GetErrorOutput(result.FailReason);
-                    ZapProcess();
-                    return new startResult(emulatorErrorMessage);
+                    var emulatorErrorMessage = this.GetErrorOutput(result.FailReason);
+                    this.ZapProcess();
+                    return new StartResult(emulatorErrorMessage);
                 }
                 else
                 {
-                    Client = result.Client;
-                    return new startResult();
+                    this.client = result.Client;
+                    return new StartResult();
                 }
             }
         }
@@ -445,37 +261,40 @@ namespace x3270if
         /// <summary>
         /// Get the TCP client for a session.
         /// </summary>
-        /// <returns>TcpClient object.</returns>
+        /// <returns><see cref="TcpClient"/> object.</returns>
         public TcpClient GetClient()
         {
-            return Client;
+            return this.client;
         }
 
         /// <summary>
-        /// Get stderr and stdout from the emulator, in case initial communication failed.
+        /// Get <c>stderr</c> and <c>stdout</c> from the emulator, in case initial communication failed.
         /// </summary>
         /// <param name="fallbackText">Text to return if there is no output.</param>
         /// <returns>Error text.</returns>
         public string GetErrorOutput(string fallbackText)
         {
             string fail = string.Empty;
-            if (Process != null)
+            if (this.process != null)
             {
-                var s = Process.StandardError.ReadToEnd();
+                var s = this.process.StandardError.ReadToEnd();
                 if (!string.IsNullOrEmpty(s))
                 {
                     fail = "(stderr): " + s;
                 }
-                s = Process.StandardOutput.ReadToEnd();
+
+                s = this.process.StandardOutput.ReadToEnd();
                 if (!string.IsNullOrEmpty(s))
                 {
                     fail += fail.JoinNonEmpty(", ", "(stdout): " + s);
                 }
             }
+
             if (string.IsNullOrEmpty(fail))
             {
                 fail = fallbackText;
             }
+
             return fail;
         }
 
@@ -485,8 +304,62 @@ namespace x3270if
         /// </summary>
         public void Close()
         {
-            ZapClient();
-            ZapProcess();
+            this.ZapClient();
+            this.ZapProcess();
+        }
+
+        /// <summary>
+        /// Internal Dispose method.
+        /// </summary>
+        /// <param name="disposing">True if called from public Dispose method.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                this.handle.Dispose();
+
+                // Free other managed objects.
+                this.Close();
+            }
+
+            this.disposed = true;
+        }
+
+        /// <summary>
+        /// Kill the emulator process.
+        /// </summary>
+        private void ZapProcess()
+        {
+            if (this.process != null)
+            {
+                try
+                {
+                    this.process.Kill();
+                }
+                catch
+                {
+                }
+
+                this.process.Dispose();
+                this.process = null;
+            }
+        }
+
+        /// <summary>
+        /// Clean up the socket.
+        /// </summary>
+        private void ZapClient()
+        {
+            if (this.client != null)
+            {
+                this.client.Close();
+                this.client = null;
+            }
         }
     }
 }

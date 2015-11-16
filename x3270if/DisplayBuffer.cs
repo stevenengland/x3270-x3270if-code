@@ -22,335 +22,17 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-using System;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Text.RegularExpressions;
-using x3270if.Attributes;
-
+//
 // Tools for interrogating the result of ReadBuffer.
 
-namespace x3270if
+namespace X3270if
 {
-    namespace Attributes
-    {
-        /// <summary>
-        /// 3270 intensity enumeration. Used by the <see cref="DisplayBuffer"/> class.
-        /// <para>These come from a Start Field order or the 3270 attributes of an extended field.</para>
-        /// </summary>
-        public enum FieldIntensity : byte
-        {
-            /// <summary>
-            /// Normal intensity, not lightpen selectable.
-            /// </summary>
-            Normal = 0x00,
-            /// <summary>
-            /// Normal, lightpen selectable.
-            /// </summary>
-            NormalSelectable = 0x04,
-            /// <summary>
-            /// Highlighted, lightpen selectable.
-            /// </summary>
-            HighlightedSelectable = 0x08,
-            /// <summary>
-            /// Invisible (a password, e.g.).
-            /// </summary>
-            Zero = 0x0c
-        }
-
-        /// <summary>
-        /// Miscellaneous field attribute flags. Used by the <see cref="DisplayBuffer"/> class.
-        /// <para>These come from a Start Field order or the 3270 attributes of an extended field.</para>
-        /// </summary>
-        [Flags]
-        public enum FieldFlags : byte
-        {
-            /// <summary>
-            /// Default (not protected or intensified).
-            /// </summary>
-            None = 0,
-            /// <summary>
-            /// Protected field (can't type input).
-            /// </summary>
-            Protected = 0x20,
-            /// <summary>
-            /// Numeric input only.
-            /// </summary>
-            Numeric = 0x10,
-            /// <summary>
-            /// Modified.
-            /// </summary>
-            Modified = 0x01,
-            /// <summary>
-            /// All possible flags.
-            /// </summary>
-            All = Protected | Numeric | Modified
-        }
-
-        /// <summary>
-        /// A foreground or background color.
-        /// Used by <see cref="ExtendedAttribute.Foreground"/> and <see cref="ExtendedAttribute.Background"/>
-        /// in the <see cref="DisplayBuffer"/> class.
-        /// </summary>
-        public enum FieldColor : byte
-        {
-            /// <summary>
-            /// Default.
-            /// </summary>
-            Default = 0,
-            /// <summary>
-            /// Neutral black (black on a screen, white on a printer).
-            /// </summary>
-            NeutralBlack = 0xf0,
-            /// <summary>
-            /// Blue.
-            /// </summary>
-            Blue = 0xf1,
-            /// <summary>
-            /// Red.
-            /// </summary>
-            Red = 0xf2,
-            /// <summary>
-            /// Pink.
-            /// </summary>
-            Pink = 0xf3,
-            /// <summary>
-            /// Green.
-            /// </summary>
-            Green = 0xf4,
-            /// <summary>
-            /// Turquiose.
-            /// </summary>
-            Turquoise = 0xf5,
-            /// <summary>
-            /// Yellow.
-            /// </summary>
-            Yellow = 0xf6,
-            /// <summary>
-            /// Neutral white (white on a screen, black on a printer).
-            /// </summary>
-            NeutralWhite = 0xf7,
-            /// <summary>
-            /// Black.
-            /// </summary>
-            Black = 0xf8,
-            /// <summary>
-            /// Deep blue.
-            /// </summary>
-            DeepBlue = 0xf9,
-            /// <summary>
-            /// Orange.
-            /// </summary>
-            Orange = 0xfa,
-            /// <summary>
-            /// Purple.
-            /// </summary>
-            Purple = 0xfb,
-            /// <summary>
-            /// Pale green.
-            /// </summary>
-            PaleGreen = 0xfc,
-            /// <summary>
-            /// Pale turquiose.
-            /// </summary>
-            PaleTurquoise = 0xfd,
-            /// <summary>
-            /// Gray.
-            /// </summary>
-            Gray = 0xfe,
-            /// <summary>
-            /// White.
-            /// </summary>
-            White = 0xff
-        }
-
-        /// <summary>
-        /// An extended attribute. Used by the <see cref="DisplayBuffer"/> class.
-        /// </summary>
-        public enum ExtendedAttribute : byte
-        {
-            /// <summary>
-            /// Standard 3270 field attributes (see <see cref="FieldIntensity"/> and <see cref="FieldFlags"/>).
-            /// </summary>
-            Ea3270 = 0xc0,
-            /// <summary>
-            /// Field validation (see <see cref="Validation"/>).
-            /// </summary>
-            Validation = 0xc1,
-            /// <summary>
-            /// Field outlining (see <see cref="Outlining"/>).
-            /// </summary>
-            Outlining = 0xc2,
-            /// <summary>
-            /// Field highlighting (see <see cref="Highlighting"/>).
-            /// </summary>
-            Highlighting = 0x41,
-            /// <summary>
-            /// Foreground color (see <see cref="FieldColor"/>).
-            /// </summary>
-            Foreground = 0x42,
-            /// <summary>
-            /// Character set (see <see cref="CharacterSet"/>).
-            /// </summary>
-            CharacterSet = 0x43,
-            /// <summary>
-            /// Background color (see <see cref="FieldColor"/>).
-            /// </summary>
-            Background = 0x45,
-            /// <summary>
-            /// Field transparency (see <see cref="Transparency"/>).
-            /// </summary>
-            Transparency = 0x46,
-            /// <summary>
-            /// Input control enable (see <see cref="InputControl"/>).
-            /// </summary>
-            InputControl = 0xfe
-        }
-
-        /// <summary>
-        /// A character set. Used by <see cref="ExtendedAttribute.CharacterSet"/> in the <see cref="DisplayBuffer"/> class.
-        /// </summary>
-        public enum CharacterSet : byte
-        {
-            /// <summary>
-            /// Default.
-            /// </summary>
-            Default = 0,
-            /// <summary>
-            /// APL and line drawing.
-            /// </summary>
-            Apl = 0xf1,
-            /// <summary>
-            /// DEC line drawing (an x3270 NVT-mode extension).
-            /// </summary>
-            LineDrawing = 0xf2,
-            /// <summary>
-            /// DBCS.
-            /// </summary>
-            Dbcs = 0xf8
-        }
-
-        /// <summary>
-        /// The Validation extended attribute. Used by <see cref="ExtendedAttribute.Validation"/> in the <see cref="DisplayBuffer"/> class.
-        /// </summary>
-        public enum Validation : byte
-        {
-            /// <summary>
-            /// Default.
-            /// </summary>
-            Default = 0,
-            /// <summary>
-            /// Mandatory fill.
-            /// </summary>
-            Fill = 0x04,
-            /// <summary>
-            /// Not sure.
-            /// </summary>
-            Entry = 0x02,
-            /// <summary>
-            /// Not sure.
-            /// </summary>
-            Trigger = 0x01
-        }
-
-        /// <summary>
-        /// The Outlining extended attribute (ORed together). Used by <see cref="ExtendedAttribute.Outlining"/> in the <see cref="DisplayBuffer"/> class.
-        /// </summary>
-        public enum Outlining : byte
-        {
-            /// <summary>
-            /// Default.
-            /// </summary>
-            Default = 0,
-            /// <summary>
-            /// Line under.
-            /// </summary>
-            Underline = 0x01,
-            /// <summary>
-            /// Line to the left.
-            /// </summary>
-            Left = 0x02,
-            /// <summary>
-            /// Line over.
-            /// </summary>
-            Overline = 0x04,
-            /// <summary>
-            /// Line to the right.
-            /// </summary>
-            Right = 0x08
-        }
-
-        /// <summary>
-        /// The Highlighting extended attribute. Used by <see cref="ExtendedAttribute.Highlighting"/> in the <see cref="DisplayBuffer"/> class.
-        /// </summary>
-        public enum Highlighting : byte
-        {
-            /// <summary>
-            /// Default.
-            /// </summary>
-            Default = 0,
-            /// <summary>
-            /// Normal intensity.
-            /// </summary>
-            Normal = 0xf0,
-            /// <summary>
-            /// Blinking.
-            /// </summary>
-            Blink = 0xf1,
-            /// <summary>
-            /// Reverse foreground and background colors.
-            /// </summary>
-            Reverse = 0xf2,
-            /// <summary>
-            /// Underlined.
-            /// </summary>
-            Underscore = 0xf4,
-            /// <summary>
-            /// Intensified.
-            /// </summary>
-            Intensify = 0xf8
-        }
-
-        /// <summary>
-        /// The Transparency extended attribute. Used by <see cref="ExtendedAttribute.Transparency"/> in the <see cref="DisplayBuffer"/> class.
-        /// </summary>
-        public enum Transparency : byte
-        {
-            /// <summary>
-            /// Default.
-            /// </summary>
-            Default = 0,
-            /// <summary>
-            /// Text is ORed.
-            /// </summary>
-            Or = 0xf0,
-            /// <summary>
-            /// Text is XORed.
-            /// </summary>
-            Xor = 0xf1,
-            /// <summary>
-            /// Text is opaque.
-            /// </summary>
-            Opaque = 0xff
-        }
-
-        /// <summary>
-        /// The InputControl extended attribute. Used by <see cref="ExtendedAttribute.InputControl"/> in the <see cref="DisplayBuffer"/> class.
-        /// </summary>
-        public enum InputControl : byte
-        {
-            /// <summary>
-            /// Default (no input control).
-            /// </summary>
-            Default = 0,
-            /// <summary>
-            /// Input control enabled.
-            /// </summary>
-            Enabled = 0x01
-        }
-    }
+    using System;
+    using System.IO;
+    using System.Text;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+    using X3270if.Attributes;
 
     /// <summary>
     /// Types of display buffer data (one position). Used by the <see cref="DisplayBuffer"/> class.
@@ -361,14 +43,17 @@ namespace x3270if
         /// An ASCII character (if buffer was read in ASCII mode).
         /// </summary>
         Ascii,
+
         /// <summary>
         /// An EBCDIC character (if buffer was read in EBCDIC mode).
         /// </summary>
         Ebcdic,
+
         /// <summary>
         /// The right-hand side of a DBCS character. Effectively empty -- the left-hand side (the preceding position) is an ASCII or EBCDIC character with the DBCS character code.
         /// </summary>
         DbcsRight,
+
         /// <summary>
         /// Field attribute order.
         /// </summary>
@@ -382,51 +67,61 @@ namespace x3270if
     {
         // Basic 3270 attributes. These are actually part of the same byte, but four of the bits
         // are treated like an enum, so it's easier to split them here.
+
         /// <summary>
-        /// Field intensity.
+        /// Gets or sets the field intensity.
         /// </summary>
-        public FieldIntensity Intensity;
+        public FieldIntensity Intensity { get; set; }
+
         /// <summary>
-        /// Flags.
+        /// Gets or sets the field flags.
         /// </summary>
-        public FieldFlags Flags; 
+        public FieldFlags Flags { get; set; }
 
         // Extended attributes.
-        /// <summary>
-        /// Foreground color.
-        /// </summary>
-        public FieldColor Foreground;
-        /// <summary>
-        /// Background color.
-        /// </summary>
-        public FieldColor Background;
-        /// <summary>
-        /// Character set.
-        /// </summary>
-        public CharacterSet CharacterSet;
-        /// <summary>
-        /// Highlighting options.
-        /// </summary>
-        public Highlighting Highlighting;
-        /// <summary>
-        /// Outlining options.
-        /// </summary>
-        public Outlining Outlining;
-        /// <summary>
-        /// Transparency.
-        /// </summary>
-        public Transparency Transparency;
-        /// <summary>
-        /// Input control.
-        /// </summary>
-        public InputControl InputControl;
-        /// <summary>
-        /// Field validation.
-        /// </summary>
-        public Validation Validation;
 
         /// <summary>
-        /// Clone an Attrs object.
+        /// Gets or sets the foreground color.
+        /// </summary>
+        public FieldColor Foreground { get; set; }
+
+        /// <summary>
+        /// Gets or sets the background color.
+        /// </summary>
+        public FieldColor Background { get; set; }
+
+        /// <summary>
+        /// Gets or sets the character set.
+        /// </summary>
+        public CharacterSet CharacterSet { get; set; }
+
+        /// <summary>
+        /// Gets or sets highlighting options.
+        /// </summary>
+        public Highlighting Highlighting { get; set; }
+
+        /// <summary>
+        /// Gets or sets outlining options.
+        /// </summary>
+        public Outlining Outlining { get; set; }
+
+        /// <summary>
+        /// Gets or sets text transparency.
+        /// </summary>
+        public Transparency Transparency { get; set; }
+
+        /// <summary>
+        /// Gets or sets input control.
+        /// </summary>
+        public InputControl InputControl { get; set; }
+
+        /// <summary>
+        /// Gets or sets field validation.
+        /// </summary>
+        public Validation Validation { get; set; }
+
+        /// <summary>
+        /// Clone an <see cref="Attrs"/> object.
         /// </summary>
         /// <returns>New copy.</returns>
         public Attrs Clone()
@@ -452,66 +147,50 @@ namespace x3270if
     /// </summary>
     public class Coordinates : IEquatable<Coordinates>
     {
+        /// <summary>
+        /// The number of rows.
+        /// </summary>
         private int rows;
+
+        /// <summary>
+        /// The number of columns.
+        /// </summary>
         private int columns;
+
+        /// <summary>
+        /// The coordinate origin (0 or 1).
+        /// </summary>
         private int origin;
 
-        // The row, 0-origin.
+        /// <summary>
+        /// The row, always 0-origin.
+        /// </summary>
         private int row;
 
         /// <summary>
-        /// Row.
+        /// The column, always zero-origin.
         /// </summary>
-        public int Row
-        {
-            get { return row + origin; }
-            set
-            {
-                value -= origin;
-                if (value < 0 || value >= rows)
-                {
-                    throw new ArgumentOutOfRangeException("value");
-                }
-                row = value;
-            }
-        }
-
-        // The column, zero-origin.
         private int column;
-        /// <summary>
-        /// Column.
-        /// </summary>
-        public int Column
-        {
-            get { return column + origin; }
-            set
-            {
-                value -= origin;
-                if (value < 0 || value >= columns)
-                {
-                    throw new ArgumentOutOfRangeException("value");
-                }
-                column = value;
-            }
-        }
 
         /// <summary>
-        /// Constructor, given a DisplayBuffer and an optional initial row and column.
+        /// Initializes a new instance of the <see cref="Coordinates"/> class.
+        /// Constructor, given a <see cref="DisplayBuffer"/> and an optional initial row and column.
         /// </summary>
-        /// <param name="displayBuffer">Dispay buffer to get screen dimensions and origin from.</param>
-        /// <param name="row">Optional initial row, defaults to <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Optional initial column, defaults to <see cref="x3270if.Config.Origin"/>.</param>
+        /// <param name="displayBuffer">Display buffer to get screen dimensions and origin from.</param>
+        /// <param name="row">Optional initial row, defaults to <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Optional initial column, defaults to <see cref="X3270if.Config.Origin"/>.</param>
         public Coordinates(DisplayBuffer displayBuffer, int? row = null, int? column = null)
         {
-            rows = displayBuffer.Rows;
-            columns = displayBuffer.Columns;
-            origin = displayBuffer.Origin;
+            this.rows = displayBuffer.Rows;
+            this.columns = displayBuffer.Columns;
+            this.origin = displayBuffer.Origin;
 
-            Row = row ?? origin;
-            Column = column ?? origin;
+            this.Row = row ?? this.origin;
+            this.Column = column ?? this.origin;
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Coordinates"/> class.
         /// Cloning constructor.
         /// </summary>
         /// <param name="c">Coordinates to clone.</param>
@@ -523,6 +202,58 @@ namespace x3270if
 
             this.Row = c.Row;
             this.Column = c.Column;
+        }
+
+        /// <summary>
+        /// Gets or sets the row.
+        /// </summary>
+        public int Row
+        {
+            get
+            {
+                return this.row + this.origin;
+            }
+
+            set
+            {
+                value -= this.origin;
+                if (value < 0 || value >= this.rows)
+                {
+                    throw new ArgumentOutOfRangeException("value");
+                }
+
+                this.row = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the column.
+        /// </summary>
+        public int Column
+        {
+            get
+            {
+                return this.column + this.origin;
+            }
+
+            set
+            {
+                value -= this.origin;
+                if (value < 0 || value >= this.columns)
+                {
+                    throw new ArgumentOutOfRangeException("value");
+                }
+
+                this.column = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the buffer address (0-origin index into screen buffer).
+        /// </summary>
+        public int BufferAddress
+        {
+            get { return (this.row * this.columns) + this.column; }
         }
 
         /// <summary>
@@ -542,6 +273,7 @@ namespace x3270if
                     ret.row = 0;
                 }
             }
+
             return ret;
         }
 
@@ -562,6 +294,7 @@ namespace x3270if
                     ret.row = c.rows - 1;
                 }
             }
+
             return ret;
         }
 
@@ -577,10 +310,12 @@ namespace x3270if
             {
                 return true;
             }
+
             if ((object)c1 == null || (object)c2 == null)
             {
                 return false;
             }
+
             return c1.row == c2.row && c1.column == c2.column;
         }
 
@@ -593,6 +328,48 @@ namespace x3270if
         public static bool operator !=(Coordinates c1, Coordinates c2)
         {
             return !(c1 == c2);
+        }
+
+        /// <summary>
+        /// Greater-than operator.
+        /// </summary>
+        /// <param name="c1">First coordinates.</param>
+        /// <param name="c2">Second coordinates.</param>
+        /// <returns>True if c1 &gt; c2.</returns>
+        public static bool operator >(Coordinates c1, Coordinates c2)
+        {
+            if (c1 == null)
+            {
+                throw new ArgumentNullException("c1");
+            }
+
+            if (c2 == null)
+            {
+                throw new ArgumentNullException("c2");
+            }
+
+            return c1.BufferAddress > c2.BufferAddress;
+        }
+
+        /// <summary>
+        /// Less-than operator.
+        /// </summary>
+        /// <param name="c1">First coordinates.</param>
+        /// <param name="c2">Second coordinates.</param>
+        /// <returns>True if c1 &lt; c2.</returns>
+        public static bool operator <(Coordinates c1, Coordinates c2)
+        {
+            if (c1 == null)
+            {
+                throw new ArgumentNullException("c1");
+            }
+
+            if (c2 == null)
+            {
+                throw new ArgumentNullException("c2");
+            }
+
+            return c1.BufferAddress < c2.BufferAddress;
         }
 
         /// <summary>
@@ -617,6 +394,7 @@ namespace x3270if
             {
                 return false;
             }
+
             return this == otherCoordinate;
         }
 
@@ -626,45 +404,16 @@ namespace x3270if
         /// <returns>Hash value.</returns>
         public override int GetHashCode()
         {
-            return Row ^ Column;
+            return this.Row ^ this.Column;
         }
 
         /// <summary>
-        /// Greater-than operator.
+        /// String conversion method.
         /// </summary>
-        /// <param name="c1">First coordinates.</param>
-        /// <param name="c2">Second coordinates.</param>
-        /// <returns>True if c1 &gt; c2.</returns>
-        public static bool operator >(Coordinates c1, Coordinates c2)
+        /// <returns>Human-readable text.</returns>
+        public override string ToString()
         {
-            if (c1 == null)
-            {
-                throw new ArgumentNullException("c1");
-            }
-            if (c2 == null)
-            {
-                throw new ArgumentNullException("c2");
-            }
-            return c1.BufferAddress > c2.BufferAddress;
-        }
-
-        /// <summary>
-        /// Less-than operator.
-        /// </summary>
-        /// <param name="c1">First coordinates.</param>
-        /// <param name="c2">Second coordinates.</param>
-        /// <returns>True if c1 &lt; c2.</returns>
-        public static bool operator <(Coordinates c1, Coordinates c2)
-        {
-            if (c1 == null)
-            {
-                throw new ArgumentNullException("c1");
-            }
-            if (c2 == null)
-            {
-                throw new ArgumentNullException("c2");
-            }
-            return c1.BufferAddress < c2.BufferAddress;
+            return "[" + this.Row + "," + this.Column + "]";
         }
 
         /// <summary>
@@ -674,23 +423,6 @@ namespace x3270if
         public Coordinates Clone()
         {
             return new Coordinates(this);
-        }
-
-        /// <summary>
-        /// Buffer address (0-origin index into screen buffer).
-        /// </summary>
-        public int BufferAddress
-        {
-            get { return (row * columns) + column; }
-        }
-
-        /// <summary>
-        /// String conversion method.
-        /// </summary>
-        /// <returns>Human-readable text.</returns>
-        public override string ToString()
-        {
-            return "[" + Row + "," + Column + "]";
         }
     }
 
@@ -702,62 +434,72 @@ namespace x3270if
     public class DisplayPosition
     {
         /// <summary>
-        /// The type of data in this position.
+        /// The displayed text.
         /// </summary>
-        public PositionType Type;
-
-        // The displayed text.
         private ushort ebcdicChar;
+
         /// <summary>
-        /// The EBCDIC value for a screen position.
+        /// Backing field for <see cref="AsciiChar"/>.
+        /// </summary>
+        private char asciiChar;
+
+        /// <summary>
+        /// Gets or sets the type of data in this position.
+        /// </summary>
+        public PositionType Type { get; set; }
+
+        /// <summary>
+        /// Gets or sets the EBCDIC value for a screen position.
         /// </summary>
         public ushort EbcdicChar
         {
             get
             {
-                switch (Type)
+                switch (this.Type)
                 {
                     case PositionType.Ascii:
                         throw new InvalidOperationException("Cannot get EBCDIC value from an ASCII ReadBuffer result");
                     case PositionType.Ebcdic:
-                        return (Attrs.Intensity != FieldIntensity.Zero) ? ebcdicChar : (ushort)0x40;
+                        return (this.Attrs.Intensity != FieldIntensity.Zero) ? this.ebcdicChar : (ushort)0x40;
                     default:
                         throw new InvalidOperationException("Cannot get EBCDIC value from non-display position");
                 }
             }
+
             set
             {
-                ebcdicChar = value;
+                this.ebcdicChar = value;
             }
         }
-        private char asciiChar;
+
         /// <summary>
-        /// The ASCII value for a screen position.
+        /// Gets or sets the ASCII value for a screen position.
         /// </summary>
         public char AsciiChar
         {
             get
             {
-                switch (Type)
+                switch (this.Type)
                 {
                     case PositionType.Ascii:
-                        return (Attrs.Intensity != FieldIntensity.Zero) ? asciiChar : ' ';
+                        return (this.Attrs.Intensity != FieldIntensity.Zero) ? this.asciiChar : ' ';
                     case PositionType.Ebcdic:
                         throw new InvalidOperationException("Cannot get ASCII value from an EBCDIC ReadBuffer result");
                     default:
                         throw new InvalidOperationException("Cannot get ASCII value from non-display position");
                 }
             }
+
             set
             {
-                asciiChar = value;
+                this.asciiChar = value;
             }
         }
 
         /// <summary>
-        /// Field attributes.
+        /// Gets or sets the field attributes.
         /// </summary>
-        public Attrs Attrs;
+        public Attrs Attrs { get; set; }
     }
 
     /// <summary>
@@ -771,7 +513,7 @@ namespace x3270if
     /// ensuring that the screen image being interrogated for one field is the same image as queried for others (i.e., that this
     /// is one screen drawn by the host).
     /// <para>If the host has not yet finished drawing the screen, the application can call the <see cref="Session.Wait"/> method
-    /// with the parameter <see cref="x3270if.WaitMode.Output"/>, waiting for the host to update the screen. Then it
+    /// with the parameter <see cref="X3270if.WaitMode.Output"/>, waiting for the host to update the screen. Then it
     /// can call <see cref="Session.ReadBuffer"/> again, construct a new DisplayBuffer, and continue.
     /// </para>
     /// </remarks>
@@ -783,83 +525,31 @@ namespace x3270if
         private Session.ReadBufferIoResult ioResult;
 
         /// <summary>
-        /// Coordinate origin (0 [default] or 1).
-        /// This is derived from the session's <see cref="x3270if.Config.Origin"/>.
+        /// The encoding.
         /// </summary>
-        public int Origin
-        {
-            get { return ioResult.Origin; }
-        }
+        private Encoding encoding = Encoding.UTF8;
 
         /// <summary>
-        /// Number of rows on the screen.
-        /// </summary>
-        public int Rows { get; private set; }
-
-        /// <summary>
-        /// Number of columns on the screen.
-        /// </summary>
-        public int Columns { get; private set; }
-
-        /// <summary>
-        /// Cursor row, using the session's <see cref="x3270if.Config.Origin"/>.
-        /// </summary>
-        public int CursorRow { get; private set; }
-
-        /// <summary>
-        /// Cursor column, using the session's <see cref="x3270if.Config.Origin"/>.
-        /// </summary>
-        public int CursorColumn { get; private set; }
-
-        // Encoding.
-        private Encoding Encoding = Encoding.UTF8;
-
-        /// <summary>
-        /// The screen contents, as an array indexed by 0-origin row and column.
-        /// </summary>
-        public DisplayPosition[,] ContentsArray;
-
-        /// <summary>
-        /// The screen contents, one location.
-        /// </summary>
-        /// <param name="row">Row, using the defined <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Column, using the defined <see cref="x3270if.Config.Origin"/>.</param>
-        /// <returns>Contents of one screen location.</returns>
-        public DisplayPosition Contents(int row, int column)
-        {
-            return ContentsArray[row - Origin, column - Origin];
-        }
-
-        /// <summary>
-        /// The screen contents, one location, indexed by Coordinates.
-        /// </summary>
-        /// <param name="c">Coordinates.</param>
-        /// <returns>Contents of one screen location.</returns>
-        public DisplayPosition Contents(Coordinates c)
-        {
-            return ContentsArray[c.Row - Origin, c.Column - Origin];
-        }
-
-        /// <summary>
-        /// Basic constructor for displayBuffer.
+        /// Initializes a new instance of the <see cref="DisplayBuffer"/> class.
+        /// Basic constructor for a <see cref="DisplayBuffer"/>.
         /// </summary>
         /// <param name="r">Result from ReadBuffer or ReadBufferAsync.</param>
         public DisplayBuffer(Session.ReadBufferIoResult r)
         {
-            ioResult = r;
+            this.ioResult = r;
             string[] statusFields = r.StatusLine.Split(' ');
-            Rows = int.Parse(statusFields[(int)StatusLineField.Rows]);
-            Columns = int.Parse(statusFields[(int)StatusLineField.Columns]);
-            CursorRow = int.Parse(statusFields[(int)StatusLineField.CursorRow]);
-            CursorColumn = int.Parse(statusFields[(int)StatusLineField.CursorColumn]);
-            Encoding = r.Encoding;
-            ContentsArray = new DisplayPosition[Rows, Columns];
+            this.Rows = int.Parse(statusFields[(int)StatusLineField.Rows]);
+            this.Columns = int.Parse(statusFields[(int)StatusLineField.Columns]);
+            this.CursorRow = int.Parse(statusFields[(int)StatusLineField.CursorRow]);
+            this.CursorColumn = int.Parse(statusFields[(int)StatusLineField.CursorColumn]);
+            this.encoding = r.Encoding;
+            this.ContentsArray = new DisplayPosition[this.Rows, this.Columns];
             Attrs faAttrs = new Attrs();
             Attrs saAttrs = new Attrs();
 
-            for (int row = 0; row < Rows; row++)
+            for (int row = 0; row < this.Rows; row++)
             {
-                parseRow(r.Result[row], row, ref faAttrs, ref saAttrs);
+                this.ParseRow(r.Result[row], row, ref faAttrs, ref saAttrs);
             }
 
             // Last, ugly step.
@@ -871,50 +561,499 @@ namespace x3270if
             var c = zero.Clone();
             do
             {
-                if (Contents(c).Type == PositionType.FieldAttribute)
+                if (this.Contents(c).Type == PositionType.FieldAttribute)
                 {
                     if (firstField == null)
                     {
                         firstField = c.Clone();
                     }
+
                     lastField = c.Clone();
                 }
-            } while (++c != zero);
+            }
+            while (++c != zero);
+
             if (firstField != null)
             {
-                Attrs lastAttrs = Contents(lastField).Attrs;
+                Attrs lastAttrs = this.Contents(lastField).Attrs;
                 for (c = zero; c < firstField; c++)
                 {
-                    Contents(c).Attrs.Flags = lastAttrs.Flags;
-                    Contents(c).Attrs.Intensity = lastAttrs.Intensity;
+                    this.Contents(c).Attrs.Flags = lastAttrs.Flags;
+                    this.Contents(c).Attrs.Intensity = lastAttrs.Intensity;
                 }
             }
         }
 
         /// <summary>
+        /// Gets the coordinate origin (0 [default] or 1).
+        /// This is derived from the session's <see cref="X3270if.Config.Origin"/>.
+        /// </summary>
+        public int Origin
+        {
+            get { return this.ioResult.Origin; }
+        }
+
+        /// <summary>
+        /// Gets the number of rows on the screen.
+        /// </summary>
+        public int Rows { get; private set; }
+
+        /// <summary>
+        /// Gets the number of columns on the screen.
+        /// </summary>
+        public int Columns { get; private set; }
+
+        /// <summary>
+        /// Gets the cursor row, using the session's <see cref="X3270if.Config.Origin"/>.
+        /// </summary>
+        public int CursorRow { get; private set; }
+
+        /// <summary>
+        /// Gets the cursor column, using the session's <see cref="X3270if.Config.Origin"/>.
+        /// </summary>
+        public int CursorColumn { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the screen contents, as an array indexed by 0-origin row and column.
+        /// </summary>
+        public DisplayPosition[,] ContentsArray { get; set; }
+
+        /// <summary>
+        /// The screen contents, one location.
+        /// </summary>
+        /// <param name="row">Row, using the defined <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the defined <see cref="X3270if.Config.Origin"/>.</param>
+        /// <returns>Contents of one screen location.</returns>
+        public DisplayPosition Contents(int row, int column)
+        {
+            return this.ContentsArray[row - this.Origin, column - this.Origin];
+        }
+
+        /// <summary>
+        /// The screen contents, one location, indexed by Coordinates.
+        /// </summary>
+        /// <param name="c">Coordinate indices.</param>
+        /// <returns>Contents of one screen location.</returns>
+        public DisplayPosition Contents(Coordinates c)
+        {
+            return this.ContentsArray[c.Row - this.Origin, c.Column - this.Origin];
+        }
+
+        /// <summary>
+        /// Write an ASCII ReadBuffer buffer out to the console, with proper formatting (if possible).
+        /// </summary>
+        public void DumpAsciiConsole()
+        {
+            if (this.ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
+            {
+                throw new InvalidOperationException("ReadBuffer is not Ascii");
+            }
+
+            FieldColor fg = FieldColor.NeutralWhite;
+            FieldColor bg = FieldColor.NeutralBlack;
+            Console.ForegroundColor = this.ColorMap(fg, true);
+            Console.BackgroundColor = this.ColorMap(bg, false);
+            for (int row = 0; row < this.Rows; row++)
+            {
+                for (int column = 0; column < this.Columns; column++)
+                {
+                    var c = this.ContentsArray[row, column];
+                    var a = c.Attrs;
+                    if (a.Foreground != fg)
+                    {
+                        fg = a.Foreground;
+                        Console.ForegroundColor = this.ColorMap(fg, true);
+                    }
+
+                    if (a.Background != bg)
+                    {
+                        bg = a.Background;
+                        Console.BackgroundColor = this.ColorMap(bg, false);
+                    }
+
+                    switch (c.Type)
+                    {
+                        case PositionType.Ascii:
+                            // ASCII character.
+                            if (a.Intensity == FieldIntensity.Zero || c.AsciiChar < ' ')
+                            {
+                                Console.Write(" ");
+                            }
+                            else
+                            {
+                                Console.Write(c.AsciiChar);
+                            }
+
+                            break;
+                        case PositionType.DbcsRight:
+                        // Right side of DBCS -- nothing.
+                        case PositionType.Ebcdic:
+                            // EBCDIC: Can't happen.
+                            break;
+                        case PositionType.FieldAttribute:
+                            // Field attribute -- blank.
+                            Console.Write(" ");
+                            break;
+                    }
+                }
+
+                Console.WriteLine();
+            }
+
+            Console.ResetColor();
+        }
+
+        #region Ascii methods
+        /// <summary>
+        /// Translate a DisplayBuffer to a text string, starting at the cursor address.
+        /// </summary>
+        /// <param name="length">Length of field to return. Can wrap rows.</param>
+        /// <returns>The text.</returns>
+        /// <remarks>
+        /// <note type="note">
+        /// For DBCS text, this method may return data from more buffer positions than <paramref name="length"/>.
+        /// It will attempt to return <paramref name="length"/> characters, skipping over the right-hand sides of DBCS characters
+        /// as necessary.
+        /// </note>
+        /// </remarks>
+        public string Ascii(int length)
+        {
+            return this.Ascii(this.CursorRow, this.CursorColumn, length);
+        }
+
+        /// <summary>
+        /// Translate a <see cref="DisplayBuffer"/> to a text string, starting at the specified address.
+        /// </summary>
+        /// <param name="row">Starting row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="length">Length of field.</param>
+        /// <returns>The text.</returns>
+        /// <remarks>
+        /// <note type="note">
+        /// For DBCS text, this method may return data from more buffer positions than <paramref name="length"/>.
+        /// It will attempt to return <paramref name="length"/> characters, skipping over the right-hand sides of DBCS characters
+        /// as necessary.
+        /// </note>
+        /// </remarks>
+        public string Ascii(int row, int column, int length)
+        {
+            if (this.ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
+            {
+                throw new InvalidOperationException("ReadBuffer is not Ascii");
+            }
+
+            row -= this.Origin;
+            column -= this.Origin;
+            if (row < 0 || row >= this.Rows)
+            {
+                throw new ArgumentOutOfRangeException("row");
+            }
+
+            if (column < 0 || column >= this.Columns)
+            {
+                throw new ArgumentOutOfRangeException("column");
+            }
+
+            if (length < 0 || (row * this.Columns) + column + length > this.Rows * this.Columns)
+            {
+                throw new ArgumentOutOfRangeException("length");
+            }
+
+            if (length == 0)
+            {
+                return string.Empty;
+            }
+
+            var sb = new StringBuilder();
+            var curRow = row;
+            var curColumn = column;
+            var lengthLeft = length;
+            while (lengthLeft > 0)
+            {
+                var r = this.TranslatePosition(this.ContentsArray[curRow, curColumn]);
+                if (r.HasValue)
+                {
+                    sb.Append((char)r);
+                    lengthLeft--;
+                }
+
+                // Otherwise do not decrement lengthLeft.
+                if (++curColumn >= this.Columns)
+                {
+                    curRow++;
+                    curColumn = 0;
+                }
+
+                if (curRow == row && curColumn == column)
+                {
+                    // Wrapped without getting enough characters.
+                    break;
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Translate a rectangular region of a DisplayBuffer to text.
+        /// </summary>
+        /// <param name="row">Starting row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Starting column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="rows">Number of rows.</param>
+        /// <param name="columns">Number of columns.</param>
+        /// <returns>Array of strings, one entry per row.</returns>
+        /// <remarks>
+        /// <note type="note">
+        /// For DBCS text, this method may return data from more buffer positions than <paramref name="columns"/>.
+        /// It will attempt to return <paramref name="columns"/> characters, skipping over the right-hand sides of DBCS characters
+        /// as necessary. It will not wrap across rows to do this.
+        /// </note>
+        /// </remarks>
+        public string[] Ascii(int row, int column, int rows, int columns)
+        {
+            if (this.ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
+            {
+                throw new InvalidOperationException("ReadBuffer is not Ascii");
+            }
+
+            row -= this.Origin;
+            column -= this.Origin;
+            if (row < 0 || row >= this.Rows)
+            {
+                throw new ArgumentOutOfRangeException("row");
+            }
+
+            if (column < 0 || column >= this.Columns)
+            {
+                throw new ArgumentOutOfRangeException("column");
+            }
+
+            if (rows <= 0 || row + rows > this.Rows)
+            {
+                throw new ArgumentOutOfRangeException("rows");
+            }
+
+            if (columns <= 0 || column + columns > this.Columns)
+            {
+                throw new ArgumentOutOfRangeException("columns");
+            }
+
+            string[] ret = new string[rows];
+            for (var r = row; r < row + rows; r++)
+            {
+                StringBuilder sb = new StringBuilder();
+                int columnsLeft = columns;
+                int c = column;
+
+                while (columnsLeft > 0)
+                {
+                    var rc = this.TranslatePosition(this.ContentsArray[r, c]);
+                    if (rc.HasValue)
+                    {
+                        sb.Append((char)rc);
+                        columnsLeft--;
+                    }
+
+                    if (++c >= this.Columns)
+                    {
+                        break;
+                    }
+                }
+
+                ret[r - row] = sb.ToString();
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Translate an entire DisplayBuffer buffer to text.
+        /// </summary>
+        /// <returns>Text array.</returns>
+        public string[] Ascii()
+        {
+            return this.Ascii(this.Origin, this.Origin, this.Rows, this.Columns);
+        }
+
+        /// <summary>
+        /// Returns the length of the field that includes the specified
+        /// coordinates.
+        /// </summary>
+        /// <param name="c">Coordinate indices.</param>
+        /// <returns>Field length. The length does not include the field attribute itself, so it can be zero.</returns>
+        /// <remarks>
+        /// <note type="note">
+        /// If the screen is unformatted, returns the size of the entire screen.
+        /// </note>
+        /// <note type="note">
+        /// For DBCS text, returns the number of characters in the field, not the number of buffer positions in
+        /// the field.
+        /// </note>
+        /// </remarks>
+        public int FieldLength(Coordinates c)
+        {
+            // Work backwards until we find the field attribute, or wrap.
+            // We count c (if it is not an FA) and each non-FA to the left of it.
+            int count = 0;
+            var d = c.Clone();
+            while (this.Contents(d).Type != PositionType.FieldAttribute)
+            {
+                if (this.TranslatePosition(this.Contents(d)).HasValue)
+                {
+                    count++;
+                }
+
+                if (--d == c)
+                {
+                    // Wrapped back to the start. Unformatted screen.
+                    return count;
+                }
+            }
+
+            // Count forward from (c+1) until we find the next field attribute.
+            d = c.Clone();
+            while (this.Contents(++d).Type != PositionType.FieldAttribute)
+            {
+                if (this.TranslatePosition(this.Contents(d)).HasValue)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// Returns the length of the field that includes the specified
+        /// row and column location.
+        /// </summary>
+        /// <param name="row">Row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <returns>Field length. The length does not include the field attribute itself, so it can be zero.</returns>
+        /// <remarks>
+        /// <note type="note">
+        /// If the screen is unformatted, returns the size of the entire screen.
+        /// </note>
+        /// <note type="note">
+        /// For DBCS text, returns the number of characters in the field, not the number of buffer positions in
+        /// the field.
+        /// </note>
+        /// </remarks>
+        public int FieldLength(int row, int column)
+        {
+            return this.FieldLength(new Coordinates(this, row, column));
+        }
+
+        /// <summary>
+        /// Return a field value in ASCII.
+        /// </summary>
+        /// <param name="c">Coordinate indices.</param>
+        /// <returns>The text.</returns>
+        public string AsciiField(Coordinates c = null)
+        {
+            if (c == null)
+            {
+                c = new Coordinates(this, this.CursorRow, this.CursorColumn);
+            }
+
+            // Find the field that contains this position.
+            var faPosition = this.FaPosition(c);
+            if (faPosition == null)
+            {
+                // Unformatted. One big blob.
+                return this.Ascii(0, 0, this.Rows * this.Columns);
+            }
+
+            // Return just this field.
+            var fieldLength = this.FieldLength(faPosition);
+            faPosition++;
+            return this.Ascii(faPosition.Row, faPosition.Column, fieldLength);
+        }
+
+        /// <summary>
+        /// Return a field value in ASCII.
+        /// </summary>
+        /// <param name="row">Row number, using the object's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column number, using the object's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <returns>The text.</returns>
+        public string AsciiField(int row, int column)
+        {
+            return this.AsciiField(new Coordinates(this, row, column));
+        }
+
+        /// <summary>
+        /// Convenience method for checking screen contents (exact match).
+        /// </summary>
+        /// <param name="row">Row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="text">Text to compare.</param>
+        /// <returns>True if the DisplayBuffer at that location equals <paramref name="text"/>.</returns>
+        public bool AsciiEquals(int row, int column, string text)
+        {
+            return this.Ascii(row, column, text.Length) == text;
+        }
+
+        /// <summary>
+        /// Convenience method for checking screen contents (pattern match).
+        /// </summary>
+        /// <param name="row">Row, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="column">Column, using the session's <see cref="X3270if.Config.Origin"/>.</param>
+        /// <param name="length">Length of region.</param>
+        /// <param name="regex">Regular expression to match against. (See <see cref="System.Text.RegularExpressions"/>.)</param>
+        /// <returns>True if <paramref name="regex"/> matches the specified region of the DisplayBuffer.</returns>
+        public bool AsciiMatches(int row, int column, int length, string regex)
+        {
+            return Regex.IsMatch(this.Ascii(row, column, length), regex);
+        }
+        #endregion
+
+        /// <summary>
+        /// Find the coordinates of the Field Attribute for a given screen position.
+        /// </summary>
+        /// <param name="c">Coordinate indices.</param>
+        /// <returns>Row and column, or null if the screen is unformatted.</returns>
+        private Coordinates FaPosition(Coordinates c)
+        {
+            Coordinates b = new Coordinates(c);
+            do
+            {
+                if (this.Contents(b).Type == PositionType.FieldAttribute)
+                {
+                    return b;
+                }
+
+                b--;
+            }
+            while (b != c);
+
+            // Unformatted screen.
+            return null;
+        }
+
+        /// <summary>
         /// Parse a row of ReadBuffer fields.
         /// </summary>
-        /// <param name="text">One line out output from EbdcicField.</param>
+        /// <param name="text">One line of output from <c>EbcdicField</c>.</param>
         /// <param name="row">Row index.</param>
         /// <param name="faAttrs">Current FA attributes.</param>
         /// <param name="saAttrs">Current SA attributes.</param>
-        private void parseRow(string text, int row, ref Attrs faAttrs, ref Attrs saAttrs)
+        private void ParseRow(string text, int row, ref Attrs faAttrs, ref Attrs saAttrs)
         {
             string[] split = text.Split(' ');
             int column = 0;
-            Attrs attrs = CombineAttrs(faAttrs, saAttrs);
+            Attrs attrs = this.CombineAttrs(faAttrs, saAttrs);
             foreach (string s in split)
             {
                 if (s.StartsWith("SA("))
                 {
-                    parseSA(s, ref saAttrs);
-                    attrs = CombineAttrs(faAttrs, saAttrs);
+                    this.ParseSA(s, ref saAttrs);
+                    attrs = this.CombineAttrs(faAttrs, saAttrs);
                     continue;
                 }
 
                 if (s == "-")
                 {
-                    ContentsArray[row, column] = new DisplayPosition
+                    this.ContentsArray[row, column] = new DisplayPosition
                     {
                         Type = PositionType.DbcsRight,
                         Attrs = attrs
@@ -923,9 +1062,9 @@ namespace x3270if
                 else if (s.StartsWith("SF("))
                 {
                     faAttrs = new Attrs();
-                    parseSA(s, ref faAttrs);
-                    attrs = CombineAttrs(faAttrs, saAttrs);
-                    ContentsArray[row, column] = new DisplayPosition
+                    this.ParseSA(s, ref faAttrs);
+                    attrs = this.CombineAttrs(faAttrs, saAttrs);
+                    this.ContentsArray[row, column] = new DisplayPosition
                     {
                         Type = PositionType.FieldAttribute,
                         Attrs = attrs
@@ -938,18 +1077,18 @@ namespace x3270if
 
                     Attrs geAttrs = attrs.Clone();
                     geAttrs.CharacterSet = CharacterSet.Apl;
-                    if (ioResult.ReadBufferType == Session.ReadBufferType.Ascii)
+                    if (this.ioResult.ReadBufferType == Session.ReadBufferType.Ascii)
                     {
-                        ContentsArray[row, column] = new DisplayPosition
+                        this.ContentsArray[row, column] = new DisplayPosition
                         {
                             Type = PositionType.Ascii,
-                            AsciiChar = parseHexEncoded(hexChar),
+                            AsciiChar = this.ParseHexEncoded(hexChar),
                             Attrs = geAttrs
                         };
                     }
                     else
                     {
-                        ContentsArray[row, column] = new DisplayPosition
+                        this.ContentsArray[row, column] = new DisplayPosition
                         {
                             Type = PositionType.Ebcdic,
                             EbcdicChar = ushort.Parse(hexChar, System.Globalization.NumberStyles.HexNumber),
@@ -959,18 +1098,18 @@ namespace x3270if
                 }
                 else
                 {
-                    if (ioResult.ReadBufferType == Session.ReadBufferType.Ascii)
+                    if (this.ioResult.ReadBufferType == Session.ReadBufferType.Ascii)
                     {
-                        ContentsArray[row, column] = new DisplayPosition
+                        this.ContentsArray[row, column] = new DisplayPosition
                         {
                             Type = PositionType.Ascii,
-                            AsciiChar = parseHexEncoded(s),
+                            AsciiChar = this.ParseHexEncoded(s),
                             Attrs = attrs
                         };
                     }
                     else
                     {
-                        ContentsArray[row, column] = new DisplayPosition
+                        this.ContentsArray[row, column] = new DisplayPosition
                         {
                             Type = PositionType.Ebcdic,
                             EbcdicChar = ushort.Parse(s, System.Globalization.NumberStyles.HexNumber),
@@ -978,6 +1117,7 @@ namespace x3270if
                         };
                     }
                 }
+
                 column++;
             }
         }
@@ -987,14 +1127,15 @@ namespace x3270if
         /// </summary>
         /// <param name="hexChar">Hexadecimal text.</param>
         /// <returns>Decoded character.</returns>
-        private char parseHexEncoded(string hexChar)
+        private char ParseHexEncoded(string hexChar)
         {
             var bytes = new byte[hexChar.Length / 2];
             for (int i = 0; i < hexChar.Length; i += 2)
             {
                 bytes[i / 2] = byte.Parse(hexChar.Substring(i, 2), System.Globalization.NumberStyles.HexNumber);
             }
-            return Encoding.GetString(bytes)[0];
+
+            return this.encoding.GetString(bytes)[0];
         }
 
         /// <summary>
@@ -1016,21 +1157,21 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Parse an extended attrbute enumeration in hex.
-        /// If the value is unparseable or unsupported, return the default for the type.
+        /// Parse an extended attribute enumeration in hex.
+        /// If the value cannot be parsed or is unsupported, return the default for the type.
         /// </summary>
         /// <typeparam name="T">Enumeration type.</typeparam>
         /// <param name="value">Text to parse.</param>
         /// <param name="result">Value stored here, if valid.</param>
-        private void parseExtendedAttribute<T>(string value, ref T result) where T : struct, IConvertible
+        private void ParseExtendedAttribute<T>(string value, ref T result) where T : struct, IConvertible
         {
-            var i = TryParseHex(value);
+            var i = this.TryParseHex(value);
             if (i.HasValue)
             {
-                T rValue = (T)(object)i.Value;
-                if (Enum.IsDefined(typeof(T), rValue))
+                T resultValue = (T)(object)i.Value;
+                if (Enum.IsDefined(typeof(T), resultValue))
                 {
-                    result = rValue;
+                    result = resultValue;
                 }
                 else
                 {
@@ -1042,9 +1183,9 @@ namespace x3270if
         /// <summary>
         /// Parse an SA, which defines attributes that override SF attributes.
         /// </summary>
-        /// <param name="field">SA(xx=yy) text.</param>
+        /// <param name="field">SA(XX=YY) text.</param>
         /// <param name="attrs">Current/modified attributes.</param>
-        private void parseSA(string field, ref Attrs attrs)
+        private void ParseSA(string field, ref Attrs attrs)
         {
             const byte IntensityMask = 0x0c;
 
@@ -1059,36 +1200,53 @@ namespace x3270if
                 {
                     continue;
                 }
+
                 switch ((ExtendedAttribute)b)
                 {
                     case ExtendedAttribute.Ea3270:
                         var ea3270 = byte.Parse(expr[1], System.Globalization.NumberStyles.HexNumber);
-                        attrs.Flags = (FieldFlags)(ea3270 & (byte)(FieldFlags.All));
+                        attrs.Flags = (FieldFlags)(ea3270 & (byte)FieldFlags.All);
                         attrs.Intensity = (FieldIntensity)(ea3270 & IntensityMask);
                         break;
                     case ExtendedAttribute.Background:
-                        parseExtendedAttribute<FieldColor>(expr[1], ref attrs.Background);
+                        var background = attrs.Background;
+                        this.ParseExtendedAttribute<FieldColor>(expr[1], ref background);
+                        attrs.Background = background;
                         break;
                     case ExtendedAttribute.Foreground:
-                        parseExtendedAttribute<FieldColor>(expr[1], ref attrs.Foreground);
+                        var foreground = attrs.Foreground;
+                        this.ParseExtendedAttribute<FieldColor>(expr[1], ref foreground);
+                        attrs.Foreground = foreground;
                         break;
                     case ExtendedAttribute.CharacterSet:
-                        parseExtendedAttribute<CharacterSet>(expr[1], ref attrs.CharacterSet);
+                        var characterSet = attrs.CharacterSet;
+                        this.ParseExtendedAttribute<CharacterSet>(expr[1], ref characterSet);
+                        attrs.CharacterSet = characterSet;
                         break;
                     case ExtendedAttribute.Highlighting:
-                        parseExtendedAttribute<Highlighting>(expr[1], ref attrs.Highlighting);
+                        var highlighting = attrs.Highlighting;
+                        this.ParseExtendedAttribute<Highlighting>(expr[1], ref highlighting);
+                        attrs.Highlighting = highlighting;
                         break;
                     case ExtendedAttribute.Transparency:
-                        parseExtendedAttribute<Transparency>(expr[1], ref attrs.Transparency);
+                        var transparency = attrs.Transparency;
+                        this.ParseExtendedAttribute<Transparency>(expr[1], ref transparency);
+                        attrs.Transparency = transparency;
                         break;
                     case ExtendedAttribute.Outlining:
-                        parseExtendedAttribute<Outlining>(expr[1], ref attrs.Outlining);
+                        var outlining = attrs.Outlining;
+                        this.ParseExtendedAttribute<Outlining>(expr[1], ref outlining);
+                        attrs.Outlining = outlining;
                         break;
                     case ExtendedAttribute.InputControl:
-                        parseExtendedAttribute<InputControl>(expr[1], ref attrs.InputControl);
+                        var inputControl = attrs.InputControl;
+                        this.ParseExtendedAttribute<InputControl>(expr[1], ref inputControl);
+                        attrs.InputControl = inputControl;
                         break;
                     case ExtendedAttribute.Validation:
-                        parseExtendedAttribute<Validation>(expr[1], ref attrs.Validation);
+                        var validation = attrs.Validation;
+                        this.ParseExtendedAttribute<Validation>(expr[1], ref validation);
+                        attrs.Validation = validation;
                         break;
                     default:
                         break;
@@ -1099,11 +1257,11 @@ namespace x3270if
         /// <summary>
         /// Return sa if non-default, else fa.
         /// </summary>
-        /// <typeparam name="T">Enum type that defines Default.</typeparam>
+        /// <typeparam name="T">Enumeration type that defines Default.</typeparam>
         /// <param name="fa">Other value.</param>
         /// <param name="sa">Value that takes precedence.</param>
         /// <returns><paramref name="sa"/> if <paramref name="sa"/> is non-default, else <paramref name="fa"/>.</returns>
-        private T setNonDefault<T>(T fa, T sa) where T: IComparable
+        private T SetNonDefault<T>(T fa, T sa) where T : IComparable
         {
             T defaultValue = (T)Enum.Parse(typeof(T), "Default");
             if (!sa.Equals(defaultValue))
@@ -1129,14 +1287,14 @@ namespace x3270if
             resultAttrs.Intensity = faAttrs.Intensity;
             resultAttrs.Flags = faAttrs.Flags;
 
-            resultAttrs.Foreground = setNonDefault<FieldColor>(faAttrs.Foreground, saAttrs.Foreground);
-            resultAttrs.Background = setNonDefault<FieldColor>(faAttrs.Background, saAttrs.Background);
-            resultAttrs.CharacterSet = setNonDefault<CharacterSet>(faAttrs.CharacterSet, saAttrs.CharacterSet);
-            resultAttrs.Highlighting = setNonDefault<Highlighting>(faAttrs.Highlighting, saAttrs.Highlighting);
-            resultAttrs.Transparency = setNonDefault<Transparency>(faAttrs.Transparency, saAttrs.Transparency);
-            resultAttrs.Outlining = setNonDefault<Outlining>(faAttrs.Outlining, saAttrs.Outlining);
-            resultAttrs.InputControl = setNonDefault<InputControl>(faAttrs.InputControl, saAttrs.InputControl);
-            resultAttrs.Validation = setNonDefault<Validation>(faAttrs.Validation, saAttrs.Validation);
+            resultAttrs.Foreground = this.SetNonDefault<FieldColor>(faAttrs.Foreground, saAttrs.Foreground);
+            resultAttrs.Background = this.SetNonDefault<FieldColor>(faAttrs.Background, saAttrs.Background);
+            resultAttrs.CharacterSet = this.SetNonDefault<CharacterSet>(faAttrs.CharacterSet, saAttrs.CharacterSet);
+            resultAttrs.Highlighting = this.SetNonDefault<Highlighting>(faAttrs.Highlighting, saAttrs.Highlighting);
+            resultAttrs.Transparency = this.SetNonDefault<Transparency>(faAttrs.Transparency, saAttrs.Transparency);
+            resultAttrs.Outlining = this.SetNonDefault<Outlining>(faAttrs.Outlining, saAttrs.Outlining);
+            resultAttrs.InputControl = this.SetNonDefault<InputControl>(faAttrs.InputControl, saAttrs.InputControl);
+            resultAttrs.Validation = this.SetNonDefault<Validation>(faAttrs.Validation, saAttrs.Validation);
                 
             return resultAttrs;
         }
@@ -1197,64 +1355,6 @@ namespace x3270if
         }
 
         /// <summary>
-        /// Write an ASCII ReadBuffer buffer out to the console, with proper formatting (if possible).
-        /// </summary>
-        public void DumpAsciiConsole()
-        {
-            if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
-            {
-                throw new InvalidOperationException("ReadBuffer is not Ascii");
-            }
-            FieldColor fg = FieldColor.NeutralWhite;
-            FieldColor bg = FieldColor.NeutralBlack;
-            Console.ForegroundColor = ColorMap(fg, true);
-            Console.BackgroundColor = ColorMap(bg, false);
-            for (int row = 0; row < Rows; row++)
-            {
-                for (int column = 0; column < Columns; column++)
-                {
-                    var c = ContentsArray[row, column];
-                    var a = c.Attrs;
-                    if (a.Foreground != fg)
-                    {
-                        fg = a.Foreground;
-                        Console.ForegroundColor = ColorMap(fg, true);
-                    }
-                    if (a.Background != bg)
-                    {
-                        bg = a.Background;
-                        Console.BackgroundColor = ColorMap(bg, false);
-                    }
-                    switch (c.Type)
-                    {
-                        case PositionType.Ascii:
-                            // ASCII character.
-                            if (a.Intensity == FieldIntensity.Zero || c.AsciiChar < ' ')
-                            {
-                                Console.Write(" ");
-                            }
-                            else
-                            {
-                                Console.Write(c.AsciiChar);
-                            }
-                            break;
-                        case PositionType.DbcsRight:
-                            // Right side of DBCS -- nothing.
-                        case PositionType.Ebcdic:
-                            // EBCDIC: Can't happen.
-                            break;
-                        case PositionType.FieldAttribute:
-                            // Field attribute -- blank.
-                            Console.Write(" ");
-                            break;
-                    }
-                }
-                Console.WriteLine();
-            }
-            Console.ResetColor();
-        }
-
-        /// <summary>
         /// Translate one screen position to a character.
         /// </summary>
         /// <param name="c">Display position to translate.</param>
@@ -1273,6 +1373,7 @@ namespace x3270if
                     {
                         return c.AsciiChar;
                     }
+
                 case PositionType.DbcsRight:
                     // Right side of DBCS -- skip it.
                     return null;
@@ -1281,319 +1382,5 @@ namespace x3270if
                     return ' ';
             }
         }
-
-        // The following methods allow the entire screen to be interrogated with a single
-        // ReadBuffer call, which can then be picked apart into individual fields. This is
-        // much faster than using the emulator Ascii methods, each of which requires a
-        // round trip over the socket and context switches.
-
-        #region Ascii methods
-        /// <summary>
-        /// Translate a DisplayBuffer to a text string, starting at the cursor address.
-        /// </summary>
-        /// <param name="length">Length of field to return. Can wrap rows.</param>
-        /// <returns>Text.</returns>
-        /// <remarks>
-        /// <note type="note">
-        /// For DBCS text, this method may return data from more buffer positions than <paramref name="length"/>.
-        /// It will attempt to return <paramref name="length"/> characters, skipping over the right-hand sides of DBCS characters
-        /// as necessary.
-        /// </note>
-        /// </remarks>
-        public string Ascii(int length)
-        {
-            return Ascii(CursorRow, CursorColumn, length);
-        }
-
-        /// <summary>
-        /// Translate a DisplayBuffer to a text string, starting at the specified address.
-        /// </summary>
-        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="length">Length of field.</param>
-        /// <returns>Text.</returns>
-        /// <remarks>
-        /// <note type="note">
-        /// For DBCS text, this method may return data from more buffer positions than <paramref name="length"/>.
-        /// It will attempt to return <paramref name="length"/> characters, skipping over the right-hand sides of DBCS characters
-        /// as necessary.
-        /// </note>
-        /// </remarks>
-        public String Ascii(int row, int column, int length)
-        {
-            if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
-            {
-                throw new InvalidOperationException("ReadBuffer is not Ascii");
-            }
-            row -= Origin;
-            column -= Origin;
-            if (row < 0 || row >= Rows)
-            {
-                throw new ArgumentOutOfRangeException("row");
-            }
-            if (column < 0 || column >= Columns)
-            {
-                throw new ArgumentOutOfRangeException("column");
-            }
-            if (length < 0 || (row * Columns) + column + length > Rows * Columns)
-            {
-                throw new ArgumentOutOfRangeException("length");
-            }
-            if (length == 0)
-            {
-                return string.Empty;
-            }
-
-            var sb = new StringBuilder();
-            var curRow = row;
-            var curColumn = column;
-            var lengthLeft = length;
-            while (lengthLeft > 0)
-            {
-                var r = TranslatePosition(ContentsArray[curRow, curColumn]);
-                if (r.HasValue)
-                {
-                    sb.Append((char)r);
-                    lengthLeft--;
-                }
-                // Otherwise do not decrement lengthLeft.
-                if (++curColumn >= Columns)
-                {
-                    curRow++;
-                    curColumn = 0;
-                }
-                if (curRow == row && curColumn == column)
-                {
-                    // Wrapped without getting enough characters.
-                    break;
-                }
-            }
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Translate a rectangular region of a DisplayBuffer to text.
-        /// </summary>
-        /// <param name="row">Starting row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Starting column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="rows">Number of rows.</param>
-        /// <param name="columns">Number of columns.</param>
-        /// <returns>Array of strings, one entry per row.</returns>
-        /// <remarks>
-        /// <note type="note">
-        /// For DBCS text, this method may return data from more buffer positions than <paramref name="columns"/>.
-        /// It will attempt to return <paramref name="columns"/> characters, skipping over the right-hand sides of DBCS characters
-        /// as necessary. It will not wrap across rows to do this.
-        /// </note>
-        /// </remarks>
-        public string[] Ascii(int row, int column, int rows, int columns)
-        {
-            if (ioResult.ReadBufferType != Session.ReadBufferType.Ascii)
-            {
-                throw new InvalidOperationException("ReadBuffer is not Ascii");
-            }
-            row -= Origin;
-            column -= Origin;
-            if (row < 0 || row >= this.Rows)
-            {
-                throw new ArgumentOutOfRangeException("row");
-            }
-            if (column < 0 || column >= this.Columns)
-            {
-                throw new ArgumentOutOfRangeException("column");
-            }
-            if (rows <= 0 || row + rows > this.Rows)
-            {
-                throw new ArgumentOutOfRangeException("rows");
-            }
-            if (columns <= 0 || column + columns > this.Columns)
-            {
-                throw new ArgumentOutOfRangeException("columns");
-            }
-
-            string[] ret = new string[rows];
-            for (var r = row; r < row + rows; r++)
-            {
-                StringBuilder sb = new StringBuilder();
-                int columnsLeft = columns;
-                int c = column;
-
-                while (columnsLeft > 0)
-                {
-                    var rc = TranslatePosition(ContentsArray[r, c]);
-                    if (rc.HasValue)
-                    {
-                        sb.Append((char)rc);
-                        columnsLeft--;
-                    }
-                    if (++c >= Columns)
-                    {
-                        break;
-                    }
-                }
-                ret[r - row] = sb.ToString();
-            }
-            return ret;
-        }
-
-        /// <summary>
-        /// Translate an entire DisplayBuffer buffer to text.
-        /// </summary>
-        /// <returns>Text array.</returns>
-        public string[] Ascii()
-        {
-            return Ascii(Origin, Origin, Rows, Columns);
-        }
-
-        /// <summary>
-        /// Find the coordinates of the Field Attribute for a given screen position.
-        /// </summary>
-        /// <param name="c">Coordinates.</param>
-        /// <returns>Row and column, or null if the screen is unformatted.</returns>
-        private Coordinates FaPosition(Coordinates c)
-        {
-            Coordinates b = new Coordinates(c);
-            do
-            {
-                if (Contents(b).Type == PositionType.FieldAttribute)
-                {
-                    return b;
-                }
-                b--;
-            } while (b != c);
-
-            // Unformatted screen.
-            return null;
-        }
-
-        /// <summary>
-        /// Returns the length of the field that includes the specified
-        /// coordinates.
-        /// </summary>
-        /// <param name="c">Coordinates.</param>
-        /// <returns>Field length. The length does not include the field attribute itself, so it can be zero.</returns>
-        /// <remarks>
-        /// <note type="note">
-        /// If the screen is unformatted, returns the size of the entire screen.
-        /// </note>
-        /// <note type="note">
-        /// For DBCS text, returns the number of characters in the field, not the number of buffer positions in
-        /// the field.
-        /// </note>
-        /// </remarks>
-        public int FieldLength(Coordinates c)
-        {
-            // Work backwards until we find the field attribute, or wrap.
-            // We count c (if it is not an FA) and each non-FA to the left of it.
-            int count = 0;
-            var d = c.Clone();
-            while (Contents(d).Type != PositionType.FieldAttribute)
-            {
-                if (TranslatePosition(Contents(d)).HasValue)
-                {
-                    count++;
-                }
-                if (--d == c)
-                {
-                    // Wrapped back to the start. Unformatted screen.
-                    return count;
-                }
-            }
-
-            // Count forward from (c+1) until we find the next field attribute.
-            d = c.Clone();
-            while (Contents(++d).Type != PositionType.FieldAttribute)
-            {
-                if (TranslatePosition(Contents(d)).HasValue)
-                {
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        /// <summary>
-        /// Returns the length of the field that includes the specified
-        /// row and column location.
-        /// </summary>
-        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Column using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <returns>Field length. The length does not include the field attribute itself, so it can be zero.</returns>
-        /// <remarks>
-        /// <note type="note">
-        /// If the screen is unformatted, returns the size of the entire screen.
-        /// </note>
-        /// <note type="note">
-        /// For DBCS text, returns the number of characters in the field, not the number of buffer positions in
-        /// the field.
-        /// </note>
-        /// </remarks>
-        public int FieldLength(int row, int column)
-        {
-            return FieldLength(new Coordinates(this, row, column));
-        }
-
-        /// <summary>
-        /// Return a field value in ASCII.
-        /// </summary>
-        /// <param name="c">Coordinates.</param>
-        /// <returns>Text.</returns>
-        public string AsciiField(Coordinates c = null)
-        {
-            if (c == null)
-            {
-                c = new Coordinates(this, CursorRow, CursorColumn);
-            }
-
-            // Find the field that contains this position.
-            var faPosition = FaPosition(c);
-            if (faPosition == null)
-            {
-                // Unformatted. One big blob.
-                return Ascii(0, 0, Rows * Columns);
-            }
-
-            // Return just this field.
-            var fieldLength = FieldLength(faPosition);
-            faPosition++;
-            return Ascii(faPosition.Row, faPosition.Column, fieldLength);
-        }
-
-        /// <summary>
-        /// Return a field value in ASCII.
-        /// </summary>
-        /// <param name="row">Row number, using the object's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Column number, using the object's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <returns>Text.</returns>
-        public string AsciiField(int row, int column)
-        {
-            return AsciiField(new Coordinates(this, row, column));
-        }
-
-        /// <summary>
-        /// Convenience method for checking screen contents (exact match).
-        /// </summary>
-        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="text">Text to compare.</param>
-        /// <returns>True if the DisplayBuffer at that location equals <paramref name="text"/>.</returns>
-        public bool AsciiEquals(int row, int column, string text)
-        {
-            return Ascii(row, column, text.Length) == text;
-        }
-
-        /// <summary>
-        /// Convenience method for checking screen contents (pattern match).
-        /// </summary>
-        /// <param name="row">Row, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="column">Column, using the session's <see cref="x3270if.Config.Origin"/>.</param>
-        /// <param name="length">Length of region.</param>
-        /// <param name="regex">Regular expression to match against. (See <see cref="System.Text.RegularExpressions"/>.)</param>
-        /// <returns>True if <paramref name="regex"/> matches the specified region of the DisplayBuffer.</returns>
-        public bool AsciiMatches(int row, int column, int length, string regex)
-        {
-            return Regex.IsMatch(Ascii(row, column, length), regex);
-        }
-        #endregion
     }
 }
