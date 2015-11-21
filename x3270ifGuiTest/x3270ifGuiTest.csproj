@@ -55,6 +55,9 @@
       <DependentUpon>Form1.cs</DependentUpon>
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="Form1Engine.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Program.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
