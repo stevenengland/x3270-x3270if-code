@@ -188,7 +188,7 @@ namespace UnitTests
         [Test]
         public void TestExpandHostName()
         {
-            // Start out with an x3270if session with no options, hence no default connect flags.
+            // Start out with an X3270if session with no options, hence no default connect flags.
             var emulator = new ProcessSession();
 
             // Trivial version, does nothing.

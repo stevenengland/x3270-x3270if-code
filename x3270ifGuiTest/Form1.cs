@@ -42,7 +42,7 @@ namespace x3270ifGuiTest
     using X3270if.ProcessOptions;
 
     /// <summary>
-    /// GUI test for X3270if.
+    /// GUI test for x3270if.
     /// </summary>
     public partial class x3270ifGuiTest : Form
     {

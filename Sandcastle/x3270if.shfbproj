@@ -40,10 +40,14 @@
     <ProjectSummary>The x3270if DLL is a set of classes for use in IBM host screen-scraping applications. It allows complete, efficient control over the operation of the session. It is based on ws3270, and requires a compatible copy of ws3270.exe in order to operate.</ProjectSummary>
     <NamespaceSummaries>
       <NamespaceSummaryItem name="(global)" isDocumented="False">The x3270if DLL is a set of classes for use in IBM host screen-scraping applications. It allows complete, efficient control over the operation of the session. It is based on ws3270, and requires a current copy of ws3270.exe in order to operate.</NamespaceSummaryItem>
-<NamespaceSummaryItem name="x3270if" isDocumented="True">IBM 3270 host emulator classes.</NamespaceSummaryItem>
-<NamespaceSummaryItem name="x3270if.Attributes" isDocumented="True">3270 field attributes, decoded by the DisplayBuffer class.</NamespaceSummaryItem>
-<NamespaceSummaryItem name="x3270if.Transfer" isDocumented="True">File transfer parameters for use by the Transfer action.</NamespaceSummaryItem>
-<NamespaceSummaryItem name="x3270if.ProcessOptions" isDocumented="True">Extra command-line options for the ProcessConfig class.</NamespaceSummaryItem></NamespaceSummaries>
+<NamespaceSummaryItem name="x3270if" isDocumented="False">IBM 3270 host emulator classes.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="x3270if.Attributes" isDocumented="False">3270 field attributes, decoded by the DisplayBuffer class.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="x3270if.Transfer" isDocumented="False">File transfer parameters for use by the Transfer action.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="x3270if.ProcessOptions" isDocumented="False">Extra command-line options for the ProcessConfig class.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="X3270if" isDocumented="True">IBM 3270 host emulator classes.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="X3270if.Attributes" isDocumented="True">3270 field attributes, decoded by the DisplayBuffer class.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="X3270if.ProcessOptions" isDocumented="True">Extra command-line options for the ProcessConfig class.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="X3270if.Transfer" isDocumented="True">File transfer parameters for use by the Transfer action.</NamespaceSummaryItem></NamespaceSummaries>
     <CopyrightText>Copyright &amp;#169%3b 2015 Paul Mattes</CopyrightText>
     <VisibleItems>InheritedMembers, InheritedFrameworkMembers, Internals, ProtectedInternalAsProtected</VisibleItems>
   </PropertyGroup>

@@ -13,17 +13,19 @@
     </introduction>
     <para>The x3270if DLL allows screen-scraping applications to access
     IBM mainframe host sessions. It can be used to access and modify data
-    on the host.</para>
+    on the host.
+    It can also be used to write scripts to automate operations of
+    interactive 3270 sessions.</para>
     <para>A screen-scraping application consists of four components:</para>
     <list class="bullet">
       <listItem><para>Your local application code.</para></listItem>
       <listItem><para>The x3270if DLL.</para></listItem>
-      <listItem><para>A running copy of ws3270.exe.</para></listItem>
+      <listItem><para>A 3270 emulator process such as ws3270.exe or wc3270.exe.</para></listItem>
       <listItem><para>The mainframe running your host application.</para></listItem>
     </list>
     <para>The goal of this DLL is to make the connection between your local
-    application and the mainframe application as transparent and efficient
-    as possible, but it is still necessary to understand the individual
+    application and the mainframe application as simple
+    as possible, but to use the DLL properly it is still necessary to understand each of the
     components and manage them properly.</para>
     <!-- Add one or more top-level section elements.  These are collapsible.
          If using <autoOutline />, add an address attribute to identify it
@@ -32,28 +34,42 @@
       <title>The Emulator Session</title>
       <content>
         <autoOutline />
-        <para>Your local application must first create an emulator session.
-        This is by creating a
-        <codeEntityReference>T:x3270if.ProcessSession</codeEntityReference>
-        object and calling its
-        <codeEntityReference>M:x3270if.Session.Start</codeEntityReference>
+        <para>Your local application must first create a connection to an emulator session.
+        This is done in one of two ways, one for screen-scraping apps and the other
+        for interactive scripts.</para>
+        <para>
+        A standalone screen-scraping application creates a
+        <codeEntityReference>T:X3270if.ProcessSession</codeEntityReference>
+        object and calls its
+        <codeEntityReference>M:X3270if.Session.Start</codeEntityReference>
         method. No other active ProcessSession
         methods will work until Start has been called.</para>
         <para>The effect of a Start is to create an emulator process, which is
         a copy of ws3270.exe. When you are finished using the session, you must
         call the
-        <codeEntityReference>M:x3270if.Session.Close(System.Boolean)</codeEntityReference>
+        <codeEntityReference>M:X3270if.Session.Close(System.Boolean)</codeEntityReference>
         method to clean it up. The emulator
         process will be automatically cleaned up when your application process
-        exits, but if your app continues to run after the need for mainframe
-        data has passed, you should call Close.
+        exits, but if your app continues to run after the mainframe
+        operations are complete, it should call Close explicitly.
+        </para>
+        <para>
+        The second way is for an interactive scripting applications, where there is
+        already an interactive emulator session (wc3270.exe) running. The scripting app
+        is started with wc3270's Script() action, as a child of the wc3270 process.
+        In this case, the scripting app creates a
+        <codeEntityReference>T:X3270if.PortSession</codeEntityReference>
+        object. There is no need to call a Start method; the PortSession will automatically
+        connect to the wc3270 process using information found in the environment. But it is
+        recommended that the scripting app call <codeEntityReference>M:X3270if.Session.Close(System.Boolean)</codeEntityReference>
+        to clean up when it is finished.
         </para>
         <para>The emulator process may exit prematurely while you are using it.
-        In that case, attempting to use a ProcessSession may result in an
-        <codeEntityReference>T:x3270if.X3270ifCommandException</codeEntityReference>.
+        In that case, attempting to use the Session may result in an
+        <codeEntityReference>T:X3270if.X3270ifCommandException</codeEntityReference>.
         It is good practice to wrap emulator operations
-        in a try/catch to catch these exceptions, and clean up and Start again
-        as needed.</para>
+        in a try/catch to catch these exceptions. Screen-scraping apps should
+        clean up and Start again as needed.</para>
       </content>
       <!-- If a section contains a sections element, its content creates
            sub-sections.  These are not collapsible.
@@ -75,23 +91,26 @@
     <section address="HostConnection">
       <title>Host Connections</title>
       <content>
-      <para>Once you have an emulator session running, you must connect to the
-      mainframe. This is done with the
-      <codeEntityReference>M:x3270if.Session.Connect(System.String,System.String,System.Collections.Generic.IEnumerable{System.String},x3270if.ConnectFlags)</codeEntityReference>
+      <para>Once you have an emulator session running, a screen-scraping app must
+      connect to the
+      mainframe. (Interactive scripting apps may or may not need to create a connection -- it depends on
+      the state of the emulator when the script is invoked.)
+      Creating a host connection is done with the
+      <codeEntityReference>M:X3270if.Session.Connect(System.String,System.String,System.Collections.Generic.IEnumerable{System.String},X3270if.ConnectFlags)</codeEntityReference>
       method.
       Connect is given the host's name or IP address, the TCP port to connect
       to, the Logical Unit name(s) to attach to, and other options. Until the
-      Connect
-      succeeds, ProcessSession methods that attempt to communicate with
+      connection is established,
+      Session methods that attempt to communicate with
       the mainframe, such as
-      <codeEntityReference>M:x3270if.Session.String(System.String,System.Boolean)</codeEntityReference> or
-      <codeEntityReference>M:x3270if.Session.Enter</codeEntityReference>,
+      <codeEntityReference>M:X3270if.Session.String(System.String,System.Boolean)</codeEntityReference> or
+      <codeEntityReference>M:X3270if.Session.Enter</codeEntityReference>,
       will have no effect.</para>
       <para>You can terminate the host connection with the
-      <codeEntityReference>M:x3270if.Session.Disconnect</codeEntityReference>
+      <codeEntityReference>M:X3270if.Session.Disconnect</codeEntityReference>
       method. After a Disconnect, you are free to do another
       Connect.</para>
-      <para>Note that if you stop the emulator session with the Close
+      <para>Note that if you stop a Process session with the Close
       method, any host connection will also be implicitly disconnected.
       </para>
       </content>
@@ -99,12 +118,12 @@
     <section address="HostSession">
       <title>Host Login Sessions</title>
       <content>
-      <para>Note also that neither the x3270if DLL nor the ws3270 emulator have any
+      <para>Note also that neither the x3270if DLL nor the ws3270 and wc3270 emulators have any
       knowledge of host login sessions. That is, they do not know if and how
       you may be logged into an account on the mainframe, or what the effect of
       breaking the TCP connection between the emulator and the host might be.
-      It is up to your application to perform host login (and if necessary,
-      logout) operations, by interacting with the host via 3270 screens.
+      It is up to your application to perform host login and logout operations
+      by interacting with the host via 3270 screens.
       </para>
       </content>
     </section>

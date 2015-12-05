@@ -43,7 +43,7 @@ namespace x3270ifGuiTest
     using X3270if.Transfer;
 
     /// <summary>
-    /// GUI test for X3270if.
+    /// GUI test for x3270if.
     /// This is the real meat of the form, and is not generated, so it can be subject to StyleCop checks.
     /// </summary>
     public partial class x3270ifGuiTest : Form

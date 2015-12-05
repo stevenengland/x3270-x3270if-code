@@ -100,7 +100,7 @@ namespace X3270if
     }
 
     /// <summary>
-    /// x3270if session configuration.
+    /// X3270if session configuration.
     /// </summary>
     public class Config
     {

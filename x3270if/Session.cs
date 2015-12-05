@@ -98,7 +98,7 @@ namespace X3270if
     }
 
     /// <summary>
-    /// Exception class for x3270if operational errors (internal operation failed).
+    /// Exception class for X3270if operational errors (internal operation failed).
     /// </summary>
     [Serializable]
     public class X3270ifInternalException : X3270ifException
