@@ -131,6 +131,11 @@ namespace X3270if
     public class ProcessBackEnd : IBackEnd
     {
         /// <summary>
+        /// Minimum acceptable version of ws3270.
+        /// </summary>
+        private const string MinVersion = "3.5alpha4";
+
+        /// <summary>
         /// Has Dispose already been called?
         /// </summary>
         private bool disposed = false;
@@ -191,7 +196,7 @@ namespace X3270if
                 //  -utf8             UTF-8 mode
                 //  -model n          Model number
                 //  -scriptportonce   Make sure the emulator exists if the socket connection breaks
-                var arguments = string.Format("-utf8 -model {0} -scriptportonce", this.processConfig.Model);
+                var arguments = string.Format("-minversion {0} -utf8 -model {1} -scriptportonce", MinVersion, this.processConfig.Model);
 
                 // Add arbitrary extra options.
                 if (this.processConfig.ExtraOptions != null)

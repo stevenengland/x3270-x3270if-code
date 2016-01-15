@@ -55,7 +55,7 @@ namespace UnitTests
         /// <summary>
         /// Test fixture set-up.
         /// </summary>
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             Util.ConsoleDebug = false;

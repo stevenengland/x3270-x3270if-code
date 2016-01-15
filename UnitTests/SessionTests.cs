@@ -57,7 +57,7 @@ namespace UnitTests
         /// <summary>
         /// Test set-up.
         /// </summary>
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             Util.ConsoleDebug = false;
@@ -281,9 +281,10 @@ namespace UnitTests
         [Test]
         public void TestProcessMockSession()
         {
+            var objDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             var startup = new ProcessConfig
             {
-                ProcessName = "MockWs3270.exe",
+                ProcessName = Path.Combine(objDir, "MockWs3270.exe"),
                 ConnectRetryMsec = 50
             };
 
